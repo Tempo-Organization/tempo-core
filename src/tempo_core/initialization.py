@@ -9,7 +9,7 @@ from tempo_core import (
     settings,
     wrapper,
 )
-from tempo_core.programs import repak, unreal_engine
+from tempo_core.programs import repak, unreal_engine, retoc
 
 
 def uproject_check():
@@ -85,10 +85,15 @@ def initialization():
         game_launcher_exe_override_check()
         git_info_check()
         repak.ensure_repak_installed()
+        retoc.ensure_retoc_installed()
         # game_exe_check()
 
         if repak.get_is_using_repak_path_override():
             file_io.check_file_exists(repak.get_repak_path_override())
+            logger.log_message("Check: Repak exists")
+
+        if retoc.get_is_using_retoc_path_override():
+            file_io.check_file_exists(retoc.get_retoc_path_override())
             logger.log_message("Check: Repak exists")
 
         logger.log_message("Check: Game exists")

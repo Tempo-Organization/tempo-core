@@ -1,5 +1,6 @@
 from enum import Enum
 from typing import Type, Any
+from dataclasses import dataclass
 
 
 class PackingType(Enum):
@@ -10,6 +11,7 @@ class PackingType(Enum):
     ENGINE = "engine"
     UNREAL_PAK = "unreal_pak"
     REPAK = "repak"
+    RETOC = "retoc"
     LOOSE = "loose"
 
 
@@ -216,3 +218,60 @@ def get_enum_from_val(enum_cls: Type[Enum], value: Any) -> Enum:
 
 def get_enum_strings_from_enum(enum_cls: Type[Enum]) -> list[str]:
     return [entry.value for entry in enum_cls]
+
+
+@dataclass
+class UnrealEngineVersion:
+    major_version: int
+    minor_version: int
+
+    def get_retoc_unreal_version_str(self) -> str:
+        return f'UE{self.major_version}_{self.minor_version}'
+
+    def get_uasset_gui_unreal_version_str(self) -> str:
+        return f'VER_UE{self.major_version}_{self.minor_version}'
+
+    def get_repak_unreal_version_str(self) -> str:
+        version_key = f"{self.major_version}.{self.minor_version}"
+        return UnrealEngineVersion.engine_version_to_repak_version.get(
+            version_key, "Unknown"
+        )
+
+    engine_version_to_repak_version = {
+        "4.0": "V1",
+        "4.1": "V1",
+        "4.2": "V1",
+        "4.3": "V3",
+        "4.4": "V3",
+        "4.5": "V3",
+        "4.6": "V3",
+        "4.7": "V3",
+        "4.8": "V3",
+        "4.9": "V3",
+        "4.10": "V3",
+        "4.11": "V3",
+        "4.12": "V3",
+        "4.13": "V3",
+        "4.14": "V3",
+        "4.15": "V3",
+        "4.16": "V4",
+        "4.17": "V4",
+        "4.18": "V4",
+        "4.19": "V4",
+        "4.20": "V5",
+        "4.21": "V7",
+        "4.22": "V8A",
+        "4.23": "V8B",
+        "4.24": "V8B",
+        "4.25": "V9",
+        "4.26": "V11",
+        "4.27": "V11",
+        "4.28": "V11",
+        "5.0": "V11",
+        "5.1": "V11",
+        "5.2": "V11",
+        "5.3": "V11",
+        "5.4": "V11",
+        "5.5": "V11",
+        "5.6": "V11",
+    }

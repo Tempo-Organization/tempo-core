@@ -1,12 +1,12 @@
 import os
 import shutil
+import pathlib
 
-
-import tempo_core.app_runner
 import tempo_core.settings
+import tempo_core.app_runner
 from tempo_core import file_io, packing, utilities
-from tempo_core.data_structures import CompressionType
-from tempo_core.programs import unreal_engine
+from tempo_core.programs import unreal_engine, retoc
+from tempo_core.data_structures import CompressionType, UnrealEngineVersion
 
 
 def get_pak_dir_to_pack(mod_name: str):
@@ -190,6 +190,7 @@ def make_ue5_iostore_mods(mod_name: str, final_pak_file: str):
     tempo_core.app_runner.run_app(exe_path=exe, args=args)
 
 
+# at this point it seems mostly done outside of intermediary pak location/symlink support
 def make_iostore_unreal_pak_mod(
     mod_name: str, final_pak_file: str, *, use_symlinks: bool
 ):
@@ -199,6 +200,7 @@ def make_iostore_unreal_pak_mod(
     else:
         make_ue5_iostore_mods(mod_name, final_pak_file)
         # make_ue5_iostore_mods(mod_name, final_pak_file, use_symlinks)
+
 
 
 def make_non_iostore_unreal_pak_mod(
