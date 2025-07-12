@@ -19,7 +19,7 @@ from tempo_core.data_structures import (
     PackingType,
     get_enum_from_val,
 )
-from tempo_core.programs import repak, unreal_engine, unreal_pak
+from tempo_core.programs import repak, unreal_engine, unreal_pak, retoc
 
 
 @dataclass
@@ -436,6 +436,10 @@ def install_mod(
         unreal_pak.install_unreal_pak_mod(
             mod_name, compression_type, use_symlinks=use_symlinks
         )
+    elif packing_type == PackingType.RETOC:
+        retoc.install_retoc_mod(
+            mod_name=mod_name, compression_type=compression_type, use_symlinks=use_symlinks
+        )
     else:
         logger.log_message(
             f'Error: You have provided an invalid packing_type for your "{mod_name}" mod entry in your settings json'
@@ -480,7 +484,7 @@ def package_project_iostore_ue4():
         "-archive",
         f'-archivedirectory="{archive_directory}"',
         "-package",
-        f'-ue4exe="{editor_cmd_exe_path}"',
+        f'-ue4exe={editor_cmd_exe_path}',
         "-ddc=InstalledDerivedDataBackendGraph",
         "-iostore",
         "-pak",
@@ -518,7 +522,7 @@ def package_project_iostore_ue5():
         "-archive",
         f'-archivedirectory="{archive_directory}"',
         "-package",
-        f'-unrealexe="{editor_cmd_exe_path}"',
+        f'-unrealexe={editor_cmd_exe_path}',
         "-ddc=InstalledDerivedDataBackendGraph",
         "-iostore",
         "-pak",

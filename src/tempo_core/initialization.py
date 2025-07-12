@@ -94,7 +94,7 @@ def initialization():
 
         if retoc.get_is_using_retoc_path_override():
             file_io.check_file_exists(retoc.get_retoc_path_override())
-            logger.log_message("Check: Retoc exists")
+            logger.log_message("Check: Repak exists")
 
         logger.log_message("Check: Game exists")
 
