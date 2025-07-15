@@ -64,7 +64,7 @@ def test_mods(*, input_mod_names: list[str], toggle_engine: bool, use_symlinks: 
 def test_mods_all(*, toggle_engine: bool, use_symlinks: bool):
     if toggle_engine:
         engine.toggle_engine_off()
-    for entry in settings.settings_information.settings["mods_info"]:
+    for entry in settings.settings_information.settings.get("mods_info", []):
         settings.settings_information.mod_names.append(entry["mod_name"])
     generate_mods_other(use_symlinks=use_symlinks)
     if toggle_engine:
