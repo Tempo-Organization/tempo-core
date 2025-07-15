@@ -10,9 +10,7 @@ from tempo_core.programs import unreal_pak, unreal_engine
 
 
 def get_is_using_retoc_path_override() -> bool:
-    return settings.settings_information.settings["retoc_info"][
-        "override_default_retoc_path"
-    ]
+    return settings.settings_information.settings.get("retoc_info", {}).get("override_default_retoc_path", False)
 
 
 def get_retoc_path_override() -> str:

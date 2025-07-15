@@ -572,7 +572,7 @@ def get_mod_files_asset_paths_for_loose_mods(mod_name: str) -> dict:
         settings.get_uproject_file(), settings.get_unreal_engine_dir()
     )
     mod_info = get_mod_pak_entry(mod_name)
-    for asset in mod_info["file_includes"]["asset_paths"]:
+    for asset in mod_info.get("file_includes", {}).get("asset_paths", []):
         base_path = f"{cooked_uproject_dir}/{asset}"
         for extension in file_io.get_file_extensions(base_path):
             before_path = f"{base_path}{extension}"
@@ -587,7 +587,7 @@ def get_mod_files_tree_paths_for_loose_mods(mod_name: str) -> dict:
         settings.get_uproject_file(), settings.get_unreal_engine_dir()
     )
     mod_info = get_mod_pak_entry(mod_name)
-    for tree in mod_info["file_includes"]["tree_paths"]:
+    for tree in mod_info.get("file_includes", {}).get("tree_paths", []):
         tree_path = f"{cooked_uproject_dir}/{tree}"
         for entry in file_io.get_files_in_tree(tree_path):
             if os.path.isfile(entry):
@@ -652,13 +652,12 @@ def get_mod_file_paths_for_manually_made_pak_mods_asset_paths(mod_name: str) -> 
         settings.get_uproject_file(), settings.get_unreal_engine_dir()
     )
     mod_info = get_mod_pak_entry(mod_name)
-    if mod_info["file_includes"]["asset_paths"] is not None:
-        for asset in mod_info["file_includes"]["asset_paths"]:
-            base_path = f"{cooked_uproject_dir}/{asset}"
-            for extension in file_io.get_file_extensions(base_path):
-                before_path = f"{base_path}{extension}"
-                after_path = f"{settings.get_working_dir()}/{mod_name}/{unreal_engine.get_uproject_name(settings.get_uproject_file())}/{asset}{extension}"
-                file_dict[before_path] = after_path
+    for asset in mod_info.get("file_includes", {}).get("asset_paths", []):
+        base_path = f"{cooked_uproject_dir}/{asset}"
+        for extension in file_io.get_file_extensions(base_path):
+            before_path = f"{base_path}{extension}"
+            after_path = f"{settings.get_working_dir()}/{mod_name}/{unreal_engine.get_uproject_name(settings.get_uproject_file())}/{asset}{extension}"
+            file_dict[before_path] = after_path
     return file_dict
 
 
@@ -668,17 +667,16 @@ def get_mod_file_paths_for_manually_made_pak_mods_tree_paths(mod_name: str) -> d
         settings.get_uproject_file(), settings.get_unreal_engine_dir()
     )
     mod_info = get_mod_pak_entry(mod_name)
-    if mod_info["file_includes"]["tree_paths"] is not None:
-        for tree in mod_info["file_includes"]["tree_paths"]:
-            tree_path = f"{cooked_uproject_dir}/{tree}"
-            for entry in file_io.get_files_in_tree(tree_path):
-                if os.path.isfile(entry):
-                    base_entry = os.path.splitext(entry)[0]
-                    for extension in file_io.get_file_extensions(base_entry):
-                        before_path = f"{base_entry}{extension}"
-                        relative_path = os.path.relpath(base_entry, cooked_uproject_dir)
-                        after_path = f"{settings.get_working_dir()}/{mod_name}/{unreal_engine.get_uproject_name(settings.get_uproject_file())}/{relative_path}{extension}"
-                        file_dict[before_path] = after_path
+    for tree in mod_info.get("file_includes", {}).get("tree_paths", []):
+        tree_path = f"{cooked_uproject_dir}/{tree}"
+        for entry in file_io.get_files_in_tree(tree_path):
+            if os.path.isfile(entry):
+                base_entry = os.path.splitext(entry)[0]
+                for extension in file_io.get_file_extensions(base_entry):
+                    before_path = f"{base_entry}{extension}"
+                    relative_path = os.path.relpath(base_entry, cooked_uproject_dir)
+                    after_path = f"{settings.get_working_dir()}/{mod_name}/{unreal_engine.get_uproject_name(settings.get_uproject_file())}/{relative_path}{extension}"
+                    file_dict[before_path] = after_path
     return file_dict
 
 

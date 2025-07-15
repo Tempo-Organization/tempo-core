@@ -16,9 +16,7 @@ def is_repak_packing_enum_in_use():
 
 
 def get_is_using_repak_path_override() -> bool:
-    return settings.settings_information.settings["repak_info"][
-        "override_default_repak_path"
-    ]
+    return settings.settings_information.settings.get("repak_info", {}).get("override_default_repak_path", False)
 
 
 def get_repak_path_override() -> str:

@@ -73,7 +73,7 @@ def get_unreal_engine_dir() -> str:
     return ue_dir
 
 
-def is_unreal_pak_packing_enum_in_use():
+def is_unreal_pak_packing_enum_in_use() -> bool:
     is_in_use = False
     for entry in get_mods_info_list_from_json():
         if entry["packing_type"] == "unreal_pak":
@@ -81,10 +81,34 @@ def is_unreal_pak_packing_enum_in_use():
     return is_in_use
 
 
-def is_engine_packing_enum_in_use():
+def is_engine_packing_enum_in_use() -> bool:
     is_in_use = False
     for entry in get_mods_info_list_from_json():
         if entry["packing_type"] == "engine":
+            is_in_use = True
+    return is_in_use
+
+
+def is_repak_packing_enum_in_use() -> bool:
+    is_in_use = False
+    for entry in get_mods_info_list_from_json():
+        if entry["packing_type"] == "repak":
+            is_in_use = True
+    return is_in_use
+
+
+def is_retoc_packing_enum_in_use() -> bool:
+    is_in_use = False
+    for entry in get_mods_info_list_from_json():
+        if entry["packing_type"] == "retoc":
+            is_in_use = True
+    return is_in_use
+
+
+def is_loose_packing_enum_in_use() -> bool:
+    is_in_use = False
+    for entry in get_mods_info_list_from_json():
+        if entry["packing_type"] == "loose":
             is_in_use = True
     return is_in_use
 
@@ -102,9 +126,7 @@ def get_game_launcher_exe_path() -> str:
 
 
 def get_override_automatic_launcher_exe_finding() -> bool:
-    return settings_information.settings["game_info"][
-        "override_automatic_launcher_exe_finding"
-    ]
+    return settings_information.settings.get("game_info", {}).get("override_automatic_launcher_exe_finding", False)
 
 
 def get_uproject_file() -> str:
@@ -112,15 +134,15 @@ def get_uproject_file() -> str:
 
 
 def get_unreal_engine_packaging_main_command() -> str:
-    return settings_information.settings["engine_info"]["engine_packaging_command"]
+    return settings_information.settings.get("engine_info", {}).get("engine_packaging_command", "BuildCookRun")
 
 
 def get_unreal_engine_cooking_main_command() -> str:
-    return settings_information.settings["engine_info"]["engine_cooking_command"]
+    return settings_information.settings.get("engine_info", {}).get("engine_cooking_command", "BuildCookRun")
 
 
 def get_unreal_engine_building_main_command() -> str:
-    return settings_information.settings["engine_info"]["engine_building_command"]
+    return settings_information.settings.get("engine_info", {}).get("engine_building_command", "BuildCookRun")
 
 
 def get_cleanup_repo_path() -> str:
@@ -136,31 +158,50 @@ def get_window_title_override() -> str:
 
 
 def get_override_automatic_window_title_finding() -> bool:
-    return settings_information.settings["game_info"][
-        "override_automatic_window_title_finding"
-    ]
+    return settings_information.settings.get("game_info", {}).get("override_automatic_window_title_finding", False)
 
 
 def get_is_overriding_automatic_version_finding() -> bool:
-    return settings_information.settings["repak_info"][
-        "override_automatic_version_finding"
-    ]
+    return settings_information.settings.get("repak_info", {}).get("override_automatic_version_finding", False)
 
 
 def get_engine_building_args() -> list:
-    return settings_information.settings["engine_info"]["engine_building_args"]
+    default_args = [
+      "-build",
+      "-skipstage",
+      "-nodebuginfo",
+      "-noP4"
+    ]
+    return settings_information.settings.get("engine_info", {}).get("engine_building_args", default_args)
 
 
 def get_engine_packaging_args() -> list:
-    return settings_information.settings["engine_info"]["engine_packaging_args"]
+    default_args = [
+      "-stage",
+      "-pak",
+      "-cook",
+      "-unversionedcookedcontent",
+      "-SkipCookingEditorContent",
+      "-iterate",
+      "-noP4",
+      "-compressed"
+    ]
+    return settings_information.settings.get("engine_info", {}).get("engine_packaging_args", default_args)
 
 
 def get_engine_cooking_args() -> list:
-    return settings_information.settings["engine_info"]["engine_cooking_args"]
+    default_args = [
+      "-cook",
+      "-unversionedcookedcontent",
+      "-SkipCookingEditorContent",
+      "-iterate",
+      "-noP4"
+    ]
+    return settings_information.settings.get("engine_info", {}).get("engine_cooking_args", default_args)
 
 
 def get_window_management_events() -> dict:
-    return settings_information.settings["window_management_events"]
+    return settings_information.settings.get("window_management_events", [])
 
 
 def get_override_working_dir() -> str:
@@ -168,22 +209,19 @@ def get_override_working_dir() -> str:
 
 
 def get_is_overriding_default_working_dir() -> bool:
-    general_info = settings_information.settings.get("general_info", {})
-    return bool(general_info.get("override_default_working_dir", False))
+    return settings_information.settings.get("general_info", {}).get("override_default_working_dir", False)
 
 
 def get_persistent_mod_dir(mod_name: str) -> str:
-    return f"{settings_information.settings_json_dir}/mod_packaging/persistent_files/{mod_name}"
+    return os.path.normpath(f"{settings_information.settings_json_dir}/mod_packaging/persistent_files/{mod_name}")
 
 
 def get_persistent_mods_dir() -> str:
-    return f"{settings_information.settings_json_dir}/mod_packaging/persistent_files"
+    return os.path.normpath(f"{settings_information.settings_json_dir}/mod_packaging/persistent_files")
 
 
 def get_override_automatic_version_finding() -> bool:
-    return settings_information.settings["engine_info"][
-        "override_automatic_version_finding"
-    ]
+    return settings_information.settings.get("engine_info", {}).get("override_automatic_version_finding", False)
 
 
 def get_alt_packing_dir_name() -> str:
@@ -191,15 +229,15 @@ def get_alt_packing_dir_name() -> str:
 
 
 def get_is_using_alt_dir_name() -> bool:
-    return settings_information.settings["packaging_uproject_name"]["use_override"]
+    return settings_information.settings.get("packaging_uproject_name", {}).get("use_override", False)
 
 
 def get_mods_info_list_from_json() -> list:
-    return settings_information.settings["mods_info"]
+    return settings_information.settings.get("mods_info", [])
 
 
 def get_exec_events() -> list:
-    return settings_information.settings["exec_events"]
+    return settings_information.settings.get("exec_events", [])
 
 
 def get_ide_path() -> str:
@@ -219,11 +257,11 @@ def get_game_id() -> int:
 
 
 def get_game_launch_params() -> list:
-    return settings_information.settings["game_info"]["launch_params"]
+    return settings_information.settings.get("game_info", {}).get("launch_params", [])
 
 
 def get_engine_launch_args() -> list:
-    return settings_information.settings["engine_info"]["engine_launch_args"]
+    return settings_information.settings.get("engine_info", {}).get("engine_launch_args", [])
 
 
 def custom_get_unreal_engine_version(engine_path: str) -> str:
@@ -245,14 +283,6 @@ def get_working_dir() -> str:
         working_dir = os.path.join(file_io.SCRIPT_DIR, "working_dir")
     os.makedirs(working_dir, exist_ok=True)
     return working_dir
-
-
-def is_loose_packing_enum_in_use():
-    is_in_use = False
-    for entry in get_mods_info_list_from_json():
-        if entry["packing_type"] == "loose":
-            is_in_use = True
-    return is_in_use
 
 
 def should_show_progress_bars() -> bool:
