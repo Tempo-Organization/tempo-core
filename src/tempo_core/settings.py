@@ -49,8 +49,9 @@ def init_settings(settings_json_path: pathlib.Path):
     if auto_close_game and is_process_running:
         taskkill_path = shutil.which("taskkill")
 
-        if taskkill_path and not process_name == '':
-            subprocess.run([taskkill_path, "/F", "/IM", process_name], check=False)
+        if taskkill_path:
+            if not process_name == '':
+                subprocess.run([taskkill_path, "/F", "/IM", process_name], check=False)
         else:
             taskkill_exe_not_found_error = "taskkill.exe not found."
             raise FileNotFoundError(taskkill_exe_not_found_error)
