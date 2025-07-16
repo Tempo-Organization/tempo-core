@@ -212,7 +212,7 @@ def make_non_iostore_unreal_pak_mod(
     *,
     use_symlinks: bool,
 ):
-    command = f'{exe_path} "{intermediate_pak_file}" -Create="{make_response_file_non_iostore(mod_name)}"'
+    command = f'"{exe_path}" "{intermediate_pak_file}" -Create="{make_response_file_non_iostore(mod_name)}"'
     if compression_str != "None":
         command = f"{command} -compress -compressionformat={compression_str}"
     tempo_core.app_runner.run_app(command)
