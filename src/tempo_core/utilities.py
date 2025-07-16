@@ -34,7 +34,7 @@ def get_uproject_tempo_resources_dir():
 
 
 def get_use_mod_name_dir_name_override(mod_name: str) -> bool:
-    return get_mods_info_dict_from_mod_name(mod_name)["use_mod_name_dir_name_override"]
+    return get_mods_info_dict_from_mod_name(mod_name).get("use_mod_name_dir_name_override", False)
 
 
 def get_mod_name_dir_name_override(mod_name: str) -> str:
