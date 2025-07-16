@@ -42,14 +42,14 @@ def init_settings(settings_json_path: pathlib.Path):
     # settings_information.settings = configs.DynamicSettings(raw_settings)
     settings_information.settings = raw_settings
     settings = settings_information.settings
-    process_name = os.path.basename(settings["game_info"]["game_exe_path"])
+    process_name = os.path.basename(settings.get("game_info", {}).get("game_exe_path", ''))
     # window_management.change_window_name(settings["general_info"]["window_title"])
     auto_close_game = settings["process_kill_events"]["auto_close_game"]
     is_process_running = process_management.is_process_running(process_name)
     if auto_close_game and is_process_running:
         taskkill_path = shutil.which("taskkill")
 
-        if taskkill_path:
+        if taskkill_path and not process_name == '':
             subprocess.run([taskkill_path, "/F", "/IM", process_name], check=False)
         else:
             taskkill_exe_not_found_error = "taskkill.exe not found."
@@ -114,7 +114,7 @@ def is_loose_packing_enum_in_use() -> bool:
 
 
 def get_game_exe_path() -> str:
-    return settings_information.settings["game_info"]["game_exe_path"]
+    return settings_information.settings.get("game_info", {}).get("game_exe_path", '')
 
 
 def get_git_info_repo_path() -> str:
