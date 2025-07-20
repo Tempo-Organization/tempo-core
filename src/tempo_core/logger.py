@@ -92,13 +92,14 @@ def log_message(message: str):
                 if keyword in message:
                     rgb_color = f"rgb({color[0]},{color[1]},{color[2]})"
                     console.print(
-                        padded_line, style=f"{rgb_color} on {default_background_color}"
+                        padded_line, style=f"{rgb_color} on {default_background_color}", markup=False
                     )
                     break
             else:
                 console.print(
                     padded_line,
                     style=f"{default_text_color} on {default_background_color}",
+                    markup=False
                 )
 
         log_dir = os.path.join(log_information.log_base_dir)
@@ -119,6 +120,7 @@ def log_message(message: str):
                 console.print(
                     f"Failed to create log file: {e}",
                     style=f"{error_color} on {default_background_color}",
+                    markup=False
                 )
                 return
 
@@ -132,4 +134,5 @@ def log_message(message: str):
             console.print(
                 f"Failed to write to log file: {e}",
                 style=f"{error_color} on {default_background_color}",
+                markup=False
             )

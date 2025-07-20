@@ -2,6 +2,7 @@ import os
 import shutil
 import pathlib
 import subprocess
+import platform
 
 import requests
 
@@ -34,33 +35,30 @@ def download_and_install_latest_version(repository="trumank/retoc", install_path
         response.raise_for_status()
         release_data = response.json()
 
+        # Always use the PowerShell installer
+        script_name = "retoc-installer.ps1"
+        script_path = os.path.join(os.environ.get("TEMP", "/tmp"), script_name)
+
         asset = next(
-            (
-                asset
-                for asset in release_data["assets"]
-                if asset["name"] == "retoc-installer.ps1"
-            ),
+            (asset for asset in release_data["assets"] if asset["name"] == script_name),
             None,
         )
 
         if asset is None:
-            installer_not_found_error = (
-                'Asset "retoc-installer.ps1" not found in the latest release.'
-            )
-            raise RuntimeError(installer_not_found_error)
+            raise RuntimeError(f'Asset "{script_name}" not found in the latest release.')
 
         asset_url = asset["browser_download_url"]
-        script_path = os.path.join(os.environ["TEMP"], "retoc-installer.ps1")
         script_response = requests.get(asset_url)
         script_response.raise_for_status()
 
         with open(script_path, "wb") as file:
             file.write(script_response.content)
 
-        powershell_exe = shutil.which("powershell")
+        # Determine PowerShell executable
+        powershell_exe = shutil.which("powershell") or shutil.which("pwsh")
         if not powershell_exe:
-            powershell_not_found_error = "Was unable to find powershell"
-            raise FileNotFoundError(powershell_not_found_error)
+            raise FileNotFoundError("PowerShell executable not found (tried 'powershell' and 'pwsh').")
+
         subprocess.run(
             [
                 powershell_exe,
@@ -72,12 +70,14 @@ def download_and_install_latest_version(repository="trumank/retoc", install_path
             check=True,
         )
 
-        logger.log_message("Retoc installed successfully.")
+        logger.log_message("Retoc CLI installed successfully.")
 
     except requests.RequestException as e:
         logger.log_message(f"Error fetching release information: {e}")
     except subprocess.CalledProcessError as e:
         logger.log_message(f"Error executing the installer script: {e}")
+    except Exception as e:
+        logger.log_message(f"Unexpected error: {e}")
 
 
 def ensure_retoc_installed():
@@ -211,3 +211,11 @@ def install_retoc_mod(*, mod_name: str, compression_type: data_structures.Compre
         exist_ok=True,
     )
     make_iostore_unreal_pak_mod(mod_name, final_pak_file, use_symlinks=use_symlinks)
+
+
+# make a reusable platform function
+# get the latest tag
+# get the platform
+# get the cache dir
+# if alreayd installed check the install is still valid and if so use that, otherwise download a new one into the cahce
+# 
