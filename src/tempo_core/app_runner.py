@@ -39,6 +39,7 @@ def run_app(
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             text=True,
+            shell=True
         )
 
         if process.stdout:

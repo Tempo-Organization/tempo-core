@@ -6,6 +6,7 @@ import subprocess
 from dataclasses import dataclass
 from typing import Any
 import json
+import platform
 
 from tempo_core import (
     file_io,
@@ -47,14 +48,31 @@ def init_settings(settings_json_path: pathlib.Path):
     auto_close_game = settings["process_kill_events"]["auto_close_game"]
     is_process_running = process_management.is_process_running(process_name)
     if auto_close_game and is_process_running:
-        taskkill_path = shutil.which("taskkill")
+        current_os = platform.system()
 
-        if taskkill_path:
-            if not process_name == '':
-                subprocess.run([taskkill_path, "/F", "/IM", process_name], check=False)
+        if current_os == "Windows":
+            taskkill_path = shutil.which("taskkill")
+
+            if taskkill_path:
+                if process_name != '':
+                    subprocess.run([taskkill_path, "/F", "/IM", process_name], check=False)
+            else:
+                raise FileNotFoundError("taskkill.exe not found.")
+        
+        elif current_os == "Linux":
+            # Try to use `pkill` or `killall` if available
+            pkill_path = shutil.which("pkill")
+            killall_path = shutil.which("killall")
+
+            if process_name != '':
+                if pkill_path:
+                    subprocess.run([pkill_path, "-f", process_name], check=False)
+                elif killall_path:
+                    subprocess.run([killall_path, process_name], check=False)
+                else:
+                    raise FileNotFoundError("Neither pkill nor killall found.")
         else:
-            taskkill_exe_not_found_error = "taskkill.exe not found."
-            raise FileNotFoundError(taskkill_exe_not_found_error)
+            raise NotImplementedError(f"Unsupported OS: {current_os}")
     settings_information.init_settings_done = True
     settings_information.settings_json = str(settings_json_path)
     settings_information.settings_json_dir = os.path.dirname(

@@ -88,8 +88,9 @@ def get_is_mod_installed(mod_name: str) -> bool:
 
 
 def get_engine_pak_command() -> str:
+    test_path = os.path.normpath(f'{settings.get_unreal_engine_dir()}/Engine/Build/BatchFiles/RunUAT.{file_io.get_platform_wrapper_extension()}')
     command = (
-        f'"Engine\\Build\\BatchFiles\\RunUAT.{file_io.get_platform_wrapper_extension()}" {settings.get_unreal_engine_packaging_main_command()} '
+        f'"{test_path}" {settings.get_unreal_engine_packaging_main_command()} '
         f'-project="{settings.get_uproject_file()}"'
     )
     if not unreal_engine.has_build_target_been_built(settings.get_uproject_file()):
