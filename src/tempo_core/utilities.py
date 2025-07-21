@@ -12,9 +12,10 @@ def custom_get_game_dir():
 
 def custom_get_game_paks_dir() -> str:
     alt_game_dir = os.path.dirname(custom_get_game_dir())
-    if settings.get_is_using_alt_dir_name():
+    potential_alt_dir_name = settings.get_alt_packing_dir_name()
+    if potential_alt_dir_name:
         return os.path.join(
-            alt_game_dir, settings.get_alt_packing_dir_name(), "Content", "Paks"
+            alt_game_dir, alt_game_dir, "Content", "Paks"
         )
     return unreal_engine.get_game_paks_dir(
         settings.get_uproject_file(), custom_get_game_dir()
@@ -121,6 +122,8 @@ def filter_file_paths(paths_dict: dict) -> dict:
 
 
 def get_game_window_title() -> str:
-    if settings.get_override_automatic_window_title_finding():
-        return settings.get_window_title_override()
-    return unreal_engine.get_game_process_name(settings.get_game_exe_path())
+    potential_window_title_override = settings.get_window_title_override()
+    if potential_window_title_override:
+        return potential_window_title_override
+    else:
+        return unreal_engine.get_game_process_name(settings.get_game_exe_path())

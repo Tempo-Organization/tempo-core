@@ -161,14 +161,22 @@ def handle_install_logic(packing_type: PackingType, *, use_symlinks: bool):
             and mod_info["mod_name"] in settings.settings_information.mod_names
             and get_enum_from_val(PackingType, mod_info["packing_type"]) == packing_type
         ):
-            install_mod(
-                packing_type=packing_type,
-                mod_name=mod_info["mod_name"],
-                compression_type=CompressionType(
-                    get_enum_from_val(CompressionType, mod_info["compression_type"])
-                ),
-                use_symlinks=use_symlinks,
-            )
+            if packing_type == PackingType.RETOC:
+                install_mod(
+                    packing_type=packing_type,
+                    mod_name=mod_info["mod_name"],
+                    compression_type=None,
+                    use_symlinks=use_symlinks,
+                )
+            else:
+                install_mod(
+                    packing_type=packing_type,
+                    mod_name=mod_info["mod_name"],
+                    compression_type=CompressionType(
+                        get_enum_from_val(CompressionType, mod_info["compression_type"])
+                    ),
+                    use_symlinks=use_symlinks,
+                )
 
 
 @hook_states.hook_state_decorator(
@@ -350,9 +358,6 @@ def make_pak_repak(*, mod_name: str, use_symlinks: bool):
     os.makedirs(pak_dir, exist_ok=True)
     os.chdir(pak_dir)
 
-    compression_type_str = utilities.get_mods_info_dict_from_mod_name(mod_name)[
-        "compression_type"
-    ]
     before_symlinked_dir = f"{settings.get_working_dir()}/{mod_name}"
 
     if not os.path.isdir(before_symlinked_dir) or not os.listdir(before_symlinked_dir):
@@ -369,15 +374,13 @@ def make_pak_repak(*, mod_name: str, use_symlinks: bool):
     intermediate_pak_file = f"{intermediate_pak_dir}/{mod_name}.pak"
 
     final_pak_location = f"{pak_dir}/{mod_name}.pak"
-
-    command = f'"{repak.get_repak_package_path()}" pack "{before_symlinked_dir}" "{intermediate_pak_file}"'
-    if compression_type_str != "None":
-        command = f"{command} --compression {compression_type_str} --version {repak.get_repak_pak_version_str()}"
     if os.path.islink(final_pak_location):
         os.unlink(final_pak_location)
     if os.path.isfile(final_pak_location):
         os.remove(final_pak_location)
-    app_runner.run_app(command)
+
+    repak.run_repak_pack_command(before_symlinked_dir, intermediate_pak_file)
+
     install_mod_sig(mod_name, use_symlinks=use_symlinks)
     if use_symlinks:
         os.symlink(intermediate_pak_file, final_pak_location)
@@ -424,7 +427,7 @@ def install_mod(
     *,
     packing_type: PackingType,
     mod_name: str,
-    compression_type: CompressionType,
+    compression_type: CompressionType | None,
     use_symlinks: bool,
 ):
     if packing_type == PackingType.LOOSE:
@@ -439,7 +442,7 @@ def install_mod(
         )
     elif packing_type == PackingType.RETOC:
         retoc.install_retoc_mod(
-            mod_name=mod_name, compression_type=compression_type, use_symlinks=use_symlinks
+            mod_name=mod_name, use_symlinks=use_symlinks
         )
     else:
         logger.log_message(
@@ -706,8 +709,9 @@ def get_mod_file_paths_for_manually_made_pak_mods_mod_name_dir_paths(
     for file in file_io.get_files_in_tree(cooked_game_name_mod_dir):
         relative_file_path = os.path.relpath(file, cooked_game_name_mod_dir)
         before_path = f"{cooked_game_name_mod_dir}/{relative_file_path}"
-        if settings.get_is_using_alt_dir_name():
-            dir_name = settings.get_alt_packing_dir_name()
+        potential_alt_dir_name = settings.get_alt_packing_dir_name()
+        if potential_alt_dir_name:
+            dir_name = potential_alt_dir_name
         else:
             dir_name = unreal_engine.get_uproject_name(settings.get_uproject_file())
         after_path = f"{settings.get_working_dir()}/{mod_name}/{dir_name}/Content/{utilities.get_unreal_mod_tree_type_str(mod_name)}/{utilities.get_mod_name_dir_name(mod_name)}/{relative_file_path}"

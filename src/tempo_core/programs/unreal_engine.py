@@ -1,22 +1,23 @@
 import json
 import os
 
-from tempo_core import file_io, process_management
-from tempo_core.data_structures import PackagingDirType
+from tempo_core import file_io, process_management, settings
+from tempo_core.data_structures import PackagingDirType, UnrealEngineVersion
 
 
 def get_game_process_name(input_game_exe_path: str) -> str:
     return process_management.get_process_name(input_game_exe_path)
 
 
-def get_unreal_engine_version(engine_path: str) -> str:
+def get_unreal_engine_version_from_build_version_file(engine_path: str) -> UnrealEngineVersion:
     version_file_path = f"{engine_path}/Engine/Build/Build.version"
     file_io.check_path_exists(version_file_path)
     with open(version_file_path) as f:
         version_info = json.load(f)
-        unreal_engine_major_version = version_info.get("MajorVersion", 0)
-        unreal_engine_minor_version = version_info.get("MinorVersion", 0)
-        return f"{unreal_engine_major_version}.{unreal_engine_minor_version}"
+        return UnrealEngineVersion( 
+            major_version=version_info["MajorVersion"],
+            minor_version=version_info["MinorVersion"]
+        )
 
 
 def get_game_paks_dir(uproject_file_path: str, game_dir: str) -> str:
@@ -24,7 +25,7 @@ def get_game_paks_dir(uproject_file_path: str, game_dir: str) -> str:
         os.path.dirname(game_dir),
         get_uproject_name(uproject_file_path),
         "Content",
-        "Paks",
+        "Paks"
     )
 
 
@@ -74,11 +75,11 @@ def get_editor_cmd_path(unreal_engine_dir: str) -> str:
 
 
 def is_game_ue5(unreal_engine_dir: str) -> bool:
-    return get_unreal_engine_version(unreal_engine_dir).startswith("5")
+    return settings.get_unreal_engine_version(unreal_engine_dir).major_version == 5
 
 
 def is_game_ue4(unreal_engine_dir: str) -> bool:
-    return get_unreal_engine_version(unreal_engine_dir).startswith("4")
+    return settings.get_unreal_engine_version(unreal_engine_dir).major_version == 4
 
 
 def get_unreal_editor_exe_path(unreal_engine_dir: str) -> str:
