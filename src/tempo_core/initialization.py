@@ -8,6 +8,7 @@ from tempo_core import (
     main_logic,
     settings,
     wrapper,
+    cache
 )
 from tempo_core.programs import repak, unreal_engine, retoc
 
@@ -39,8 +40,9 @@ def unreal_engine_check():
 
 
 def game_launcher_exe_override_check():
-    if settings.get_override_automatic_launcher_exe_finding():
-        file_io.check_file_exists(settings.get_game_launcher_exe_path())
+    potential_game_launcher_path = settings.get_game_launcher_exe_path()
+    if potential_game_launcher_path:
+        file_io.check_file_exists(potential_game_launcher_path)
 
 
 def git_info_check():
@@ -84,21 +86,22 @@ def initialization():
         unreal_engine_check()
         game_launcher_exe_override_check()
         # git_info_check()
-        repak.ensure_repak_installed()
-        retoc.ensure_retoc_installed()
+        # repak.ensure_repak_installed()
+        # retoc.ensure_retoc_installed()
         # game_exe_check()
 
-        if repak.get_is_using_repak_path_override():
-            file_io.check_file_exists(repak.get_repak_path_override())
-            logger.log_message("Check: Repak exists")
+        # if repak.get_is_using_repak_path_override():
+        #     file_io.check_file_exists(repak.get_repak_path_override())
+        #     logger.log_message("Check: Repak exists")
 
-        if retoc.get_is_using_retoc_path_override():
-            file_io.check_file_exists(retoc.get_retoc_path_override())
-            logger.log_message("Check: Retoc exists")
+        # if retoc.get_is_using_retoc_path_override():
+        #     file_io.check_file_exists(retoc.get_retoc_path_override())
+        #     logger.log_message("Check: Retoc exists")
 
         logger.log_message("Check: Game exists")
 
         logger.log_message("Check: Passed all init checks")
+    cache.init_cache()
 
 
 def check_generate_wrapper():

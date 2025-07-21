@@ -1,4 +1,5 @@
 import os
+import sys
 import shutil
 import pathlib
 import subprocess
@@ -6,113 +7,88 @@ import platform
 
 import requests
 
-from tempo_core import logger, settings, data_structures, utilities
+from tempo_core import logger, settings, data_structures, utilities, cache
 from tempo_core.programs import unreal_pak, unreal_engine
 
 
-def get_is_using_retoc_path_override() -> bool:
-    return settings.settings_information.settings.get("retoc_info", {}).get("override_default_retoc_path", False)
+def get_current_retoc_release_tag() -> str:
+
+    default_value = "latest"
+    config_value = None
+
+    if settings.settings_information.settings:
+        config_value = settings.settings_information.settings.get('retoc_info', {}).get('retoc_release_tag')
+
+    env_value = os.environ.get('TEMPO_RETOC_RELEASE_TAG')
+
+    cli_value = None
+    if '--retoc-release-tag' in sys.argv:
+        idx = sys.argv.index('--retoc-release-tag')
+        if idx + 1 < len(sys.argv):
+            cli_value = sys.argv[idx + 1]
+        else:
+            raise RuntimeError('You passed --retoc-release-tag without a tag after it.')
+
+    prioritized_value = cli_value or env_value or config_value or default_value
+
+    if prioritized_value == "latest":
+        try:
+            response = requests.get("https://api.github.com/repos/trumank/retoc/releases/latest", timeout=5)
+            response.raise_for_status()
+            return response.json().get("tag_name", "latest")
+        except Exception as e:
+            print(f"[Warning] Failed to fetch latest Retoc release tag from GitHub: {e}")
+            return "latest"
+
+    return prioritized_value
 
 
-def get_retoc_path_override() -> str:
-    return settings.settings_information.settings["retoc_info"]["retoc_path_override"]
+def get_tool_install_dir(tool_name: str) -> str:
+    if settings.is_windows():
+        platform_name = 'windows'
+    elif settings.is_linux():
+        platform_name = 'linux'
+    else:
+        raise RuntimeError('You are on an unsupported os')
+    return os.path.normpath(os.path.join(
+        cache.get_cache_dir(), "tools", tool_name, platform_name, get_current_retoc_release_tag()
+    ))
+
+
+def get_executable_name() -> str:
+    if settings.is_windows():
+        return 'retoc.exe'
+    elif settings.is_linux():
+        return 'retoc'
+    else:
+        raise ValueError('unsupported os')
+
+
+def get_retoc_directory() -> str:
+    
+    default_value = get_tool_install_dir('retoc')
+
+    config_value = None
+    if settings.settings_information.settings:
+        config_value = settings.settings_information.settings.get('retoc_info', {}).get('retoc_dir', None)
+
+    env_value = os.environ.get('TEMPO_RETOC_DIR')
+
+    cli_value = None
+    if '--retoc-dir' in sys.argv:
+        idx = sys.argv.index('--retoc-dir')
+        if idx + 1 < len(sys.argv):
+            cli_value = sys.argv[idx + 1]
+        else:
+            raise RuntimeError('you passed --retoc-dir without a tag after')
+    
+    prioritized_value = cli_value or env_value or config_value or default_value
+
+    return prioritized_value
 
 
 def get_retoc_package_path():
-    if get_is_using_retoc_path_override():
-        return get_retoc_path_override()
-    return os.path.join(os.path.expanduser("~"), ".cargo", "bin", "retoc.exe")
-
-
-def download_and_install_latest_version(repository="trumank/retoc", install_path=None):
-    if install_path is None:
-        install_path = os.path.join(os.path.expanduser("~"), ".cargo", "bin")
-
-    api_url = f"https://api.github.com/repos/{repository}/releases/latest"
-
-    try:
-        response = requests.get(api_url)
-        response.raise_for_status()
-        release_data = response.json()
-
-        # Always use the PowerShell installer
-        script_name = "retoc-installer.ps1"
-        script_path = os.path.join(os.environ.get("TEMP", "/tmp"), script_name)
-
-        asset = next(
-            (asset for asset in release_data["assets"] if asset["name"] == script_name),
-            None,
-        )
-
-        if asset is None:
-            raise RuntimeError(f'Asset "{script_name}" not found in the latest release.')
-
-        asset_url = asset["browser_download_url"]
-        script_response = requests.get(asset_url)
-        script_response.raise_for_status()
-
-        with open(script_path, "wb") as file:
-            file.write(script_response.content)
-
-        # Determine PowerShell executable
-        powershell_exe = shutil.which("powershell") or shutil.which("pwsh")
-        if not powershell_exe:
-            raise FileNotFoundError("PowerShell executable not found (tried 'powershell' and 'pwsh').")
-
-        subprocess.run(
-            [
-                powershell_exe,
-                "-ExecutionPolicy",
-                "Bypass",
-                "-File",
-                script_path,
-            ],
-            check=True,
-        )
-
-        logger.log_message("Retoc CLI installed successfully.")
-
-    except requests.RequestException as e:
-        logger.log_message(f"Error fetching release information: {e}")
-    except subprocess.CalledProcessError as e:
-        logger.log_message(f"Error executing the installer script: {e}")
-    except Exception as e:
-        logger.log_message(f"Unexpected error: {e}")
-
-
-def ensure_retoc_installed():
-    retoc_path = get_retoc_package_path()
-
-    if os.path.exists(retoc_path):
-        logger.log_message(
-            f"Retoc is already installed at {retoc_path}. Skipping installation."
-        )
-        return
-
-    logger.log_message("Retoc executable not found. Proceeding with installation...")
-
-    download_and_install_latest_version()
-
-
-# try to use the one from the dataclass when possible, this will bwe deprecated
-def get_retoc_version_str_from_engine_version(engine_version: str) -> str:
-    # takes in a string like 5.3 or 4.27 and returns a string like UE5_3 or UE4_27
-    parts = engine_version.strip().split(".")
-    return f'UE{parts[0]}_{parts[1]}' if len(parts) > 1 else f'UE{parts[0]}'
-
-
-
-def get_retoc_pak_version_str() -> str:
-    # the below code is because we either derive the version from the engine version
-    # if not using engine, it can't be derived from the engine, so we need to manually specify
-    if settings.get_is_overriding_automatic_version_finding():
-        retoc_version_str = settings.settings_information.settings["retoc_info"][
-            "retoc_version"
-        ]
-    else:
-        # have this use the data class later
-        retoc_version_str = get_retoc_version_str_from_engine_version(settings.custom_get_unreal_engine_version(settings.get_unreal_engine_dir()))
-    return retoc_version_str
+    return os.path.normpath(f'{get_retoc_directory()}/{get_executable_name()}')
 
 
 def run_retoc_to_zen_command(input_directory: pathlib.Path, output_utoc: pathlib.Path, unreal_version: data_structures.UnrealEngineVersion) -> list[pathlib.Path]:
@@ -146,7 +122,7 @@ def run_retoc_to_zen_command(input_directory: pathlib.Path, output_utoc: pathlib
     return file_paths
 
 
-def make_iostore_unreal_pak_mod(
+def make_retoc_mod(
     mod_name: str, final_pak_file: str, *, use_symlinks: bool
 ):
     from tempo_core import packing
@@ -181,41 +157,60 @@ def make_iostore_unreal_pak_mod(
                 os.makedirs(os.path.dirname(target_path), exist_ok=True)
                 shutil.move(source_path, target_path)
 
-    # try:
-    #     os.rmdir(original_mod_dir)
-    # except OSError:
-    #     pass
-
-    ue_version_str = settings.custom_get_unreal_engine_version(settings.get_unreal_engine_dir())
-    major_str, minor_str = ue_version_str.split(".")
-    unreal_version = data_structures.UnrealEngineVersion(major_version=int(major_str), minor_version=int(minor_str))
     if any(files for _, _, files in os.walk(ucas_mod_dir)):
         run_retoc_to_zen_command(
             input_directory=pathlib.Path(ucas_mod_dir),
             output_utoc=pathlib.Path(f'{os.path.splitext(final_pak_file)[0]}.utoc'),
-            unreal_version=unreal_version
+            unreal_version=settings.get_unreal_engine_version(settings.get_unreal_engine_dir())
         )
 
     packing.make_pak_repak(mod_name=mod_name, use_symlinks=use_symlinks)
 
 
-def install_retoc_mod(*, mod_name: str, compression_type: data_structures.CompressionType, use_symlinks: bool):
+def get_file_to_download() -> str:
+    if settings.is_windows():
+        return 'retoc_cli-x86_64-pc-windows-msvc.zip'
+    elif settings.is_linux():
+        return 'retoc-x86_64-unknown-linux-gnu.tar.xz'
+    else:
+        raise ValueError('unsupported os')
+
+
+def get_download_url() -> str:
+    base_url_prefix = f'https://github.com/trumank/retoc/releases/download/{get_current_retoc_release_tag()}/retoc-x86_64-'
+    if settings.is_windows():
+        return f'{base_url_prefix}pc-windows-msvc.zip'
+    elif settings.is_linux():
+        return f'{base_url_prefix}unknown-linux-gnu.tar.xz'
+    else:
+        raise ValueError('unsupported os')
+
+
+def install_tool_retoc():
+    cache.install_tool_to_cache(
+        tools = cache.TempoCache, 
+        tool_name = 'retoc', 
+        version_tag = get_current_retoc_release_tag(), 
+        file_paths = [], 
+        executable_path = get_executable_name(), 
+        file_to_download = get_file_to_download(), 
+        download_url = get_download_url()
+    )
+
+
+def install_retoc_mod(*, mod_name: str, use_symlinks: bool):
+    retoc_path = get_retoc_package_path()
+    if not os.path.isfile(retoc_path):
+        install_tool_retoc()
+        if not os.path.isfile(retoc_path):
+            no_repak_error_message = f'retoc was not found at the following location "{retoc_path}"'
+            raise FileNotFoundError(no_repak_error_message)
     unreal_pak.move_files_for_packing(mod_name)
-    compression_str = data_structures.CompressionType(compression_type).value
     output_pak_dir = f"{settings.get_working_dir()}/{utilities.get_pak_dir_structure(mod_name)}"
-    intermediate_pak_file = f"{settings.get_working_dir()}/{utilities.get_pak_dir_structure(mod_name)}/{mod_name}.pak"
     final_pak_file = f"{utilities.custom_get_game_paks_dir()}/{utilities.get_pak_dir_structure(mod_name)}/{mod_name}.pak"
     os.makedirs(output_pak_dir, exist_ok=True)
     os.makedirs(
         f"{utilities.custom_get_game_paks_dir()}/{utilities.get_pak_dir_structure(mod_name)}",
         exist_ok=True,
     )
-    make_iostore_unreal_pak_mod(mod_name, final_pak_file, use_symlinks=use_symlinks)
-
-
-# make a reusable platform function
-# get the latest tag
-# get the platform
-# get the cache dir
-# if alreayd installed check the install is still valid and if so use that, otherwise download a new one into the cahce
-# 
+    make_retoc_mod(mod_name, final_pak_file, use_symlinks=use_symlinks)

@@ -12,6 +12,7 @@ from tempo_core import (
     file_io,
     logger,
     process_management,
+    data_structures
 )
 from tempo_core.programs import unreal_engine
 
@@ -132,20 +133,16 @@ def is_loose_packing_enum_in_use() -> bool:
     return is_in_use
 
 
-def get_game_exe_path() -> str:
-    return settings_information.settings.get("game_info", {}).get("game_exe_path", '')
+def get_game_exe_path() -> str | None:
+    return settings_information.settings.get("game_info", {}).get("game_exe_path", None)
 
 
 def get_git_info_repo_path() -> str:
     return settings_information.settings["git_info"]["repo_path"]
 
 
-def get_game_launcher_exe_path() -> str:
-    return settings_information.settings["game_info"]["game_launcher_exe"]
-
-
-def get_override_automatic_launcher_exe_finding() -> bool:
-    return settings_information.settings.get("game_info", {}).get("override_automatic_launcher_exe_finding", False)
+def get_game_launcher_exe_path() -> str | None:
+    return settings_information.settings.get('game_info', {}).get('game_launcher_exe', None)
 
 
 def get_uproject_file() -> str:
@@ -168,20 +165,8 @@ def get_cleanup_repo_path() -> str:
     return settings_information.settings["git_info"]["repo_path"]
 
 
-def get_window_title() -> str:
-    return settings_information.settings["general_info"]["window_title"]
-
-
-def get_window_title_override() -> str:
-    return settings_information.settings["game_info"]["window_title_override"]
-
-
-def get_override_automatic_window_title_finding() -> bool:
-    return settings_information.settings.get("game_info", {}).get("override_automatic_window_title_finding", False)
-
-
-def get_is_overriding_automatic_version_finding() -> bool:
-    return settings_information.settings.get("repak_info", {}).get("override_automatic_version_finding", False)
+def get_window_title_override() -> str | None:
+    return settings_information.settings.get('game_info', {}).get('window_title_override', None)
 
 
 def get_engine_building_args() -> list:
@@ -223,14 +208,6 @@ def get_window_management_events() -> dict:
     return settings_information.settings.get("window_management_events", [])
 
 
-def get_override_working_dir() -> str:
-    return settings_information.settings["general_info"]["working_dir"]
-
-
-def get_is_overriding_default_working_dir() -> bool:
-    return settings_information.settings.get("general_info", {}).get("override_default_working_dir", False)
-
-
 def get_persistent_mod_dir(mod_name: str) -> str:
     return os.path.normpath(f"{settings_information.settings_json_dir}/mod_packaging/persistent_files/{mod_name}")
 
@@ -239,16 +216,8 @@ def get_persistent_mods_dir() -> str:
     return os.path.normpath(f"{settings_information.settings_json_dir}/mod_packaging/persistent_files")
 
 
-def get_override_automatic_version_finding() -> bool:
-    return settings_information.settings.get("engine_info", {}).get("override_automatic_version_finding", False)
-
-
-def get_alt_packing_dir_name() -> str:
-    return settings_information.settings["packaging_uproject_name"]["name"]
-
-
-def get_is_using_alt_dir_name() -> bool:
-    return settings_information.settings.get("packaging_uproject_name", {}).get("use_override", False)
+def get_alt_packing_dir_name() -> str | None:
+    return settings_information.settings.get('packaging_uproject_name', {}).get('name', None)
 
 
 def get_mods_info_list_from_json() -> list:
@@ -283,26 +252,33 @@ def get_engine_launch_args() -> list:
     return settings_information.settings.get("engine_info", {}).get("engine_launch_args", [])
 
 
-def custom_get_unreal_engine_version(engine_path: str) -> str:
-    if get_override_automatic_version_finding():
-        unreal_engine_major_version = settings_information.settings["engine_info"][
-            "unreal_engine_major_version"
-        ]
-        unreal_engine_minor_version = settings_information.settings["engine_info"][
-            "unreal_engine_minor_version"
-        ]
-        return f"{unreal_engine_major_version}.{unreal_engine_minor_version}"
-    return unreal_engine.get_unreal_engine_version(engine_path)
+def get_unreal_engine_version(engine_path: str) -> data_structures.UnrealEngineVersion:
+    potential_valid_minor_version = settings_information.settings.get('engine_info', {}).get('unreal_engine_minor_version', None)
+    potential_valid_major_version = settings_information.settings.get('engine_info', {}).get('unreal_engine_major_version', None)
+    if potential_valid_minor_version and potential_valid_major_version:
+        unreal_engine_version = data_structures.UnrealEngineVersion(
+            minor_version=int(potential_valid_minor_version), 
+            major_version=int(potential_valid_major_version )
+        )
+    else:
+        unreal_engine_version = unreal_engine.get_unreal_engine_version_from_build_version_file(engine_path)
+    # add other ways to grab this later, like patternsleuth through game scan
+    return unreal_engine_version
 
 
 def get_working_dir() -> str:
-    if get_is_overriding_default_working_dir():
-        working_dir = get_override_working_dir()
-    else:
-        working_dir = os.path.join(file_io.SCRIPT_DIR, "working_dir")
+    working_dir = os.path.join(file_io.SCRIPT_DIR, "working_dir")
     os.makedirs(working_dir, exist_ok=True)
     return working_dir
 
 
 def should_show_progress_bars() -> bool:
     return "--disable_progress_bars" not in sys.argv
+
+
+def is_windows():
+    return platform.system() == "Windows"
+
+
+def is_linux():
+    return platform.system() == "Linux"
