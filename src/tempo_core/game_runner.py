@@ -12,8 +12,9 @@ def run_game_exe():
 
 
 def run_game_steam():
-    if settings.get_override_automatic_launcher_exe_finding():
-        steam_exe = settings.get_game_launcher_exe_path()
+    potential_game_launcher_path = settings.get_game_launcher_exe_path()
+    if potential_game_launcher_path:
+        steam_exe = potential_game_launcher_path
     else:
         steam_exe = get_steam_exe_location()
     launch_params = []
