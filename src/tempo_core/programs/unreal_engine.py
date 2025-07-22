@@ -93,10 +93,16 @@ def get_unreal_editor_exe_path(unreal_engine_dir: str) -> str:
 
 
 def get_win_dir_str(unreal_engine_dir: str) -> str:
-    win_dir_type = "Windows"
-    if is_game_ue4(unreal_engine_dir):
-        win_dir_type = f"{win_dir_type}NoEditor"
-    return win_dir_type
+    if settings.is_windows():
+        win_dir_type = "Windows"
+        if is_game_ue4(unreal_engine_dir):
+            win_dir_type = f"{win_dir_type}NoEditor"
+        return win_dir_type
+    else:
+        win_dir_type = "Linux"
+        if is_game_ue4(unreal_engine_dir):
+            win_dir_type = f"{win_dir_type}NoEditor"
+        return win_dir_type
 
 
 def get_cooked_uproject_dir(uproject_file_path: str, unreal_engine_dir: str) -> str:
@@ -138,9 +144,14 @@ def has_build_target_been_built(uproject_file_path: str) -> bool:
 
 
 def get_unreal_pak_exe_path(unreal_engine_dir: str) -> str:
-    return os.path.join(
-        unreal_engine_dir, "Engine", "Binaries", "Win64", "UnrealPak.exe"
-    )
+    if settings.is_windows():
+            return os.path.join(
+                unreal_engine_dir, "Engine", "Binaries", "Win64", "UnrealPak.exe"
+            )
+    else:
+            return os.path.join(
+                unreal_engine_dir, "Engine", "Binaries", "Linux", "UnrealPak"
+            )
 
 
 def get_game_window_title(input_game_exe_path: str) -> str:
