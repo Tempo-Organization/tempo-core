@@ -260,6 +260,8 @@ def install_mod_sig(mod_name: str, *, use_symlinks: bool):
         ),
     )
     sig_location = os.path.normpath(f"{game_paks_dir}/{pak_dir_str}/{mod_name}.sig")
+    if os.path.isfile(sig_location):
+        os.remove(sig_location)
     os.makedirs(os.path.dirname(sig_location), exist_ok=True)
     if sig_method_type in data_structures.SigMethodType:
         if sig_method_type == data_structures.SigMethodType.COPY:
@@ -474,7 +476,10 @@ def package_project_iostore_ue4():
         settings.get_unreal_engine_dir()
     )
     archive_directory = f"{settings.get_working_dir()}/iostore_packaging/output"
-    target_platform = "Win64"
+    if settings.is_windows():
+        target_platform = "Win64"
+    else:
+        target_platform = "Linux"
     client_config = "Development"
     args = [
         f'-ScriptsForProject="{uproject_path}"',
@@ -512,7 +517,10 @@ def package_project_iostore_ue5():
         settings.get_unreal_engine_dir()
     )
     archive_directory = f"{settings.get_working_dir()}/iostore_packaging/output"
-    target_platform = "Win64"
+    if settings.is_windows():
+        target_platform = "Win64"
+    else:
+        target_platform = "Linux"
     client_config = "Development"
     args = [
         f'-ScriptsForProject="{uproject_path}"',

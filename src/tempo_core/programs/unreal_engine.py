@@ -67,11 +67,18 @@ def get_win_dir_type(unreal_engine_dir: str) -> PackagingDirType:
 
 
 def get_editor_cmd_path(unreal_engine_dir: str) -> str:
-    if get_win_dir_type(unreal_engine_dir) == PackagingDirType.WINDOWS_NO_EDITOR:
-        engine_path_suffix = "UE4Editor-Cmd.exe"
+    if settings.is_windows():
+        if get_win_dir_type(unreal_engine_dir) == PackagingDirType.WINDOWS_NO_EDITOR:
+            engine_path_suffix = "UE4Editor-Cmd.exe"
+        else:
+            engine_path_suffix = "UnrealEditor-Cmd.exe"
+        return f'"{unreal_engine_dir}/Engine/Binaries/Win64/{engine_path_suffix}"'
     else:
-        engine_path_suffix = "UnrealEditor-Cmd.exe"
-    return f'"{unreal_engine_dir}/Engine/Binaries/Win64/{engine_path_suffix}"'
+        if get_win_dir_type(unreal_engine_dir) == PackagingDirType.WINDOWS_NO_EDITOR:
+            engine_path_suffix = "UE4Editor-Cmd"
+        else:
+            engine_path_suffix = "UnrealEditor-Cmd"
+        return f'"{unreal_engine_dir}/Engine/Binaries/Linux/{engine_path_suffix}"'
 
 
 def is_game_ue5(unreal_engine_dir: str) -> bool:
@@ -83,13 +90,22 @@ def is_game_ue4(unreal_engine_dir: str) -> bool:
 
 
 def get_unreal_editor_exe_path(unreal_engine_dir: str) -> str:
-    if get_win_dir_type(unreal_engine_dir) == PackagingDirType.WINDOWS_NO_EDITOR:
-        engine_path_suffix = "UE4Editor.exe"
+    if settings.is_windows():
+        if get_win_dir_type(unreal_engine_dir) == PackagingDirType.WINDOWS_NO_EDITOR:
+            engine_path_suffix = "UE4Editor.exe"
+        else:
+            engine_path_suffix = "UnrealEditor.exe"
+        return os.path.join(
+            unreal_engine_dir, "Engine", "Binaries", "Win64", engine_path_suffix
+        )
     else:
-        engine_path_suffix = "UnrealEditor.exe"
-    return os.path.join(
-        unreal_engine_dir, "Engine", "Binaries", "Win64", engine_path_suffix
-    )
+        if get_win_dir_type(unreal_engine_dir) == PackagingDirType.WINDOWS_NO_EDITOR:
+            engine_path_suffix = "UE4Editor"
+        else:
+            engine_path_suffix = "UnrealEditor"
+        return os.path.join(
+            unreal_engine_dir, "Engine", "Binaries", "Linux", engine_path_suffix
+        )
 
 
 def get_win_dir_str(unreal_engine_dir: str) -> str:
@@ -136,7 +152,11 @@ def get_engine_process_name(unreal_dir: str) -> str:
 def get_build_target_file_path(uproject_file_path: str) -> str:
     uproject_dir = get_uproject_dir(uproject_file_path)
     uproject_name = get_uproject_name(uproject_file_path)
-    return os.path.join(uproject_dir, "Binaries", "Win64", f"{uproject_name}.target")
+    if settings.is_windows():
+        target_platform = "Win64"
+    else:
+        target_platform = "Linux"
+    return os.path.join(uproject_dir, "Binaries", target_platform, f"{uproject_name}.target")
 
 
 def has_build_target_been_built(uproject_file_path: str) -> bool:
