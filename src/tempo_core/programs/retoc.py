@@ -163,8 +163,11 @@ def make_retoc_mod(
             output_utoc=pathlib.Path(f'{os.path.splitext(final_pak_file)[0]}.utoc'),
             unreal_version=settings.get_unreal_engine_version(settings.get_unreal_engine_dir())
         )
+    
+    if any(files for _, _, files in os.walk(original_mod_dir)):
+        packing.make_pak_repak(mod_name=mod_name, use_symlinks=use_symlinks)
 
-    packing.make_pak_repak(mod_name=mod_name, use_symlinks=use_symlinks)
+    packing.install_mod_sig(mod_name=mod_name, use_symlinks=use_symlinks)
 
 
 def get_file_to_download() -> str:
