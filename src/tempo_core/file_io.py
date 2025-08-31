@@ -67,11 +67,20 @@ def open_website(input_url: str):
     webbrowser.open(input_url)
 
 
-def check_directory_exists(dir_path: str) -> bool:
+def verify_directory_exists(dir_path: str) -> bool:
     if os.path.isdir(dir_path):
         return True
     directory_not_found_error = f'Check: "{dir_path}" directory not found.'
     raise NotADirectoryError(directory_not_found_error)
+
+
+def verify_directories_exists(directory_paths: list[str]):
+    for directory_path in directory_paths:
+        if not os.path.isdir(directory_path):
+            directory_not_found_error = (
+                f'Check: "{directory_path}" directory not found.'
+            )
+            raise NotADirectoryError(directory_not_found_error)
 
 
 def check_path_exists(path: str) -> bool:
@@ -81,11 +90,19 @@ def check_path_exists(path: str) -> bool:
     raise FileNotFoundError(path_not_found_error)
 
 
-def check_file_exists(file_path: str) -> bool:
+def verify_file_exists(file_path: str) -> bool:
     if os.path.isfile(file_path):
         return True
     file_not_found_error = f'Check: "{file_path}" file not found.'
     raise FileNotFoundError(file_not_found_error)
+
+
+def verify_files_exists(file_paths: list[str]):
+    for file_path in file_paths:
+        path_to_check = os.path.normpath(file_path)
+        if not os.path.isfile(path_to_check):
+            file_not_found_error = f'Check: "{path_to_check}" file not found.'
+            raise FileNotFoundError(file_not_found_error)
 
 
 def get_file_hash(file_path: str) -> str:
@@ -111,21 +128,8 @@ def get_file_extension(file_path: str) -> str:
     return file_extension
 
 
-# returns .extension not extension
-def get_file_extensions(file_path: str) -> list:
-    directory = os.path.dirname(file_path)
-    base_name = os.path.splitext(os.path.basename(file_path))[0]
-    extensions = {
-        os.path.splitext(file)[1]
-        for _, _, files in os.walk(directory)
-        for file in files
-        if os.path.splitext(file)[0] == base_name and os.path.splitext(file)[1]
-    }
-    return sorted(extensions)
-
-
-# returns extension, not .extension
-def get_file_extensions_two(directory_with_base_name: str) -> list:
+# returns extension, not .extension (e.g. txt not .txt)
+def get_file_extensions(directory_with_base_name: str) -> list:
     directory, base_name = os.path.split(directory_with_base_name)
     extensions = set()
     for _, _, files in os.walk(directory):

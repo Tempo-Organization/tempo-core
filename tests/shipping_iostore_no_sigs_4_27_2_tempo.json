@@ -1,0 +1,63 @@
+{
+  "engine_info": {
+    "unreal_engine_dir": "C:/Program Files/Epic Games/UE_4.27",
+    "unreal_project_file": "Z:/GitHub/tempo-core/src/tempo_core/temp/tests/shipping_iostore_no_sigs_4_27_2/unreal_project/TempoTesting.uproject"
+  },
+  "game_info": {
+    "game_exe_path": "Z:/GitHub/tempo-core/src/tempo_core/temp/tests/shipping_iostore_no_sigs_4_27_2/packaged_game/TempoTesting/Binaries/Win64/TempoTesting-Win64-Shipping.exe",
+    "is_iostore": true,
+    "launch_params": [
+      "nullrhi"
+    ],
+    "launch_type": "exe",
+    "window_title_override": "TempoTesting"
+  },
+  "mods_info": [
+    {
+      "compression_type": "Zlib",
+      "is_enabled": true,
+      "mod_name": "UnrealPakMadeExampleMod",
+      "mod_name_dir_type": "Mods",
+      "packing_type": "unreal_pak",
+      "pak_dir_structure": "LogicMods"
+    },
+    {
+      "is_enabled": true,
+      "mod_name": "RepakMadeExampleMod",
+      "mod_name_dir_type": "Mods",
+      "packing_type": "repak",
+      "pak_dir_structure": "LogicMods"
+    },
+    {
+      "compression_type": "Zlib",
+      "is_enabled": true,
+      "mod_name": "MaterialTest",
+      "packing_type": "engine",
+      "pak_chunk_num": 2,
+      "pak_dir_structure": "LogicMods"
+    },
+    {
+      "is_enabled": true,
+      "mod_name": "LooseExampleMod",
+      "mod_name_dir_type": "Mods",
+      "packing_type": "loose",
+      "pak_dir_structure": "LogicMods"
+    },
+    {
+      "compression_type": "Zlib",
+      "is_enabled": true,
+      "mod_name": "EngineMadeExampleMod",
+      "packing_type": "engine",
+      "pak_chunk_num": 1,
+      "pak_dir_structure": "LogicMods"
+    },
+    {
+      "compression_type": "Zlib",
+      "is_enabled": true,
+      "mod_name": "RetocMadeExampleMod",
+      "mod_name_dir_type": "Mods",
+      "packing_type": "retoc",
+      "pak_dir_structure": "LogicMods"
+    }
+  ]
+}

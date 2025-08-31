@@ -1,7 +1,7 @@
 import json
 import os
 
-from tempo_core import file_io, process_management, settings
+from tempo_core import file_io, process_management, settings, data_structures
 from tempo_core.data_structures import PackagingDirType, UnrealEngineVersion
 
 
@@ -9,14 +9,16 @@ def get_game_process_name(input_game_exe_path: str) -> str:
     return process_management.get_process_name(input_game_exe_path)
 
 
-def get_unreal_engine_version_from_build_version_file(engine_path: str) -> UnrealEngineVersion:
+def get_unreal_engine_version_from_build_version_file(
+    engine_path: str,
+) -> UnrealEngineVersion:
     version_file_path = f"{engine_path}/Engine/Build/Build.version"
     file_io.check_path_exists(version_file_path)
     with open(version_file_path) as f:
         version_info = json.load(f)
-        return UnrealEngineVersion( 
+        return UnrealEngineVersion(
             major_version=version_info["MajorVersion"],
-            minor_version=version_info["MinorVersion"]
+            minor_version=version_info["MinorVersion"],
         )
 
 
@@ -25,12 +27,15 @@ def get_game_paks_dir(uproject_file_path: str, game_dir: str) -> str:
         os.path.dirname(game_dir),
         get_uproject_name(uproject_file_path),
         "Content",
-        "Paks"
+        "Paks",
     )
 
 
 def get_is_game_iostore(uproject_file_path: str, game_dir: str) -> bool:
-    extensions = [".ucas", ".utoc", "ucas", "utoc"]
+    first_check = settings.get_is_game_iostore_from_config()
+    if first_check:
+        return first_check
+    extensions = ["ucas", "utoc"]
     _game_dir = game_dir
     _uproject_file_path = uproject_file_path
     is_game_iostore = False
@@ -56,8 +61,8 @@ def get_game_content_dir(game_dir: str):
 
 def get_game_pak_folder_archives(uproject_file_path: str, game_dir: str) -> list:
     if get_is_game_iostore(uproject_file_path, game_dir):
-        return ["pak", "utoc", "ucas"]
-    return ["pak"]
+        return data_structures.unreal_non_iostore_no_sigs_archive_extensions
+    return data_structures.unreal_non_iostore_no_sigs_archive_extensions
 
 
 def get_win_dir_type(unreal_engine_dir: str) -> PackagingDirType:
@@ -125,7 +130,10 @@ def get_cooked_uproject_dir(uproject_file_path: str, unreal_engine_dir: str) -> 
     uproject_dir = get_uproject_dir(uproject_file_path)
     win_dir_name = get_win_dir_str(unreal_engine_dir)
     uproject_name = get_uproject_name(uproject_file_path)
-    return os.path.join(uproject_dir, "Saved", "Cooked", win_dir_name, uproject_name)
+    cooked_dir = os.path.normpath(
+        f"{uproject_dir}/Saved/Cooked/{win_dir_name}/{uproject_name}"
+    )
+    return cooked_dir
 
 
 def get_uproject_name(uproject_file_path: str) -> str:
@@ -156,7 +164,9 @@ def get_build_target_file_path(uproject_file_path: str) -> str:
         target_platform = "Win64"
     else:
         target_platform = "Linux"
-    return os.path.join(uproject_dir, "Binaries", target_platform, f"{uproject_name}.target")
+    return os.path.join(
+        uproject_dir, "Binaries", target_platform, f"{uproject_name}.target"
+    )
 
 
 def has_build_target_been_built(uproject_file_path: str) -> bool:
@@ -165,13 +175,13 @@ def has_build_target_been_built(uproject_file_path: str) -> bool:
 
 def get_unreal_pak_exe_path(unreal_engine_dir: str) -> str:
     if settings.is_windows():
-            return os.path.join(
-                unreal_engine_dir, "Engine", "Binaries", "Win64", "UnrealPak.exe"
-            )
+        return os.path.join(
+            unreal_engine_dir, "Engine", "Binaries", "Win64", "UnrealPak.exe"
+        )
     else:
-            return os.path.join(
-                unreal_engine_dir, "Engine", "Binaries", "Linux", "UnrealPak"
-            )
+        return os.path.join(
+            unreal_engine_dir, "Engine", "Binaries", "Linux", "UnrealPak"
+        )
 
 
 def get_game_window_title(input_game_exe_path: str) -> str:

@@ -103,7 +103,7 @@ def full_run_all(
 ):
     if toggle_engine:
         engine.toggle_engine_off()
-    for entry in settings.settings_information.settings["mods_info"]:
+    for entry in settings.settings_information.settings.get("mods_info", {}):
         settings.settings_information.mod_names.append(entry["mod_name"])
     packing.cooking()
     generate_mods_all(use_symlinks=use_symlinks)
@@ -172,7 +172,10 @@ def run_game(*, toggle_engine: bool):
 
 
 def close_game():
-    process_management.kill_process(os.path.basename(settings.get_game_exe_path()))
+    game_exe_path = settings.get_game_exe_path()
+    if not game_exe_path:
+        raise FileNotFoundError("cannot find game exe")
+    process_management.kill_process(os.path.basename(game_exe_path))
 
 
 def run_engine():
@@ -214,7 +217,7 @@ def run_proj_build_command(command: str):
     executable = command_parts[0]
     args = command_parts[1:]
     app_runner.run_app(
-        exe_path=executable, args=args, working_dir=settings.get_unreal_engine_dir()
+        exe_path=executable, args=args, temp_dir=settings.get_unreal_engine_dir()
     )
 
 
@@ -526,7 +529,7 @@ def cleanup_full():
         exe_path=exe,
         exec_mode=data_structures.ExecutionMode.ASYNC,
         args=args,
-        working_dir=repo_path,
+        temp_dir=repo_path,
     )
     logger.log_message(f'Cleaned up repo at: "{repo_path}"')
 
@@ -535,10 +538,10 @@ def cleanup_full():
         shutil.rmtree(dist_dir)
     logger.log_message(f'Cleaned up dist dir at: "{dist_dir}"')
 
-    working_dir = settings.get_working_dir()
-    if os.path.isdir(working_dir):
-        shutil.rmtree(working_dir)
-    logger.log_message(f'Cleaned up working dir at: "{working_dir}"')
+    temp_dir = settings.get_temp_directory()
+    if os.path.isdir(temp_dir):
+        shutil.rmtree(temp_dir)
+    logger.log_message(f'Cleaned up temp dir at: "{temp_dir}"')
 
 
 def cleanup_cooked():
@@ -607,8 +610,6 @@ def generate_file_list(directory: str, file_list: str):
 def generate_mods(*, input_mod_names: list[str], use_symlinks: bool):
     for mod_name in input_mod_names:
         settings.settings_information.mod_names.append(mod_name)
-    for entry in settings.get_mods_info_list_from_json():
-        settings.settings_information.mod_names.append(entry["mod_name"])
     packing.generate_mods(use_symlinks=use_symlinks)
 
 
@@ -619,17 +620,27 @@ def generate_mods_all(*, use_symlinks: bool):
     packing.generate_mods(use_symlinks=use_symlinks)
 
 
+# doesn't account for when there are ucas/utoc to copy over
 def make_unreal_pak_mod_release(
     singular_mod_info: dict, base_files_directory: str, output_directory: str
 ):
+    # currently assumes mod was installed to game and not temporarily in the working dir, maybe?
     mod_name = singular_mod_info["mod_name"]
-    before_pak_file = f"{utilities.custom_get_game_paks_dir()}/{utilities.get_pak_dir_structure(mod_name)}/{mod_name}.pak"
-    final_pak_file = f"{base_files_directory}/{mod_name}/{utilities.get_pak_dir_structure(mod_name)}/{mod_name}.pak"
-    if os.path.isfile(final_pak_file):
-        os.remove(final_pak_file)
-    logger.log_message(os.path.dirname(final_pak_file))
-    os.makedirs(os.path.dirname(final_pak_file), exist_ok=True)
-    shutil.copyfile(before_pak_file, final_pak_file)
+    src_pak = os.path.normpath(
+        f"{utilities.custom_get_game_paks_dir()}/{utilities.get_pak_dir_structure(mod_name)}/{mod_name}.pak"
+    )
+    dest_pak_file = os.path.normpath(
+        f"{base_files_directory}/{mod_name}/{utilities.get_pak_dir_structure(mod_name)}/{mod_name}.pak"
+    )
+    if os.path.isfile(dest_pak_file):
+        os.remove(dest_pak_file)
+    logger.log_message(os.path.dirname(dest_pak_file))
+    os.makedirs(os.path.dirname(dest_pak_file), exist_ok=True)
+    if not os.path.isfile(src_pak):
+        # this creates it when it doesn't exist, sometimes there are no files to make a pak, but one is needed
+        open(src_pak, "w").close()
+    else:
+        shutil.copyfile(src_pak, dest_pak_file)
     file_io.zip_directory_tree(
         input_dir=f"{base_files_directory}/{mod_name}",
         output_dir=output_directory,
@@ -641,13 +652,13 @@ def make_repak_mod_release(
     singular_mod_info: dict, base_files_directory: str, output_directory: str
 ):
     mod_name = singular_mod_info["mod_name"]
-    before_pak_file = f"{utilities.custom_get_game_paks_dir()}/{utilities.get_pak_dir_structure(mod_name)}/{mod_name}.pak"
-    final_pak_file = f"{base_files_directory}/{mod_name}/{utilities.get_pak_dir_structure(mod_name)}/{mod_name}.pak"
-    if os.path.isfile(final_pak_file):
-        os.remove(final_pak_file)
-    logger.log_message(os.path.dirname(final_pak_file))
-    os.makedirs(os.path.dirname(final_pak_file), exist_ok=True)
-    shutil.copyfile(before_pak_file, final_pak_file)
+    src_pak = f"{settings.get_temp_directory()}/{utilities.get_pak_dir_structure(mod_name)}/{mod_name}.pak"
+    dest_pak = f"{base_files_directory}/{mod_name}/{utilities.get_pak_dir_structure(mod_name)}/{mod_name}.pak"
+    if os.path.isfile(dest_pak):
+        os.remove(dest_pak)
+    logger.log_message(os.path.dirname(dest_pak))
+    os.makedirs(os.path.dirname(dest_pak), exist_ok=True)
+    shutil.copyfile(src_pak, dest_pak)
     file_io.zip_directory_tree(
         input_dir=f"{base_files_directory}/{mod_name}",
         output_dir=output_directory,
@@ -674,12 +685,12 @@ def make_engine_mod_release(
         ):
             dir_engine_mod = f"{utilities.custom_get_game_dir()}/Content/Paks/{utilities.get_pak_dir_structure(mod_name)}"
             os.makedirs(dir_engine_mod, exist_ok=True)
-            before_file = f"{file}{suffix}"
-            after_file = f"{base_files_directory}/{mod_name}/{utilities.get_pak_dir_structure(mod_name)}/{mod_name}.{suffix}"
-            if os.path.isfile(after_file):
-                os.remove(after_file)
-            os.makedirs(os.path.dirname(after_file), exist_ok=True)
-            shutil.copyfile(before_file, after_file)
+            src_file = f"{file}{suffix}"
+            dest_file = f"{base_files_directory}/{mod_name}/{utilities.get_pak_dir_structure(mod_name)}/{mod_name}.{suffix}"
+            if os.path.isfile(dest_file):
+                os.remove(dest_file)
+            os.makedirs(os.path.dirname(dest_file), exist_ok=True)
+            shutil.copyfile(src_file, dest_file)
     file_io.zip_directory_tree(
         input_dir=f"{base_files_directory}/{mod_name}",
         output_dir=output_directory,
@@ -695,14 +706,14 @@ def get_mod_files_asset_paths_for_loose_mods(
         settings.get_uproject_file(), settings.get_unreal_engine_dir()
     )
     mod_info = packing.get_mod_pak_entry(mod_name)
-    for asset in mod_info["file_includes"]["asset_paths"]:
+    for asset in mod_info.get("file_includes", {}).get("asset_paths", []):
         base_path = f"{cooked_uproject_dir}/{asset}"
         for extension in file_io.get_file_extensions(base_path):
-            before_path = f"{base_path}{extension}"
-            after_path = (
-                f"{base_files_directory}/{mod_name}/mod_files/{asset}{extension}"
+            src_file = f"{base_path}.{extension}"
+            dest_file = (
+                f"{base_files_directory}/{mod_name}/mod_files/{asset}.{extension}"
             )
-            file_dict[before_path] = after_path
+            file_dict[src_file] = dest_file
     return file_dict
 
 
@@ -714,16 +725,16 @@ def get_mod_files_tree_paths_for_loose_mods(
         settings.get_uproject_file(), settings.get_unreal_engine_dir()
     )
     mod_info = packing.get_mod_pak_entry(mod_name)
-    for tree in mod_info["file_includes"]["tree_paths"]:
+    for tree in mod_info.get("file_includes", {}).get("tree_paths", []):
         tree_path = f"{cooked_uproject_dir}/{tree}"
         for entry in file_io.get_files_in_tree(tree_path):
             if os.path.isfile(entry):
                 base_entry = os.path.splitext(entry)[0]
-                for extension in file_io.get_file_extensions_two(entry):
-                    before_path = f"{base_entry}{extension}"
+                for extension in file_io.get_file_extensions(entry):
+                    src_path = f"{base_entry}.{extension}"
                     relative_path = os.path.relpath(base_entry, cooked_uproject_dir)
-                    after_path = f"{base_files_directory}/{mod_name}/mod_files/{relative_path}{extension}"
-                    file_dict[before_path] = after_path
+                    dest_path = f"{base_files_directory}/{mod_name}/mod_files/{relative_path}.{extension}"
+                    file_dict[src_path] = dest_path
     return file_dict
 
 
@@ -750,9 +761,9 @@ def get_mod_files_mod_name_dir_paths_for_loose_mods(
 
     for file in file_io.get_files_in_tree(cooked_game_name_mod_dir):
         relative_file_path = os.path.relpath(file, cooked_game_name_mod_dir)
-        before_path = os.path.abspath(file)
-        after_path = f"{base_files_directory}/{mod_name}/mod_files/{relative_file_path}"
-        file_dict[before_path] = after_path
+        src_path = os.path.abspath(file)
+        dest_path = f"{base_files_directory}/{mod_name}/mod_files/{relative_file_path}"
+        file_dict[src_path] = dest_path
     return file_dict
 
 
@@ -781,18 +792,52 @@ def make_loose_mod_release(
     mod_files = get_mod_paths_for_loose_mods(mod_name, base_files_directory)
     dict_keys = mod_files.keys()
     for key in dict_keys:
-        before_file = key
-        after_file = mod_files[key]
-        os.makedirs(os.path.dirname(after_file), exist_ok=True)
-        if os.path.exists(before_file):
-            if os.path.islink(after_file):
-                os.unlink(after_file)
-            if os.path.isfile(after_file):
-                os.remove(after_file)
-        if os.path.isfile(before_file):
-            shutil.copy(before_file, after_file)
+        src_file = key
+        dest_file = mod_files[key]
+        os.makedirs(os.path.dirname(dest_file), exist_ok=True)
+        if os.path.exists(src_file):
+            if os.path.islink(dest_file):
+                os.unlink(dest_file)
+            if os.path.isfile(dest_file):
+                os.remove(dest_file)
+        if os.path.isfile(src_file):
+            shutil.copy(src_file, dest_file)
     file_io.zip_directory_tree(
         input_dir=f"{base_files_directory}/{mod_name}",
+        output_dir=output_directory,
+        zip_name=f"{mod_name}.zip",
+    )
+
+    # this doesn't use the output_dir/mod_name/mod_files convention
+
+
+def make_retoc_mod_release(
+    singular_mod_info: dict, base_files_directory: str, output_directory: str
+):
+    temp_dir = settings.get_temp_directory()
+    mod_name = singular_mod_info["mod_name"]
+    pak_dir_structure = utilities.get_pak_dir_structure(mod_name)
+    input_dir = os.path.normpath(f"{base_files_directory}/{mod_name}")
+    base_src = os.path.normpath(f"{temp_dir}/{pak_dir_structure}/{mod_name}.")
+    base_dest_dir = os.path.normpath(
+        f"{temp_dir}/{mod_name}/mod_files/{pak_dir_structure}"
+    )
+    base_dest = os.path.normpath(f"{base_dest_dir}/{mod_name}.")
+    os.makedirs(base_dest_dir, exist_ok=True)
+    packing.install_mod_sig(mod_name=mod_name, use_symlinks=False)
+
+    extensions = data_structures.unreal_iostore_sigs_archive_extensions
+
+    for extension in extensions:
+        src_file = os.path.normpath(f"{base_src}{extension}")
+        dest_file = os.path.normpath(f"{base_dest}{extension}")
+        if os.path.isfile(dest_file):
+            os.remove(dest_file)
+        if os.path.isfile(src_file):
+            shutil.copy(src_file, dest_file)
+
+    file_io.zip_directory_tree(
+        input_dir=input_dir,
         output_dir=output_directory,
         zip_name=f"{mod_name}.zip",
     )
@@ -824,6 +869,13 @@ def generate_mod_release(
         make_loose_mod_release(
             singular_mod_info, base_files_directory, output_directory
         )
+    elif singular_mod_info["packing_type"] == "retoc":
+        make_retoc_mod_release(
+            singular_mod_info, base_files_directory, output_directory
+        )
+    else:
+        packing_type_error = f'The following incorrect packing type was supplied "{singular_mod_info["packing_type"]}".'
+        raise ValueError(packing_type_error)
 
 
 def generate_mod_releases(
@@ -862,10 +914,10 @@ def resync_dir_with_repo():
     exe = "git"
 
     args = ["clean", "-f", "-d", "-x"]
-    app_runner.run_app(exe_path=exe, args=args, working_dir=repo_path)
+    app_runner.run_app(exe_path=exe, args=args, temp_dir=repo_path)
 
     args = ["reset", "--hard"]
-    app_runner.run_app(exe_path=exe, args=args, working_dir=repo_path)
+    app_runner.run_app(exe_path=exe, args=args, temp_dir=repo_path)
 
     logger.log_message(f"Successfully resynchronized the repository at '{repo_path}'.")
 

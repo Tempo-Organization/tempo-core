@@ -3,7 +3,6 @@ import platform
 IS_WINDOWS = platform.system() == "Windows"
 
 if IS_WINDOWS:
-
     import ctypes
     from ctypes import wintypes
 
@@ -50,7 +49,6 @@ if IS_WINDOWS:
     user32.GetWindowRect.argtypes = [wintypes.HWND, ctypes.POINTER(wintypes.RECT)]
     user32.GetWindowRect.restype = wintypes.BOOL
 
-
     def enum_windows():
         windows = []
 
@@ -68,13 +66,13 @@ if IS_WINDOWS:
         user32.EnumWindows(foreach_window, 0)
         return windows
 
-
-    def does_window_exist(process_name: str, *, use_substring_check: bool = False) -> bool:
+    def does_window_exist(
+        process_name: str, *, use_substring_check: bool = False
+    ) -> bool:
         for proc in psutil.process_iter(["name"]):
             if proc.info["name"] and proc.info["name"].lower() == process_name.lower():  # type: ignore
                 return True
         return False
-
 
     def get_windows_by_title(
         window_title: str, *, use_substring_check: bool = False
@@ -82,8 +80,6 @@ if IS_WINDOWS:
         matched_windows = []
         try:
             windows = enum_windows()
-            # for hwnd, title in enum_windows():
-            #     print(f"HWND: {hwnd}, Title: {title}")
             if use_substring_check:
                 matched_windows = [
                     (hwnd, title) for hwnd, title in windows if window_title in title
@@ -98,7 +94,6 @@ if IS_WINDOWS:
             print(f"Error in get_windows_by_title: {e}")
         return matched_windows
 
-
     def get_window_by_title(window_title: str, *, use_substring_check: bool = False):
         windows = get_windows_by_title(
             window_title=window_title, use_substring_check=use_substring_check
@@ -108,22 +103,17 @@ if IS_WINDOWS:
             return None
         return windows[0]
 
-
     def minimize_window(hwnd):
         user32.ShowWindow(hwnd, SW_MINIMIZE)
-
 
     def maximize_window(hwnd):
         user32.ShowWindow(hwnd, SW_MAXIMIZE)
 
-
     def restore_window(hwnd):
         user32.ShowWindow(hwnd, SW_RESTORE)
 
-
     def close_window(hwnd):
         user32.PostMessageW(hwnd, WM_CLOSE, 0, 0)
-
 
     def move_window_to_monitor(hwnd, monitor_index=0):
         monitors = screeninfo.get_monitors()
@@ -133,7 +123,6 @@ if IS_WINDOWS:
         monitor = monitors[monitor_index]
         move_window(hwnd, monitor.x, monitor.y, None, None)
 
-
     def set_window_size(hwnd, width, height):
         rect = wintypes.RECT()
         if not user32.GetWindowRect(hwnd, ctypes.byref(rect)):
@@ -141,7 +130,6 @@ if IS_WINDOWS:
             return
         x, y = rect.left, rect.top
         user32.MoveWindow(hwnd, x, y, width, height, True)
-
 
     def move_window(hwnd, x, y, width=None, height=None):
         rect = wintypes.RECT()
@@ -156,11 +144,9 @@ if IS_WINDOWS:
         if not success:
             print("Failed to move window")
 
-
     def change_window_name(hwnd, new_title: str):
         if not user32.SetWindowTextW(hwnd, new_title):
             print(f"Failed to set window title to {new_title}")
-
 
     def move_window_with_settings(hwnd, window_settings: dict):
         monitor_index = window_settings.get("monitor")
@@ -172,7 +158,6 @@ if IS_WINDOWS:
         if width is not None and height is not None:
             set_window_size(hwnd, width, height)
 
-
     def get_window_title(hwnd) -> str:
         length = user32.GetWindowTextLengthW(hwnd)
         if length > 0:
@@ -180,7 +165,6 @@ if IS_WINDOWS:
             user32.GetWindowTextW(hwnd, buffer, length + 1)
             return buffer.value
         return ""
-
 
     def find_hwnd_by_process_name(process_name):
         # Enumerate all windows and try to find one owned by the process name
@@ -199,11 +183,15 @@ if IS_WINDOWS:
                     continue
         return None
 else:
+
     def not_supported(*args, **kwargs):
         print("Warning: Window control functions are only supported on Windows.")
 
     # Define dummy versions of functions
-    enum_windows = does_window_exist = get_windows_by_title = get_window_by_title = \
-    minimize_window = maximize_window = restore_window = close_window = \
-    move_window_to_monitor = set_window_size = move_window = change_window_name = \
-    move_window_with_settings = get_window_title = find_hwnd_by_process_name = not_supported # type: ignore
+    enum_windows = does_window_exist = get_windows_by_title = get_window_by_title = (
+        minimize_window
+    ) = maximize_window = restore_window = close_window = move_window_to_monitor = (
+        set_window_size
+    ) = move_window = change_window_name = move_window_with_settings = (
+        get_window_title
+    ) = find_hwnd_by_process_name = not_supported  # type: ignore

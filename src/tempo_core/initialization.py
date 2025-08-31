@@ -1,5 +1,6 @@
 import os
 import sys
+import shutil
 
 from tempo_core import (
     customization,
@@ -8,16 +9,32 @@ from tempo_core import (
     main_logic,
     settings,
     wrapper,
-    cache
+    cache,
 )
-from tempo_core.programs import repak, unreal_engine, retoc
+from tempo_core.programs import unreal_engine
 
 
 def uproject_check():
     uproject_file = settings.get_uproject_file()
-    if uproject_file:
-        file_io.check_file_exists(uproject_file)
-        logger.log_message("Check: Uproject file exists")
+
+    if not uproject_file:
+        logger.log_message("Error: No uproject file path provided.")
+        return
+
+    # Try full path first
+    if os.path.isfile(uproject_file):
+        logger.log_message("Check: Uproject file exists at provided path.")
+        return
+
+    # Try relative to current working directory
+    relative_path = os.path.join(os.getcwd(), uproject_file)
+    if os.path.isfile(relative_path):
+        logger.log_message("Check: Uproject file exists at relative path.")
+        return
+
+    logger.log_message(
+        f"Error: Uproject file not found at '{uproject_file}' or '{relative_path}'."
+    )
 
 
 def unreal_engine_check():
@@ -33,7 +50,7 @@ def unreal_engine_check():
         engine_str = "UE4Editor"
         if unreal_engine.is_game_ue5(settings.get_unreal_engine_dir()):
             engine_str = "UnrealEditor"
-        file_io.check_file_exists(
+        file_io.verify_file_exists(
             f"{settings.get_unreal_engine_dir()}/Engine/Binaries/Win64/{engine_str}.exe"
         )
         logger.log_message("Check: Unreal Engine exists")
@@ -42,7 +59,7 @@ def unreal_engine_check():
 def game_launcher_exe_override_check():
     potential_game_launcher_path = settings.get_game_launcher_exe_path()
     if potential_game_launcher_path:
-        file_io.check_file_exists(potential_game_launcher_path)
+        file_io.verify_file_exists(potential_game_launcher_path)
 
 
 def git_info_check():
@@ -50,15 +67,24 @@ def git_info_check():
     if git_repo_path is None or git_repo_path == "":
         return
 
-    file_io.check_directory_exists(git_repo_path)
+    file_io.verify_directory_exists(git_repo_path)
 
 
 def game_exe_check():
-    file_io.check_file_exists(settings.get_game_exe_path())
+    file_io.verify_file_exists(settings.get_game_exe_path())
+
+
+def clear_temp_dir():
+    temp_dir = settings.get_temp_directory()
+    if os.path.isdir(temp_dir):
+        shutil.rmtree(temp_dir)
 
 
 def initialization():
     # window_management.change_window_name("tempo")
+
+    # clear_temp_dir()
+
     if "--logs_directory" in sys.argv:
         index = sys.argv.index("--logs_directory") + 1
         if index < len(sys.argv):

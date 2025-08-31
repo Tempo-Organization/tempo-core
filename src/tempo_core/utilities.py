@@ -14,9 +14,7 @@ def custom_get_game_paks_dir() -> str:
     alt_game_dir = os.path.dirname(custom_get_game_dir())
     potential_alt_dir_name = settings.get_alt_packing_dir_name()
     if potential_alt_dir_name:
-        return os.path.join(
-            alt_game_dir, alt_game_dir, "Content", "Paks"
-        )
+        return os.path.join(alt_game_dir, alt_game_dir, "Content", "Paks")
     return unreal_engine.get_game_paks_dir(
         settings.get_uproject_file(), custom_get_game_dir()
     )
@@ -35,7 +33,9 @@ def get_uproject_tempo_resources_dir():
 
 
 def get_use_mod_name_dir_name_override(mod_name: str) -> bool:
-    return get_mods_info_dict_from_mod_name(mod_name).get("use_mod_name_dir_name_override", False)
+    return get_mods_info_dict_from_mod_name(mod_name).get(
+        "use_mod_name_dir_name_override", False
+    )
 
 
 def get_mod_name_dir_name_override(mod_name: str) -> str:
@@ -106,10 +106,10 @@ def get_persistent_mod_files(mod_name: str) -> list:
     return file_io.get_files_in_tree(settings.get_persistent_mod_dir(mod_name))
 
 
-def clean_working_dir():
-    working_dir = settings.get_working_dir()
-    if os.path.isdir(working_dir):
-        shutil.rmtree(working_dir)
+def clean_temp_dir():
+    temp_dir = settings.get_temp_directory()
+    if os.path.isdir(temp_dir):
+        shutil.rmtree(temp_dir)
 
 
 def filter_file_paths(paths_dict: dict) -> dict:

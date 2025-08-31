@@ -8,12 +8,8 @@ from typing import Any
 import json
 import platform
 
-from tempo_core import (
-    file_io,
-    logger,
-    process_management,
-    data_structures
-)
+
+from tempo_core import file_io, logger, process_management, data_structures
 from tempo_core.programs import unreal_engine
 
 
@@ -44,9 +40,13 @@ def init_settings(settings_json_path: pathlib.Path):
     # settings_information.settings = configs.DynamicSettings(raw_settings)
     settings_information.settings = raw_settings
     settings = settings_information.settings
-    process_name = os.path.basename(settings.get("game_info", {}).get("game_exe_path", ''))
+    process_name = os.path.basename(
+        settings.get("game_info", {}).get("game_exe_path", "")
+    )
     # window_management.change_window_name(settings["general_info"]["window_title"])
-    auto_close_game = settings["process_kill_events"]["auto_close_game"]
+    auto_close_game = settings.get("process_kill_events", {}).get(
+        "auto_close_game", True
+    )
     is_process_running = process_management.is_process_running(process_name)
     if auto_close_game and is_process_running:
         current_os = platform.system()
@@ -55,17 +55,19 @@ def init_settings(settings_json_path: pathlib.Path):
             taskkill_path = shutil.which("taskkill")
 
             if taskkill_path:
-                if process_name != '':
-                    subprocess.run([taskkill_path, "/F", "/IM", process_name], check=False)
+                if process_name != "":
+                    subprocess.run(
+                        [taskkill_path, "/F", "/IM", process_name], check=False
+                    )
             else:
                 raise FileNotFoundError("taskkill.exe not found.")
-        
+
         elif current_os == "Linux":
             # Try to use `pkill` or `killall` if available
             pkill_path = shutil.which("pkill")
             killall_path = shutil.which("killall")
 
-            if process_name != '':
+            if process_name != "":
                 if pkill_path:
                     subprocess.run([pkill_path, "-f", process_name], check=False)
                 elif killall_path:
@@ -134,7 +136,14 @@ def is_loose_packing_enum_in_use() -> bool:
 
 
 def get_game_exe_path() -> str | None:
-    return settings_information.settings.get("game_info", {}).get("game_exe_path", None)
+    game_exe_path = settings_information.settings.get("game_info", {}).get(
+        "game_exe_path", None
+    )
+    if game_exe_path and not os.path.isabs(game_exe_path):
+        game_exe_path = os.path.normpath(
+            os.path.join(file_io.SCRIPT_DIR, game_exe_path)
+        )
+    return game_exe_path
 
 
 def get_git_info_repo_path() -> str:
@@ -142,23 +151,55 @@ def get_git_info_repo_path() -> str:
 
 
 def get_game_launcher_exe_path() -> str | None:
-    return settings_information.settings.get('game_info', {}).get('game_launcher_exe', None)
+    return settings_information.settings.get("game_info", {}).get(
+        "game_launcher_exe", None
+    )
 
 
-def get_uproject_file() -> str:
-    return settings_information.settings["engine_info"]["unreal_project_file"]
+def get_uproject_file() -> str | None:
+    raw_path = settings_information.settings.get("engine_info", {}).get(
+        "unreal_project_file", None
+    )
+    if not raw_path:
+        return None
+
+    settings_dir = settings_information.settings_json_dir
+    if not os.path.isdir(settings_dir):
+        return None
+
+    if not os.path.isabs(raw_path):
+        # raw_path = os.path.join(os.getcwd(), raw_path)
+        # raw_path = os.path.join(file_io.SCRIPT_DIR, raw_path)
+        # raw_path = os.path.join(get_temp_directory(), raw_path)
+        raw_path = os.path.join(settings_dir, raw_path)
+
+    print(f"[DEBUG] uproject file: {raw_path}")
+    return os.path.normpath(raw_path)
+
+
+def get_uproject_name() -> str | None:
+    uproject_file = get_uproject_file()
+    if not uproject_file:
+        return None
+    return os.path.splitext(os.path.basename(uproject_file))[0]
 
 
 def get_unreal_engine_packaging_main_command() -> str:
-    return settings_information.settings.get("engine_info", {}).get("engine_packaging_command", "BuildCookRun")
+    return settings_information.settings.get("engine_info", {}).get(
+        "engine_packaging_command", "BuildCookRun"
+    )
 
 
 def get_unreal_engine_cooking_main_command() -> str:
-    return settings_information.settings.get("engine_info", {}).get("engine_cooking_command", "BuildCookRun")
+    return settings_information.settings.get("engine_info", {}).get(
+        "engine_cooking_command", "BuildCookRun"
+    )
 
 
 def get_unreal_engine_building_main_command() -> str:
-    return settings_information.settings.get("engine_info", {}).get("engine_building_command", "BuildCookRun")
+    return settings_information.settings.get("engine_info", {}).get(
+        "engine_building_command", "BuildCookRun"
+    )
 
 
 def get_cleanup_repo_path() -> str:
@@ -166,42 +207,45 @@ def get_cleanup_repo_path() -> str:
 
 
 def get_window_title_override() -> str | None:
-    return settings_information.settings.get('game_info', {}).get('window_title_override', None)
+    return settings_information.settings.get("game_info", {}).get(
+        "window_title_override", None
+    )
 
 
 def get_engine_building_args() -> list:
-    default_args = [
-      "-build",
-      "-skipstage",
-      "-nodebuginfo",
-      "-noP4"
-    ]
-    return settings_information.settings.get("engine_info", {}).get("engine_building_args", default_args)
+    default_args = ["-build", "-skipstage", "-nodebuginfo", "-noP4"]
+    return settings_information.settings.get("engine_info", {}).get(
+        "engine_building_args", default_args
+    )
 
 
 def get_engine_packaging_args() -> list:
     default_args = [
-      "-stage",
-      "-pak",
-      "-cook",
-      "-unversionedcookedcontent",
-      "-SkipCookingEditorContent",
-      "-iterate",
-      "-noP4",
-      "-compressed"
+        "-stage",
+        "-pak",
+        "-cook",
+        "-unversionedcookedcontent",
+        "-SkipCookingEditorContent",
+        "-iterate",
+        "-noP4",
+        "-compressed",
     ]
-    return settings_information.settings.get("engine_info", {}).get("engine_packaging_args", default_args)
+    return settings_information.settings.get("engine_info", {}).get(
+        "engine_packaging_args", default_args
+    )
 
 
 def get_engine_cooking_args() -> list:
     default_args = [
-      "-cook",
-      "-unversionedcookedcontent",
-      "-SkipCookingEditorContent",
-      "-iterate",
-      "-noP4"
+        "-cook",
+        "-unversionedcookedcontent",
+        "-SkipCookingEditorContent",
+        "-iterate",
+        "-noP4",
     ]
-    return settings_information.settings.get("engine_info", {}).get("engine_cooking_args", default_args)
+    return settings_information.settings.get("engine_info", {}).get(
+        "engine_cooking_args", default_args
+    )
 
 
 def get_window_management_events() -> dict:
@@ -209,15 +253,21 @@ def get_window_management_events() -> dict:
 
 
 def get_persistent_mod_dir(mod_name: str) -> str:
-    return os.path.normpath(f"{settings_information.settings_json_dir}/mod_packaging/persistent_files/{mod_name}")
+    return os.path.normpath(
+        f"{settings_information.settings_json_dir}/mod_packaging/persistent_files/{mod_name}"
+    )
 
 
 def get_persistent_mods_dir() -> str:
-    return os.path.normpath(f"{settings_information.settings_json_dir}/mod_packaging/persistent_files")
+    return os.path.normpath(
+        f"{settings_information.settings_json_dir}/mod_packaging/persistent_files"
+    )
 
 
 def get_alt_packing_dir_name() -> str | None:
-    return settings_information.settings.get('packaging_uproject_name', {}).get('name', None)
+    return settings_information.settings.get("packaging_uproject_name", {}).get(
+        "name", None
+    )
 
 
 def get_mods_info_list_from_json() -> list:
@@ -249,27 +299,40 @@ def get_game_launch_params() -> list:
 
 
 def get_engine_launch_args() -> list:
-    return settings_information.settings.get("engine_info", {}).get("engine_launch_args", [])
+    return settings_information.settings.get("engine_info", {}).get(
+        "engine_launch_args", []
+    )
 
 
 def get_unreal_engine_version(engine_path: str) -> data_structures.UnrealEngineVersion:
-    potential_valid_minor_version = settings_information.settings.get('engine_info', {}).get('unreal_engine_minor_version', None)
-    potential_valid_major_version = settings_information.settings.get('engine_info', {}).get('unreal_engine_major_version', None)
+    potential_valid_minor_version = settings_information.settings.get(
+        "engine_info", {}
+    ).get("unreal_engine_minor_version", None)
+    potential_valid_major_version = settings_information.settings.get(
+        "engine_info", {}
+    ).get("unreal_engine_major_version", None)
     if potential_valid_minor_version and potential_valid_major_version:
         unreal_engine_version = data_structures.UnrealEngineVersion(
-            minor_version=int(potential_valid_minor_version), 
-            major_version=int(potential_valid_major_version )
+            minor_version=int(potential_valid_minor_version),
+            major_version=int(potential_valid_major_version),
         )
     else:
-        unreal_engine_version = unreal_engine.get_unreal_engine_version_from_build_version_file(engine_path)
+        unreal_engine_version = (
+            unreal_engine.get_unreal_engine_version_from_build_version_file(engine_path)
+        )
     # add other ways to grab this later, like patternsleuth through game scan
     return unreal_engine_version
 
 
-def get_working_dir() -> str:
-    working_dir = os.path.join(file_io.SCRIPT_DIR, "working_dir")
-    os.makedirs(working_dir, exist_ok=True)
-    return working_dir
+def get_temp_directory() -> str:
+    temp_dir = os.path.join(file_io.SCRIPT_DIR, "temp")
+    os.makedirs(temp_dir, exist_ok=True)
+    return os.path.normpath(temp_dir)
+
+
+# want to use this instead, but it tends to give permission errors
+# def get_temp_directory() -> str:
+#     return os.path.normpath(tempfile.gettempdir())
 
 
 def should_show_progress_bars() -> bool:
@@ -282,3 +345,8 @@ def is_windows():
 
 def is_linux():
     return platform.system() == "Linux"
+
+
+def get_is_game_iostore_from_config() -> bool | None:
+    # Have this check manually passed param, env file, env var, config param, check from game, default to none
+    return settings_information.settings.get("game_info", {}).get("is_iostore", None)

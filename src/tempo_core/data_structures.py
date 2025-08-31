@@ -182,21 +182,6 @@ class LoadingPhases(Enum):
     MAX = "max"
 
 
-class UnrealIostoreFileExtensions(Enum):
-    """
-    Enum for the file extensions for files that should end up in iostore utoc and ucas files
-    If creating an iostore mod all files with extensions not within this list's corresponding string values
-    will be assumed to be pak assets
-    """
-
-    UMAP = "umap"
-    UEXP = "uexp"
-    UPTNL = "uptnl"
-    UBULK = "ubulk"
-    UASSET = "uasset"
-    USHADERBYTECODE = "ushaderbytecode"
-
-
 class SigMethodType(Enum):
     """
     Enum for the way to provide a sig when creating a mod release
@@ -226,10 +211,10 @@ class UnrealEngineVersion:
     minor_version: int
 
     def get_retoc_unreal_version_str(self) -> str:
-        return f'UE{self.major_version}_{self.minor_version}'
+        return f"UE{self.major_version}_{self.minor_version}"
 
     def get_uasset_gui_unreal_version_str(self) -> str:
-        return f'VER_UE{self.major_version}_{self.minor_version}'
+        return f"VER_UE{self.major_version}_{self.minor_version}"
 
     def get_repak_unreal_version_str(self) -> str:
         version_key = f"{self.major_version}.{self.minor_version}"
@@ -275,3 +260,21 @@ class UnrealEngineVersion:
         "5.5": "V11",
         "5.6": "V11",
     }
+
+
+unreal_iostore_file_extensions = [
+    "umap",
+    "uexp",
+    "uptnl",
+    "ubulk",
+    "uasset",
+    "ushaderbytecode",
+]
+
+unreal_iostore_no_sigs_archive_extensions = ["pak", "ucas", "utoc"]
+
+unreal_non_iostore_no_sigs_archive_extensions = ["pak"]
+
+unreal_iostore_sigs_archive_extensions = ["pak", "ucas", "utoc", "sigs"]
+
+unreal_non_iostore_sigs_archive_extensions = ["pak", "sigs"]
