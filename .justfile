@@ -22,6 +22,7 @@ default:
 
 setup:
   uv venv
+  uv sync
 
 clean:
   if (Test-Path ".venv") { Remove-Item ".venv" -Recurse -Force }
