@@ -198,6 +198,7 @@ class TestShippingIostoreNoSigsUE4(unittest.TestCase):
         shutil.rmtree(TEMP_DIR)
         cache_info = tests_init()
         install_ue4ss(cache_info[2], GAME_INNER_EXE_DIR)
+        os.makedirs(UPROJECT_CONFIG_DIR, exist_ok=True)
 
     # def tearDown(self):
     #     return super().tearDown()
@@ -205,14 +206,14 @@ class TestShippingIostoreNoSigsUE4(unittest.TestCase):
     # def setUp(self):
     #     return
 
-    # def test_0001_repak(self):
-    #     src.tempo_core.main_logic.full_run(
-    #         input_mod_names=["RepakMadeExampleMod"],
-    #         toggle_engine=False,
-    #         base_files_directory=BASE_FILES_DIR,
-    #         output_directory=OUTPUT_DIR,
-    #         use_symlinks=False,
-    #     )
+    def test_0001_repak(self):
+        src.tempo_core.main_logic.full_run(
+            input_mod_names=["RepakMadeExampleMod"],
+            toggle_engine=False,
+            base_files_directory=BASE_FILES_DIR,
+            output_directory=OUTPUT_DIR,
+            use_symlinks=False,
+        )
 
     def test_0002_unreal_pak(self):
         # check full run all works, and test mods all works eventually
@@ -229,41 +230,41 @@ class TestShippingIostoreNoSigsUE4(unittest.TestCase):
         #     use_symlinks=False,
         # )
 
-    # def test_0003_engine_made(self):
-    #     src.tempo_core.main_logic.full_run(
-    #         input_mod_names=["EngineMadeExampleMod"],
-    #         toggle_engine=False,
-    #         base_files_directory=BASE_FILES_DIR,
-    #         output_directory=OUTPUT_DIR,
-    #         use_symlinks=False,
-    #     )
+    def test_0003_engine_made(self):
+        src.tempo_core.main_logic.full_run(
+            input_mod_names=["EngineMadeExampleMod"],
+            toggle_engine=False,
+            base_files_directory=BASE_FILES_DIR,
+            output_directory=OUTPUT_DIR,
+            use_symlinks=False,
+        )
 
-    # def test_0004_loose(self):
-    #     src.tempo_core.main_logic.full_run(
-    #         input_mod_names=["LooseExampleMod"],
-    #         toggle_engine=False,
-    #         base_files_directory=BASE_FILES_DIR,
-    #         output_directory=OUTPUT_DIR,
-    #         use_symlinks=False,
-    #     )
+    def test_0004_loose(self):
+        src.tempo_core.main_logic.full_run(
+            input_mod_names=["LooseExampleMod"],
+            toggle_engine=False,
+            base_files_directory=BASE_FILES_DIR,
+            output_directory=OUTPUT_DIR,
+            use_symlinks=False,
+        )
 
-    # def test_0005_material_test(self):
-    #     src.tempo_core.main_logic.full_run(
-    #         input_mod_names=["MaterialTest"],
-    #         toggle_engine=False,
-    #         base_files_directory=BASE_FILES_DIR,
-    #         output_directory=OUTPUT_DIR,
-    #         use_symlinks=False,
-    #     )
+    def test_0005_material_test(self):
+        src.tempo_core.main_logic.full_run(
+            input_mod_names=["MaterialTest"],
+            toggle_engine=False,
+            base_files_directory=BASE_FILES_DIR,
+            output_directory=OUTPUT_DIR,
+            use_symlinks=False,
+        )
 
-    # def test_0006_retoc(self):
-    #     src.tempo_core.main_logic.full_run(
-    #         input_mod_names=["RetocMadeExampleMod"],
-    #         toggle_engine=False,
-    #         base_files_directory=BASE_FILES_DIR,
-    #         output_directory=OUTPUT_DIR,
-    #         use_symlinks=False,
-    #     )
+    def test_0006_retoc(self):
+        src.tempo_core.main_logic.full_run(
+            input_mod_names=["RetocMadeExampleMod"],
+            toggle_engine=False,
+            base_files_directory=BASE_FILES_DIR,
+            output_directory=OUTPUT_DIR,
+            use_symlinks=False,
+        )
 
     # def test_0007_all(self):
     #     src.tempo_core.main_logic.full_run_all(

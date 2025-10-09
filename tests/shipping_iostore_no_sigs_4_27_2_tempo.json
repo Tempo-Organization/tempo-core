@@ -1,14 +1,12 @@
 {
   "engine_info": {
     "unreal_engine_dir": "C:/Program Files/Epic Games/UE_4.27",
-    "unreal_project_file": "Z:/GitHub/tempo-core/src/tempo_core/temp/tests/shipping_iostore_no_sigs_4_27_2/unreal_project/TempoTesting.uproject"
+    "unreal_project_file": "C:/Users/mythi/OneDrive/Documents/GitHub/tempo-core/src/tempo_core/temp/tests/shipping_iostore_no_sigs_4_27_2/unreal_project/TempoTesting.uproject"
   },
   "game_info": {
-    "game_exe_path": "Z:/GitHub/tempo-core/src/tempo_core/temp/tests/shipping_iostore_no_sigs_4_27_2/packaged_game/TempoTesting/Binaries/Win64/TempoTesting-Win64-Shipping.exe",
+    "game_exe_path": "C:/Users/mythi/OneDrive/Documents/GitHub/tempo-core/src/tempo_core/temp/tests/shipping_iostore_no_sigs_4_27_2/packaged_game/TempoTesting/Binaries/Win64/TempoTesting-Win64-Shipping.exe",
     "is_iostore": true,
-    "launch_params": [
-      "nullrhi"
-    ],
+    "launch_params": [],
     "launch_type": "exe",
     "window_title_override": "TempoTesting"
   },
