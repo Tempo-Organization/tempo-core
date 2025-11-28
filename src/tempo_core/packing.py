@@ -138,7 +138,7 @@ def run_proj_command(command: str):
     executable = command_parts[0]
     args = command_parts[1:]
     app_runner.run_app(
-        exe_path=executable, args=args, temp_dir=settings.get_unreal_engine_dir()
+        exe_path=executable, args=args, temp_dir=str(settings.get_unreal_engine_dir())
     )
 
 
@@ -350,14 +350,14 @@ def install_engine_mod(mod_name: str, *, use_symlinks: bool):
             f'could not find the specified uproject file "{uproject_file}"'
         )
         raise FileNotFoundError(uproject_not_found_error)
-    uproject_dir = unreal_engine.get_uproject_dir(uproject_file)
-    win_dir_str = unreal_engine.get_win_dir_str(settings.get_unreal_engine_dir())
-    uproject_name = unreal_engine.get_uproject_name(uproject_file)
+    uproject_dir = unreal_engine.get_uproject_dir(str(uproject_file))
+    win_dir_str = unreal_engine.get_win_dir_str(str(settings.get_unreal_engine_dir()))
+    uproject_name = unreal_engine.get_uproject_name(str(uproject_file))
     prefix = f"{uproject_dir}/Saved/StagedBuilds/{win_dir_str}/{uproject_name}/Content/Paks/pakchunk{pak_chunk_num}-{win_dir_str}."
     mod_files.append(prefix)
     for file in mod_files:
         for suffix in unreal_engine.get_game_pak_folder_archives(
-            uproject_file, utilities.custom_get_game_dir()
+            str(uproject_file), utilities.custom_get_game_dir()
         ):
             dir_engine_mod = f"{utilities.custom_get_game_dir()}/Content/Paks/{utilities.get_pak_dir_structure(mod_name)}"
             os.makedirs(dir_engine_mod, exist_ok=True)
@@ -457,6 +457,7 @@ def install_mod(
     compression_type: CompressionType | None,
     use_symlinks: bool,
 ):
+
     if packing_type == PackingType.LOOSE:
         install_loose_mod(mod_name, use_symlinks=use_symlinks)
     elif packing_type == PackingType.ENGINE:
@@ -464,6 +465,8 @@ def install_mod(
     elif packing_type == PackingType.REPAK:
         install_repak_mod(mod_name, use_symlinks=use_symlinks)
     elif packing_type == PackingType.UNREAL_PAK:
+        if not compression_type:
+            raise RuntimeError('compression type is None for some reason')
         unreal_pak.install_unreal_pak_mod(
             mod_name, compression_type, use_symlinks=use_symlinks
         )
@@ -486,7 +489,7 @@ def install_mod(
 
 
 def package_project_iostore():
-    if unreal_engine.is_game_ue4(settings.get_unreal_engine_dir()):
+    if unreal_engine.is_game_ue4(str(settings.get_unreal_engine_dir())):
         package_project_iostore_ue4()
     else:
         package_project_iostore_ue5()
@@ -529,7 +532,7 @@ def package_project_iostore_ue4():
         "-utf8output",
     ]
     app_runner.run_app(
-        exe_path=main_exec, args=args, temp_dir=settings.get_unreal_engine_dir()
+        exe_path=main_exec, args=args, temp_dir=str(settings.get_unreal_engine_dir())
     )
 
 
@@ -570,7 +573,7 @@ def package_project_iostore_ue5():
         "-utf8output",
     ]
     app_runner.run_app(
-        exe_path=main_exec, args=args, temp_dir=settings.get_unreal_engine_dir()
+        exe_path=main_exec, args=args, temp_dir=str(settings.get_unreal_engine_dir())
     )
 
 
@@ -747,7 +750,7 @@ def get_mod_file_paths_for_manually_made_pak_mods_mod_name_dir_paths(
 
     # the below line is returning incorrectly for some reason
     cooked_uproject_dir = unreal_engine.get_cooked_uproject_dir(
-        uproject_path, unreal_engine_dir
+        str(uproject_path), str(unreal_engine_dir)
     )
 
     cooked_game_name_mod_dir = f"{cooked_uproject_dir}/Content/{utilities.get_unreal_mod_tree_type_str(mod_name)}/{utilities.get_mod_name_dir_name(mod_name)}"
@@ -759,7 +762,7 @@ def get_mod_file_paths_for_manually_made_pak_mods_mod_name_dir_paths(
         if potential_alt_dir_name:
             dir_name = potential_alt_dir_name
         else:
-            dir_name = unreal_engine.get_uproject_name(uproject_path)
+            dir_name = unreal_engine.get_uproject_name(str(uproject_path))
         dest_path = f"{settings.get_temp_directory()}/{mod_name}/{dir_name}/Content/{utilities.get_unreal_mod_tree_type_str(mod_name)}/{utilities.get_mod_name_dir_name(mod_name)}/{relative_file_path}"
         file_dict[src_path] = dest_path
     return file_dict
