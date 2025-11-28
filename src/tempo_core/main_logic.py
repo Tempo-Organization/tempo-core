@@ -461,7 +461,7 @@ def get_solo_cook_project_command() -> str:
         f'"Engine\\Build\\BatchFiles\\RunUAT.{file_io.get_platform_wrapper_extension()}" {settings.get_unreal_engine_cooking_main_command()} '
         f'-project="{settings.get_uproject_file()}" '
     )
-    if not unreal_engine.has_build_target_been_built(settings.get_uproject_file()):
+    if not unreal_engine.has_build_target_been_built(str(settings.get_uproject_file())):
         build_arg = "-build"
         command = f"{command} {build_arg}"
     for arg in settings.get_engine_cooking_args():
@@ -490,7 +490,7 @@ def get_solo_package_command() -> str:
     for arg in settings.get_engine_packaging_args():
         command = f"{command} {arg}"
     is_game_iostore = unreal_engine.get_is_game_iostore(
-        settings.get_uproject_file(), utilities.custom_get_game_dir()
+        str(settings.get_uproject_file()), utilities.custom_get_game_dir()
     )
     if is_game_iostore:
         command = f"{command} -iostore"
@@ -516,7 +516,7 @@ def package(*, toggle_engine: bool, use_symlinks: bool):
 def resave_packages_and_fix_up_redirectors():
     engine.close_game_engine()
     arg = "-run=ResavePackages -fixupredirects"
-    command = f'"{unreal_engine.get_unreal_editor_exe_path(settings.get_unreal_engine_dir())}" "{settings.get_uproject_file()}" {arg}'
+    command = f'"{unreal_engine.get_unreal_editor_exe_path(str(settings.get_unreal_engine_dir()))}" "{settings.get_uproject_file()}" {arg}'
     app_runner.run_app(command)
 
 
@@ -674,8 +674,8 @@ def make_engine_mod_release(
     mod_files = []
     pak_chunk_num = singular_mod_info["pak_chunk_num"]
     uproject_file = settings.get_uproject_file()
-    uproject_dir = unreal_engine.get_uproject_dir(uproject_file)
-    win_dir_str = unreal_engine.get_win_dir_str(settings.get_unreal_engine_dir())
+    uproject_dir = unreal_engine.get_uproject_dir(str(uproject_file))
+    win_dir_str = unreal_engine.get_win_dir_str(str(settings.get_unreal_engine_dir()))
     uproject_name = unreal_engine.get_uproject_name(uproject_file)
     prefix = f"{uproject_dir}/Saved/StagedBuilds/{win_dir_str}/{uproject_name}/Content/Paks/pakchunk{pak_chunk_num}-{win_dir_str}."
     mod_files.append(prefix)
@@ -703,7 +703,7 @@ def get_mod_files_asset_paths_for_loose_mods(
 ) -> dict:
     file_dict = {}
     cooked_uproject_dir = unreal_engine.get_cooked_uproject_dir(
-        settings.get_uproject_file(), settings.get_unreal_engine_dir()
+        str(settings.get_uproject_file()), str(settings.get_unreal_engine_dir())
     )
     mod_info = packing.get_mod_pak_entry(mod_name)
     for asset in mod_info.get("file_includes", {}).get("asset_paths", []):
@@ -722,7 +722,7 @@ def get_mod_files_tree_paths_for_loose_mods(
 ) -> dict:
     file_dict = {}
     cooked_uproject_dir = unreal_engine.get_cooked_uproject_dir(
-        settings.get_uproject_file(), settings.get_unreal_engine_dir()
+        str(settings.get_uproject_file()), str(settings.get_unreal_engine_dir())
     )
     mod_info = packing.get_mod_pak_entry(mod_name)
     for tree in mod_info.get("file_includes", {}).get("tree_paths", []):
@@ -757,7 +757,7 @@ def get_mod_files_mod_name_dir_paths_for_loose_mods(
     mod_name: str, base_files_directory: str
 ) -> dict:
     file_dict = {}
-    cooked_game_name_mod_dir = f"{unreal_engine.get_cooked_uproject_dir(settings.get_uproject_file(), settings.get_unreal_engine_dir())}/Content/{utilities.get_unreal_mod_tree_type_str(mod_name)}/{utilities.get_mod_name_dir_name(mod_name)}"
+    cooked_game_name_mod_dir = f"{unreal_engine.get_cooked_uproject_dir(str(settings.get_uproject_file()), str(settings.get_unreal_engine_dir()))}/Content/{utilities.get_unreal_mod_tree_type_str(mod_name)}/{utilities.get_mod_name_dir_name(mod_name)}"
 
     for file in file_io.get_files_in_tree(cooked_game_name_mod_dir):
         relative_file_path = os.path.relpath(file, cooked_game_name_mod_dir)

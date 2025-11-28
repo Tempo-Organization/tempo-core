@@ -16,12 +16,12 @@ def custom_get_game_paks_dir() -> str:
     if potential_alt_dir_name:
         return os.path.join(alt_game_dir, alt_game_dir, "Content", "Paks")
     return unreal_engine.get_game_paks_dir(
-        settings.get_uproject_file(), custom_get_game_dir()
+        str(settings.get_uproject_file()), custom_get_game_dir()
     )
 
 
 def get_uproject_dir():
-    return os.path.dirname(settings.get_uproject_file())
+    return os.path.dirname(str(settings.get_uproject_file()))
 
 
 def get_uproject_tempo_dir():
@@ -93,7 +93,7 @@ def is_mod_name_in_list(mod_name: str) -> bool:
 
 def get_mod_name_dir(mod_name: str) -> str:
     if is_mod_name_in_list(mod_name):
-        return f"{unreal_engine.get_uproject_dir(settings.get_uproject_file())}/Saved/Cooked/{get_unreal_mod_tree_type_str(mod_name)}/{mod_name}"
+        return f"{unreal_engine.get_uproject_dir(str(settings.get_uproject_file()))}/Saved/Cooked/{get_unreal_mod_tree_type_str(mod_name)}/{mod_name}"
     get_mod_name_dir_name_error = "Was unable to find the mod name dir name"
     raise RuntimeError(get_mod_name_dir_name_error)
 

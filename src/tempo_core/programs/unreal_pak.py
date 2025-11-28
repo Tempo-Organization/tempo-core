@@ -93,7 +93,7 @@ def make_ue4_iostore_mod(
     unreal_engine_editor_cmd_executable_path = unreal_engine.get_editor_cmd_path(
         unreal_engine_dir
     )
-    ue_win_dir_str = unreal_engine.get_win_dir_str(unreal_engine_dir)
+    ue_win_dir_str = unreal_engine.get_win_dir_str(str(unreal_engine_dir))
     uproject_dir = utilities.get_uproject_dir()
     uproject_file = tempo_core.settings.get_uproject_file()
     if not uproject_file:
@@ -393,7 +393,7 @@ def install_unreal_pak_mod(
         exist_ok=True,
     )
     exe_path = unreal_engine.get_unreal_pak_exe_path(
-        tempo_core.settings.get_unreal_engine_dir()
+        str(tempo_core.settings.get_unreal_engine_dir())
     )
     uproject_file = tempo_core.settings.get_uproject_file()
     if not uproject_file:
