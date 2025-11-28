@@ -174,7 +174,7 @@ def get_git_info_repo_path() -> pathlib.Path | None:
     if not os.path.isabs(raw_path):
         return pathlib.Path(str(settings_information.settings_json_dir.path), raw_path).resolve()
     else:
-        return raw_path.resolve()
+        return pathlib.Path(raw_path).resolve()
 
 
 
@@ -201,7 +201,7 @@ def get_uproject_file() -> pathlib.Path | None:
         # raw_path = os.path.join(get_temp_directory(), raw_path)
         # raw_path = os.path.join(settings_dir, raw_path
     else:
-        return raw_path.resolve()
+        return pathlib.Path(raw_path).resolve()
 
 
 def get_uproject_name() -> str | None:
