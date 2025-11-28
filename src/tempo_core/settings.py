@@ -1,35 +1,55 @@
 import os
 import sys
-import pathlib
+import json
+import enum
 import shutil
+import typing
+import pathlib
+import platform
 import subprocess
 from dataclasses import dataclass
-from typing import Any
-import json
-import platform
 
-
-from tempo_core import file_io, logger, process_management, data_structures
 from tempo_core.programs import unreal_engine
+from tempo_core import file_io, logger, process_management, data_structures
+
+
+class SettingsOrigin(enum.Enum):
+    """
+    enum for where settings came from, mostly used for relative path creation.
+    From top to bottom, is the lowest to highest priority for the recieved value.
+    So command_line values will be used over env_var, which will be used over env_file, and so on.
+    """
+
+    DEFAULT = "default"
+    CONFIG = "config"
+    ENV_FILE = "env_file"
+    ENV_VAR = "env_var"
+    COMMAND_LINE = "command_line"
+
+
+@dataclass
+class SettingSpecificInfo:
+    path: pathlib.Path | None
+    origin: SettingsOrigin | None
 
 
 @dataclass
 class SettingsInformation:
-    settings: dict[str, Any]
+    settings: dict[str, typing.Any]
     init_settings_done: bool
-    settings_json_dir: str
-    program_dir: str
+    settings_json_dir: SettingSpecificInfo
+    program_dir: SettingSpecificInfo
     mod_names: list[str]
-    settings_json: str
+    settings_json: SettingSpecificInfo
 
 
 settings_information = SettingsInformation(
     settings={},
     init_settings_done=False,
-    settings_json_dir="",
-    program_dir="",
+    settings_json_dir=SettingSpecificInfo(None, None),
+    program_dir=SettingSpecificInfo(None, None),
     mod_names=[],
-    settings_json="",
+    settings_json=SettingSpecificInfo(None, None),
 )
 
 
@@ -77,10 +97,8 @@ def init_settings(settings_json_path: pathlib.Path):
         else:
             raise NotImplementedError(f"Unsupported OS: {current_os}")
     settings_information.init_settings_done = True
-    settings_information.settings_json = str(settings_json_path)
-    settings_information.settings_json_dir = os.path.dirname(
-        settings_information.settings_json
-    )
+    settings_information.settings_json = SettingSpecificInfo(path=pathlib.Path(settings_json_path), origin=SettingsOrigin.COMMAND_LINE)
+    settings_information.settings_json_dir = SettingSpecificInfo(path=pathlib.Path(settings_json_path).parent, origin=SettingsOrigin.COMMAND_LINE)
 
 
 def load_settings(settings_json: str):
@@ -89,10 +107,12 @@ def load_settings(settings_json: str):
         init_settings(pathlib.Path(settings_json))
 
 
-def get_unreal_engine_dir() -> str:
-    ue_dir = settings_information.settings["engine_info"]["unreal_engine_dir"]
-    file_io.check_path_exists(ue_dir)
-    return ue_dir
+def get_unreal_engine_dir() -> pathlib.Path | None:
+    unreal_engine_directory = settings_information.settings.get("engine_info", {}).get("unreal_engine_dir", None)
+    if unreal_engine_directory and not os.path.isabs(unreal_engine_directory):
+        unreal_engine_directory = pathlib.Path(str(settings_information.settings_json_dir.path), unreal_engine_directory)
+    file_io.check_path_exists(str(unreal_engine_directory))
+    return unreal_engine_directory
 
 
 def is_unreal_pak_packing_enum_in_use() -> bool:
@@ -135,46 +155,53 @@ def is_loose_packing_enum_in_use() -> bool:
     return is_in_use
 
 
-def get_game_exe_path() -> str | None:
-    game_exe_path = settings_information.settings.get("game_info", {}).get(
-        "game_exe_path", None
-    )
+def get_game_exe_path() -> pathlib.Path | None:
+    game_exe_path = settings_information.settings.get("game_info", {}).get("game_exe_path", None)
     if game_exe_path and not os.path.isabs(game_exe_path):
-        game_exe_path = os.path.normpath(
-            os.path.join(file_io.SCRIPT_DIR, game_exe_path)
-        )
-    return game_exe_path
+        game_exe_path = pathlib.Path(str(settings_information.settings_json_dir.path), game_exe_path)
+    if game_exe_path:
+        return game_exe_path
+    return None
 
 
-def get_git_info_repo_path() -> str:
-    return settings_information.settings["git_info"]["repo_path"]
-
-
-def get_game_launcher_exe_path() -> str | None:
-    return settings_information.settings.get("game_info", {}).get(
-        "game_launcher_exe", None
-    )
-
-
-def get_uproject_file() -> str | None:
-    raw_path = settings_information.settings.get("engine_info", {}).get(
-        "unreal_project_file", None
+def get_git_info_repo_path() -> pathlib.Path | None:
+    raw_path = settings_information.settings.get("git_info", {}).get(
+        "repo_path", None
     )
     if not raw_path:
         return None
 
-    settings_dir = settings_information.settings_json_dir
-    if not os.path.isdir(settings_dir):
+    if not os.path.isabs(raw_path):
+        return pathlib.Path(str(settings_information.settings_json_dir.path), raw_path).resolve()
+    else:
+        return raw_path.resolve()
+
+
+
+def get_game_launcher_exe_path() -> pathlib.Path | None:
+        game_launcher_exe_path = settings_information.settings.get("game_info", {}).get("game_launcher_exe", None)
+        if game_launcher_exe_path and not os.path.isabs(game_launcher_exe_path):
+            game_launcher_exe_path = pathlib.Path(str(settings_information.settings_json_dir.path), game_launcher_exe_path)
+        if game_launcher_exe_path:
+            return game_launcher_exe_path
+        return None
+
+
+def get_uproject_file() -> pathlib.Path | None:
+    raw_path = settings_information.settings.get("engine_info", {}).get(
+        "unreal_project_file", None
+    )
+    settings_dir = str(settings_information.settings_json_dir.path)
+    if not raw_path or not os.path.isdir(settings_dir):
         return None
 
     if not os.path.isabs(raw_path):
-        # raw_path = os.path.join(os.getcwd(), raw_path)
+        return pathlib.Path(settings_dir, raw_path).resolve()
         # raw_path = os.path.join(file_io.SCRIPT_DIR, raw_path)
         # raw_path = os.path.join(get_temp_directory(), raw_path)
-        raw_path = os.path.join(settings_dir, raw_path)
-
-    print(f"[DEBUG] uproject file: {raw_path}")
-    return os.path.normpath(raw_path)
+        # raw_path = os.path.join(settings_dir, raw_path
+    else:
+        return raw_path.resolve()
 
 
 def get_uproject_name() -> str | None:
@@ -202,8 +229,17 @@ def get_unreal_engine_building_main_command() -> str:
     )
 
 
-def get_cleanup_repo_path() -> str:
-    return settings_information.settings["git_info"]["repo_path"]
+def get_cleanup_repo_path() -> pathlib.Path | None:
+    raw_path = settings_information.settings.get("git_info", {}).get(
+        "repo_path", None
+    )
+    if not raw_path:
+        return None
+
+    if not os.path.isabs(raw_path):
+        return pathlib.Path(str(settings_information.settings_json_dir.path), raw_path).resolve()
+    else:
+        return raw_path.resolve()
 
 
 def get_window_title_override() -> str | None:
@@ -278,12 +314,30 @@ def get_exec_events() -> list:
     return settings_information.settings.get("exec_events", [])
 
 
-def get_ide_path() -> str:
-    return settings_information.settings["optionals"]["ide_path"]
+def get_ide_path() -> pathlib.Path | None:
+    raw_path = settings_information.settings.get("optionals", {}).get(
+        "ide_path", None
+    )
+    if not raw_path:
+        return None
+
+    if not os.path.isabs(raw_path):
+        return pathlib.Path(str(settings_information.settings_json_dir.path), raw_path).resolve()
+    else:
+        return raw_path.resolve()
 
 
-def get_blender_path():
-    return settings_information.settings["optionals"]["blender_path"]
+def get_blender_path() -> pathlib.Path | None:
+    raw_path = settings_information.settings.get("optionals", {}).get(
+        "blender_path", None
+    )
+    if not raw_path:
+        return None
+
+    if not os.path.isabs(raw_path):
+        return pathlib.Path(str(settings_information.settings_json_dir.path), raw_path).resolve()
+    else:
+        return raw_path.resolve()
 
 
 def get_game_info_launch_type_enum_str_value() -> str:

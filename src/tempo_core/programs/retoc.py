@@ -74,7 +74,7 @@ def get_executable_name() -> str:
         raise ValueError("unsupported os")
 
 
-def get_retoc_directory() -> str:
+def get_retoc_directory() -> pathlib.Path | None:
     default_value = get_tool_install_dir("retoc")
 
     config_value = None
@@ -95,7 +95,10 @@ def get_retoc_directory() -> str:
 
     prioritized_value = cli_value or env_value or config_value or default_value
 
-    return prioritized_value
+    if not os.path.isabs(prioritized_value):
+        return pathlib.Path(str(settings.settings_information.settings_json_dir.path), prioritized_value).resolve()
+    else:
+        return pathlib.Path(prioritized_value).resolve()
 
 
 def get_retoc_package_path():
@@ -175,7 +178,7 @@ def make_retoc_mod(mod_name: str, dest_pak_file: str, *, use_symlinks: bool):
             input_directory=pathlib.Path(ucas_mod_dir),
             output_utoc=pathlib.Path(f"{os.path.splitext(dest_pak_file)[0]}.utoc"),
             unreal_version=settings.get_unreal_engine_version(
-                settings.get_unreal_engine_dir()
+                str(settings.get_unreal_engine_dir())
             ),
         )
 

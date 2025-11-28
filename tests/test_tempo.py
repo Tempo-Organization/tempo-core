@@ -7,18 +7,16 @@ import unittest
 import ue4ss_installer_gui.ue4ss
 import ue4ss_installer_gui.file_io
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../src")))
-
-import src.tempo_core.cache
-import src.tempo_core.file_io
-import src.tempo_core.settings
-import src.tempo_core.main_logic
-import src.tempo_core.programs.git
-import src.tempo_core.initialization
+import tempo_core.cache
+import tempo_core.file_io
+import tempo_core.settings
+import tempo_core.main_logic
+import tempo_core.programs.git
+import tempo_core.initialization
 
 
 CWD = os.getcwd()
-TEMP_DIR = src.tempo_core.settings.get_temp_directory()
+TEMP_DIR = tempo_core.settings.get_temp_directory()
 
 ZIP_STRS_TO_GAME_STRS = {
     "4_27_2_Shipping_Iostore_NoSigs.zip": "shipping_iostore_no_sigs_4_27_2",
@@ -52,6 +50,7 @@ UPROJECT_DIR = os.path.normpath(f"{GAME_SPECIFIC_TEST_DIR}/unreal_project")
 UPROJECT_CONTENT_DIR = os.path.normpath(f"{UPROJECT_DIR}/Content")
 UPROJECT_CONFIG_DIR = os.path.normpath(f"{UPROJECT_DIR}/Config")
 UPROJECT_FILE = os.path.normpath(f"{UPROJECT_DIR}/TempoTesting.uproject")
+print(f'uproject_file: {UPROJECT_FILE}')
 
 
 os.makedirs(OUTPUT_DIR, exist_ok=True)
@@ -65,7 +64,7 @@ SETTINGS_FILE = os.path.normpath(f"{CWD}/tests/{GAME_STR}_tempo.json")
 
 
 def cache_files() -> list[str]:
-    TEMPO_CACHE_DIR = src.tempo_core.cache.get_cache_dir()
+    TEMPO_CACHE_DIR = tempo_core.cache.get_cache_dir()
     TESTS_CACHE_DIR = os.path.normpath(f"{TEMPO_CACHE_DIR}/testing")
     UE4SS_ZIP_CACHE_DIR = os.path.normpath(f"{TESTS_CACHE_DIR}/ue4ss_zip")
     PACKAGED_GAMES_CACHE_DIR = os.path.normpath(f"{TESTS_CACHE_DIR}/packaged_games")
@@ -82,7 +81,7 @@ def cache_files() -> list[str]:
         # add some verification to make sure the zip was valid here
         if not os.path.isfile(zip_path):
             print("the following game zip is being downloaded/cached. Please wait...")
-            src.tempo_core.file_io.download_file(game_url, zip_path)
+            tempo_core.file_io.download_file(game_url, zip_path)
 
     template_files = [
         "Uprojects/4_11_2/ReusableMods/Content/Mods/LooseExampleMod/ModActor.uasset",
@@ -101,7 +100,7 @@ def cache_files() -> list[str]:
         if not os.path.isfile(
             os.path.normpath(f"{UPROJECT_FILES_CACHE_DIR}/{template_file}")
         ):
-            src.tempo_core.programs.git.download_files_from_github_repo(
+            tempo_core.programs.git.download_files_from_github_repo(
                 repo_url="https://github.com/Tempo-Organization/tempo-tests",
                 repo_branch="main",
                 file_paths=[template_file],
@@ -118,17 +117,12 @@ def init_tempo_core():
     sys.argv.append("--logs_directory")
     sys.argv.append(os.path.normpath(f"{TEMP_DIR}/logs"))
 
-    src.tempo_core.main_logic.generate_uproject(
+    tempo_core.main_logic.generate_uproject(
         project_file=UPROJECT_FILE, ignore_safety_checks=True
     )
 
-    src.tempo_core.initialization.initialization()
+    tempo_core.initialization.initialization()
     print("finished tempo core init")
-
-    # we run this twice, as init checks the uproject exists, but also deletes the temp directory
-    # src.tempo_core.main_logic.generate_uproject(
-    #     project_file=UPROJECT_FILE, ignore_safety_checks=True
-    # )
 
 
 def copy_files_from_cache(cache_info):
@@ -144,13 +138,13 @@ def copy_files_from_cache(cache_info):
         dirs_exist_ok=True,
     )
 
-    src.tempo_core.file_io.unzip_zip(
+    tempo_core.file_io.unzip_zip(
         zip_path=os.path.normpath(f"{cache_info[1]}/{ZIP_STR}"),
         output_location=GAME_DIR,
     )
 
 
-def tests_init() -> list[str]:
+def init_tests() -> list[str]:
     init_tempo_core()
     cache_info = cache_files()
     copy_files_from_cache(cache_info)
@@ -196,7 +190,7 @@ class TestShippingIostoreNoSigsUE4(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         shutil.rmtree(TEMP_DIR)
-        cache_info = tests_init()
+        cache_info = init_tests()
         install_ue4ss(cache_info[2], GAME_INNER_EXE_DIR)
         os.makedirs(UPROJECT_CONFIG_DIR, exist_ok=True)
 
@@ -206,79 +200,79 @@ class TestShippingIostoreNoSigsUE4(unittest.TestCase):
     # def setUp(self):
     #     return
 
-    def test_0001_repak(self):
-        src.tempo_core.main_logic.full_run(
-            input_mod_names=["RepakMadeExampleMod"],
-            toggle_engine=False,
-            base_files_directory=BASE_FILES_DIR,
-            output_directory=OUTPUT_DIR,
-            use_symlinks=False,
-        )
+    # def test_0001_repak(self):
+    #     tempo_core.main_logic.full_run(
+    #         input_mod_names=["RepakMadeExampleMod"],
+    #         toggle_engine=False,
+    #         base_files_directory=BASE_FILES_DIR,
+    #         output_directory=OUTPUT_DIR,
+    #         use_symlinks=False,
+    #     )
 
-    def test_0002_unreal_pak(self):
-        # check full run all works, and test mods all works eventually
-        src.tempo_core.main_logic.test_mods(
-            input_mod_names=["UnrealPakMadeExampleMod"],
-            toggle_engine=False,
-            use_symlinks=False,
-        )
-        # src.tempo_core.main_logic.full_run(
-        #     input_mod_names=["UnrealPakMadeExampleMod"],
-        #     toggle_engine=False,
-        #     base_files_directory=BASE_FILES_DIR,
-        #     output_directory=OUTPUT_DIR,
-        #     use_symlinks=False,
-        # )
+    # def test_0002_unreal_pak(self):
+    #     # check full run all works, and test mods all works eventually
+    #     # tempo_core.main_logic.test_mods(
+    #     #     input_mod_names=["UnrealPakMadeExampleMod"],
+    #     #     toggle_engine=False,
+    #     #     use_symlinks=False,
+    #     # )
+    #     tempo_core.main_logic.full_run(
+    #         input_mod_names=["UnrealPakMadeExampleMod"],
+    #         toggle_engine=False,
+    #         base_files_directory=BASE_FILES_DIR,
+    #         output_directory=OUTPUT_DIR,
+    #         use_symlinks=False,
+    #     )
 
-    def test_0003_engine_made(self):
-        src.tempo_core.main_logic.full_run(
-            input_mod_names=["EngineMadeExampleMod"],
-            toggle_engine=False,
-            base_files_directory=BASE_FILES_DIR,
-            output_directory=OUTPUT_DIR,
-            use_symlinks=False,
-        )
+    # def test_0003_engine_made(self):
+    #     tempo_core.main_logic.full_run(
+    #         input_mod_names=["EngineMadeExampleMod"],
+    #         toggle_engine=False,
+    #         base_files_directory=BASE_FILES_DIR,
+    #         output_directory=OUTPUT_DIR,
+    #         use_symlinks=False,
+    #     )
 
-    def test_0004_loose(self):
-        src.tempo_core.main_logic.full_run(
-            input_mod_names=["LooseExampleMod"],
-            toggle_engine=False,
-            base_files_directory=BASE_FILES_DIR,
-            output_directory=OUTPUT_DIR,
-            use_symlinks=False,
-        )
+    # def test_0004_loose(self):
+    #     tempo_core.main_logic.full_run(
+    #         input_mod_names=["LooseExampleMod"],
+    #         toggle_engine=False,
+    #         base_files_directory=BASE_FILES_DIR,
+    #         output_directory=OUTPUT_DIR,
+    #         use_symlinks=False,
+    #     )
 
-    def test_0005_material_test(self):
-        src.tempo_core.main_logic.full_run(
-            input_mod_names=["MaterialTest"],
-            toggle_engine=False,
-            base_files_directory=BASE_FILES_DIR,
-            output_directory=OUTPUT_DIR,
-            use_symlinks=False,
-        )
+    # def test_0005_material_test(self):
+    #     tempo_core.main_logic.full_run(
+    #         input_mod_names=["MaterialTest"],
+    #         toggle_engine=False,
+    #         base_files_directory=BASE_FILES_DIR,
+    #         output_directory=OUTPUT_DIR,
+    #         use_symlinks=False,
+    #     )
 
-    def test_0006_retoc(self):
-        src.tempo_core.main_logic.full_run(
-            input_mod_names=["RetocMadeExampleMod"],
-            toggle_engine=False,
-            base_files_directory=BASE_FILES_DIR,
-            output_directory=OUTPUT_DIR,
-            use_symlinks=False,
-        )
+    # def test_0006_retoc(self):
+    #     tempo_core.main_logic.full_run(
+    #         input_mod_names=["RetocMadeExampleMod"],
+    #         toggle_engine=False,
+    #         base_files_directory=BASE_FILES_DIR,
+    #         output_directory=OUTPUT_DIR,
+    #         use_symlinks=False,
+    #     )
 
     # def test_0007_all(self):
-    #     src.tempo_core.main_logic.full_run_all(
+    #     tempo_core.main_logic.full_run_all(
     #         toggle_engine=False,
     #         base_files_directory=BASE_FILES_DIR,
     #         output_directory=OUTPUT_DIR,
     #         use_symlinks=False
     #     )
 
-    # def test_0007_all(self):
-    #     src.tempo_core.main_logic.test_mods_all(
-    #         toggle_engine=False,
-    #         use_symlinks=False
-    #     )
+    def test_0007_all(self):
+        tempo_core.main_logic.test_mods_all(
+            toggle_engine=False,
+            use_symlinks=False
+        )
 
 
 if __name__ == "__main__":
@@ -286,7 +280,8 @@ if __name__ == "__main__":
 
 
 # To Do
-# have it install ue4ss into each game, and cache these installs
+# when unreal engine directory is not specified, but unreal engine dir is needed, check the unreal engine version, and from this check an env var for the coresponding install
+# have it install ue4ss into each game, and cache these installs, does it hash verify currently, and ensure valid zip?
 # after releases are made unzip them into the game
 # check the files all exist at the right place, and are appropriate sizes
 # run the game with nullrhi parameter, and parse the ue4ss log for mod output
@@ -308,3 +303,40 @@ if __name__ == "__main__":
 
 # if using iostore unreal pak made stuff, it either doesn't make a pak if there
 # are not files that go in paks avialabnle or it needs to be a sep step
+
+# sometimes cache zips can get corrupted, for example interrupted mid download
+
+
+# fix add/remove/edit mod cli functions
+# make a questionary for adding a mod
+# make params use one-two instead of one_two
+# instead of making lists of options directly, pull a string list from enums or other classes
+
+
+# relative to config dir and current working dir stuff
+# if in settings json, is relative to current dir
+# if being passed via cmdline it's relative to current working dir
+
+# choose what parts go where doc wise, tempo-[cli, tempo-[core, tempo-gui, in editor, etc...
+# update documentation
+
+# switch to pathlib instead of strings for a lot of things
+
+# TEMPO_UNREAL_EDITOR_4_27 env vars, also for other versions
+
+# add a global config, you can place various things to be reused by other configs here
+# like one global config for all your unreal engine installs
+# kinda doesn't make sense for most stuff in teh config though
+# allow specification of the mod packaging directory where the reused preedited files are stored
+# commandline thing to fix retoc miosing uproject name
+# commandline thing fort uassetgui hex editing guid cli thing
+
+
+
+
+# Later
+# paths to executables in the hook state stuff, should deal with resolving relative paths and absolute paths
+# giving projects ids to env vars can be grabbed via id and other stuff?
+#
+# skip game finding window step for when they use -nullrhi or something
+#

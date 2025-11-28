@@ -1,11 +1,33 @@
 from tempo_core import app_runner, hook_states, logger, settings, timer
+from tempo_core import data_structures
 from tempo_core.data_structures import ExecutionMode, GameLaunchType, HookStateType
 from tempo_core.programs.steam import get_steam_exe_location
 
 
-def run_game_exe():
+# finish this later
+def get_game_run_method() -> data_structures.ExecutionMode:
+    # default to async, check params, config, env var
+    return data_structures.ExecutionMode.ASYNC
+
+
+def run_game_for_monitoring():
+    if get_game_run_method() == data_structures.ExecutionMode.ASYNC:
+        run_game_exe_async()
+    else:
+        run_game_exe_sync()
+
+
+def run_game_exe_sync():
     app_runner.run_app(
-        exe_path=settings.get_game_exe_path(),
+        exe_path=str(settings.get_game_exe_path()),
+        exec_mode=ExecutionMode.SYNC,
+        args=settings.get_game_launch_params(),
+    )
+
+
+def run_game_exe_async():
+    app_runner.run_app(
+        exe_path=str(settings.get_game_exe_path()),
         exec_mode=ExecutionMode.ASYNC,
         args=settings.get_game_launch_params(),
     )
@@ -35,7 +57,7 @@ def run_game():
     )
     launch_type = GameLaunchType(settings.get_game_info_launch_type_enum_str_value())
     if launch_type == GameLaunchType.EXE:
-        run_game_exe()
+        run_game_for_monitoring()
     elif launch_type == GameLaunchType.STEAM:
         run_game_steam()
     # elif launch_type == game_launch_type.EPIC:

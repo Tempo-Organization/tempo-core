@@ -71,7 +71,7 @@ def git_info_check():
 
 
 def game_exe_check():
-    file_io.verify_file_exists(settings.get_game_exe_path())
+    file_io.verify_file_exists(str(settings.get_game_exe_path()))
 
 
 def clear_temp_dir():

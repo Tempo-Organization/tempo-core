@@ -7,7 +7,7 @@ from tempo_core.programs import unreal_engine
 
 
 def custom_get_game_dir():
-    return unreal_engine.get_game_dir(settings.get_game_exe_path())
+    return unreal_engine.get_game_dir(str(settings.get_game_exe_path()))
 
 
 def custom_get_game_paks_dir() -> str:
@@ -126,4 +126,4 @@ def get_game_window_title() -> str:
     if potential_window_title_override:
         return potential_window_title_override
     else:
-        return unreal_engine.get_game_process_name(settings.get_game_exe_path())
+        return unreal_engine.get_game_process_name(str(settings.get_game_exe_path()))
