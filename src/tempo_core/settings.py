@@ -239,7 +239,7 @@ def get_cleanup_repo_path() -> pathlib.Path | None:
     if not os.path.isabs(raw_path):
         return pathlib.Path(str(settings_information.settings_json_dir.path), raw_path).resolve()
     else:
-        return raw_path.resolve()
+        return pathlib.Path(raw_path).resolve()
 
 
 def get_window_title_override() -> str | None:
@@ -324,7 +324,7 @@ def get_ide_path() -> pathlib.Path | None:
     if not os.path.isabs(raw_path):
         return pathlib.Path(str(settings_information.settings_json_dir.path), raw_path).resolve()
     else:
-        return raw_path.resolve()
+        return pathlib.Path(raw_path).resolve()
 
 
 def get_blender_path() -> pathlib.Path | None:
@@ -337,7 +337,7 @@ def get_blender_path() -> pathlib.Path | None:
     if not os.path.isabs(raw_path):
         return pathlib.Path(str(settings_information.settings_json_dir.path), raw_path).resolve()
     else:
-        return raw_path.resolve()
+        return pathlib.Path(raw_path).resolve()
 
 
 def get_game_info_launch_type_enum_str_value() -> str:
