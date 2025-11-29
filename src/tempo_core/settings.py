@@ -188,58 +188,59 @@ def get_game_launcher_exe_path() -> pathlib.Path | None:
         return None
 
 
-# def get_uproject_file() -> pathlib.Path | None:
-#     raw_path = settings_information.settings.get("engine_info", {}).get(
-#         "unreal_project_file", None
-#     )
-#     settings_dir = str(settings_information.settings_json_dir.path)
-#     if not raw_path or not os.path.isdir(settings_dir):
-#         return None
-
-#     if not os.path.isabs(raw_path):
-#         return pathlib.Path(settings_dir, raw_path).resolve()
-#         # raw_path = os.path.join(file_io.SCRIPT_DIR, raw_path)
-#         # raw_path = os.path.join(get_temp_directory(), raw_path)
-#         # raw_path = os.path.join(settings_dir, raw_path
-#     else:
-#         return pathlib.Path(raw_path).resolve()
-import traceback
 def get_uproject_file() -> pathlib.Path | None:
     raw_path = settings_information.settings.get("engine_info", {}).get(
         "unreal_project_file", None
     )
     settings_dir = str(settings_information.settings_json_dir.path)
-
-    # --- Debug output ---
-    print("\n[get_uproject_file_debug] Called")
-    print(f"  raw_path: {raw_path!r}")
-    print(f"  settings_dir: {settings_dir!r}")
-    print(f"  settings_dir exists: {os.path.isdir(settings_dir)}")
-    print(f"  is raw_path absolute: {os.path.isabs(raw_path) if raw_path else None}")
-
-    # Optional: print the callsite
-    print("  Call stack:")
-    for line in traceback.format_stack(limit=5):
-        print("    " + line.strip())
-
-    if not raw_path:
-        print("  -> returning None (raw_path is empty)")
+    if not raw_path or not os.path.isdir(settings_dir):
         return None
 
-    if not os.path.isdir(settings_dir):
-        print("  -> returning None (settings_dir does not exist)")
-        return None
-
-    # Build final path
     if not os.path.isabs(raw_path):
-        final = pathlib.Path(settings_dir, raw_path).resolve()
-        print(f"  -> relative path resolved to: {str(final)!r}")
-        return final
+        return pathlib.Path(settings_dir, raw_path).resolve()
+        # raw_path = os.path.join(file_io.SCRIPT_DIR, raw_path)
+        # raw_path = os.path.join(get_temp_directory(), raw_path)
+        # raw_path = os.path.join(settings_dir, raw_path
     else:
-        final = pathlib.Path(raw_path).resolve()
-        print(f"  -> absolute path resolved to: {str(final)!r}")
-        return final
+        return pathlib.Path(raw_path).resolve()
 
+
+# import traceback
+# def get_uproject_file() -> pathlib.Path | None:
+#     raw_path = settings_information.settings.get("engine_info", {}).get(
+#         "unreal_project_file", None
+#     )
+#     settings_dir = str(settings_information.settings_json_dir.path)
+
+#     # --- Debug output ---
+#     print("\n[get_uproject_file_debug] Called")
+#     print(f"  raw_path: {raw_path!r}")
+#     print(f"  settings_dir: {settings_dir!r}")
+#     print(f"  settings_dir exists: {os.path.isdir(settings_dir)}")
+#     print(f"  is raw_path absolute: {os.path.isabs(raw_path) if raw_path else None}")
+
+#     # Optional: print the callsite
+#     print("  Call stack:")
+#     for line in traceback.format_stack(limit=5):
+#         print("    " + line.strip())
+
+#     if not raw_path:
+#         print("  -> returning None (raw_path is empty)")
+#         return None
+
+#     if not os.path.isdir(settings_dir):
+#         print("  -> returning None (settings_dir does not exist)")
+#         return None
+
+#     # Build final path
+#     if not os.path.isabs(raw_path):
+#         final = pathlib.Path(settings_dir, raw_path).resolve()
+#         print(f"  -> relative path resolved to: {str(final)!r}")
+#         return final
+#     else:
+#         final = pathlib.Path(raw_path).resolve()
+#         print(f"  -> absolute path resolved to: {str(final)!r}")
+#         return final
 
 
 # def get_uproject_file() -> pathlib.Path | None:

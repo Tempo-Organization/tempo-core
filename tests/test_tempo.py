@@ -280,6 +280,11 @@ if __name__ == "__main__":
 
 
 # To Do
+# TEMPO_UNREAL_ENGINE_DIRECTORY_4_27
+# TEMPO_UNREAL_ENGINE_DIRECTORY_5_1
+# UNREAL_ENGINE_DIRECTORY_4_27
+# UNREAL_ENGINE_DIRECTORY_5_1
+#
 # when unreal engine directory is not specified, but unreal engine dir is needed, check the unreal engine version, and from this check an env var for the coresponding install
 # have it install ue4ss into each game, and cache these installs, does it hash verify currently, and ensure valid zip?
 # after releases are made unzip them into the game
@@ -299,44 +304,32 @@ if __name__ == "__main__":
 # relative paths in config and all are broken right now, test without and figure it out later
 
 # Maybes:
-# make unique cache/temp dir enums?
 
 # if using iostore unreal pak made stuff, it either doesn't make a pak if there
 # are not files that go in paks avialabnle or it needs to be a sep step
 
-# sometimes cache zips can get corrupted, for example interrupted mid download
 
 
-# fix add/remove/edit mod cli functions
-# make a questionary for adding a mod
+
+
+
+# sometimes cache zips can get corrupted, for example interrupted mid download, deal with this, maybe add a hash check
+# fix add/remove/edit mod cli functions/add questionary versions
 # make params use one-two instead of one_two
-# instead of making lists of options directly, pull a string list from enums or other classes
-
-
-# relative to config dir and current working dir stuff
-# if in settings json, is relative to current dir
-# if being passed via cmdline it's relative to current working dir
-
-# choose what parts go where doc wise, tempo-[cli, tempo-[core, tempo-gui, in editor, etc...
-# update documentation
-
-# switch to pathlib instead of strings for a lot of things
-
-# TEMPO_UNREAL_EDITOR_4_27 env vars, also for other versions
-
-# add a global config, you can place various things to be reused by other configs here
-# like one global config for all your unreal engine installs
-# kinda doesn't make sense for most stuff in teh config though
+# instead of making lists of options directly for cli commands, pull a string list from enums or other classes
 # allow specification of the mod packaging directory where the reused preedited files are stored
 # commandline thing to fix retoc miosing uproject name
-# commandline thing fort uassetgui hex editing guid cli thing
-
+# command for uassetgui to fix retoc missing uproject name for unreal engine 4 versions
+# # choose what parts go where doc wise, tempo-[cli, tempo-[core, tempo-gui, in editor, etc...
+# update documentation
 
 
 
 # Later
 # paths to executables in the hook state stuff, should deal with resolving relative paths and absolute paths
 # giving projects ids to env vars can be grabbed via id and other stuff?
-#
-# skip game finding window step for when they use -nullrhi or something
+# add a global config, you can place various things to be reused by other configs here
+# like one global config for all your unreal engine installs
+# switch to pathlib instead of strings for a lot of things
+# make unique cache/temp dir enums?
 #
