@@ -1,6 +1,5 @@
 {
   "engine_info": {
-    "unreal_engine_dir": "D:/unreal_engine_installs/UE_4.27",
     "unreal_project_file": "../src/tempo_core/temp/tests/shipping_iostore_no_sigs_4_27_2/unreal_project/TempoTesting.uproject"
   },
   "game_info": {

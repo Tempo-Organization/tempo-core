@@ -280,16 +280,14 @@ if __name__ == "__main__":
 
 
 # To Do
-# TEMPO_UNREAL_ENGINE_DIRECTORY_4_27
-# TEMPO_UNREAL_ENGINE_DIRECTORY_5_1
-# UNREAL_ENGINE_DIRECTORY_4_27
-# UNREAL_ENGINE_DIRECTORY_5_1
 #
-# when unreal engine directory is not specified, but unreal engine dir is needed, check the unreal engine version, and from this check an env var for the coresponding install
+# allow specification of the mod packaging directory where the reused preedited files are stored, which commands need this param?
+# # generic for all, and then allow specification for specific mod names through various methods
+# # allow use of relative paths, and .. and stuff
+#
 # have it install ue4ss into each game, and cache these installs, does it hash verify currently, and ensure valid zip?
-# after releases are made unzip them into the game
+# after releases are made unzip them into the game?
 # check the files all exist at the right place, and are appropriate sizes
-# run the game with nullrhi parameter, and parse the ue4ss log for mod output
 # add a potential check for if the above is taking too long
 # retoc and unreal pak example made mods are not being packaged into releases dir properly
 
@@ -301,7 +299,6 @@ if __name__ == "__main__":
 
 # Later
 # account for bp only games/ones that have the exe within the Engine dir tree
-# relative paths in config and all are broken right now, test without and figure it out later
 
 # Maybes:
 
@@ -316,12 +313,27 @@ if __name__ == "__main__":
 # sometimes cache zips can get corrupted, for example interrupted mid download, deal with this, maybe add a hash check
 # fix add/remove/edit mod cli functions/add questionary versions
 # make params use one-two instead of one_two
-# instead of making lists of options directly for cli commands, pull a string list from enums or other classes
-# allow specification of the mod packaging directory where the reused preedited files are stored
 # commandline thing to fix retoc miosing uproject name
 # command for uassetgui to fix retoc missing uproject name for unreal engine 4 versions
 # # choose what parts go where doc wise, tempo-[cli, tempo-[core, tempo-gui, in editor, etc...
 # update documentation
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -332,4 +344,5 @@ if __name__ == "__main__":
 # like one global config for all your unreal engine installs
 # switch to pathlib instead of strings for a lot of things
 # make unique cache/temp dir enums?
-#
+# ability to set unreal version through commandline, and env var on top of the auto detection based on game, and settings file
+# -nullrhi compatibility

@@ -112,6 +112,25 @@ def get_unreal_engine_dir() -> pathlib.Path | None:
     unreal_engine_directory = settings_information.settings.get("engine_info", {}).get("unreal_engine_dir", None)
     if unreal_engine_directory and not os.path.isabs(unreal_engine_directory):
         unreal_engine_directory = pathlib.Path(str(settings_information.settings_json_dir.path), unreal_engine_directory)
+    else:
+        unreal_version = get_unreal_engine_version(engine_path=None)
+        env_var_string_one = 'UNREAL_ENGINE_DIRECTORY'
+        env_var_string_two = f'TEMPO_{env_var_string_one}'
+        env_var_string_three = f'{env_var_string_one}_{unreal_version.major_version}_{unreal_version.minor_version}'
+        env_var_string_four = f'TEMPO_{env_var_string_three}'
+        var_one = os.environ.get(env_var_string_one)
+        var_two = os.environ.get(env_var_string_two)
+        var_three = os.environ.get(env_var_string_three)
+        var_four = os.environ.get(env_var_string_four)
+        # print(env_var_string_one)
+        # print(env_var_string_two)
+        # print(env_var_string_three)
+        # print(env_var_string_four)
+        # print(f'var one: {var_one}')
+        # print(f'var two: {var_two}')
+        # print(f'var three: {var_three}')
+        # print(f'var four: {var_four}')
+        unreal_engine_directory = var_four or var_three or var_two or var_one
     file_io.check_path_exists(str(unreal_engine_directory))
     return unreal_engine_directory
 
@@ -414,14 +433,30 @@ def get_engine_launch_args() -> list:
     )
 
 
-def get_unreal_engine_version(engine_path: str) -> data_structures.UnrealEngineVersion:
+# priority is not proper now for this I think
+def get_unreal_engine_version(engine_path: str | None) -> data_structures.UnrealEngineVersion:
     potential_valid_minor_version = settings_information.settings.get(
         "engine_info", {}
     ).get("unreal_engine_minor_version", None)
     potential_valid_major_version = settings_information.settings.get(
         "engine_info", {}
     ).get("unreal_engine_major_version", None)
-    if potential_valid_minor_version and potential_valid_major_version:
+    if not engine_path:
+        var_one = 'TEMPO_UNREAL_ENGINE_MAJOR_VERSION'
+        var_two = 'TEMPO_UNREAL_ENGINE_MINOR_VERSION'
+        var_three = 'UNREAL_ENGINE_MAJOR_VERSION'
+        var_four = 'UNREAL_ENGINE_MINOR_VERSION'
+        var_five = os.environ.get(var_one)
+        var_six = os.environ.get(var_two)
+        var_seven = os.environ.get(var_three)
+        var_eight = os.environ.get(var_four)
+        prioritized_major_value = var_five or var_eight
+        prioritized_minor_value = var_six or var_seven
+        if prioritized_major_value and prioritized_minor_value:
+            return data_structures.UnrealEngineVersion(major_version=int(prioritized_major_value), minor_version=int(prioritized_minor_value))
+        else:
+            raise RuntimeError('There was no valid unreal engine version findeable from env var, env file, config, param, or auto detected through game install, or unreal engine build version. Please specify somehow.')
+    elif potential_valid_minor_version and potential_valid_major_version:
         unreal_engine_version = data_structures.UnrealEngineVersion(
             minor_version=int(potential_valid_minor_version),
             major_version=int(potential_valid_major_version),
