@@ -476,8 +476,8 @@ def install_mod(
     elif packing_type == PackingType.REPAK:
         install_repak_mod(mod_name, use_symlinks=use_symlinks)
     elif packing_type == PackingType.UNREAL_PAK:
-        if not compression_type:
-            raise RuntimeError('compression type is None for some reason')
+        # if not compression_type:
+        #     raise RuntimeError('compression type is None for some reason')
         unreal_pak.install_unreal_pak_mod(
             mod_name, compression_type, use_symlinks=use_symlinks
         )
