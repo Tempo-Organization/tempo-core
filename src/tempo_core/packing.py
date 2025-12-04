@@ -186,16 +186,26 @@ def handle_install_logic(packing_type: PackingType, *, use_symlinks: bool):
                     use_symlinks=use_symlinks,
                 )
             else:
-                install_mod(
-                    packing_type=packing_type,
-                    mod_name=mod_info["mod_name"],
-                    compression_type=CompressionType(
-                        get_enum_from_val_loose(
-                            CompressionType, mod_info.get("compression_type", None)
-                        )
-                    ),
-                    use_symlinks=use_symlinks,
-                )
+                test = mod_info.get("compression_type", None)
+                if test:
+                    install_mod(
+                        packing_type=packing_type,
+                        mod_name=mod_info["mod_name"],
+                        compression_type=CompressionType(
+                            get_enum_from_val_loose(
+                                CompressionType, mod_info.get("compression_type", None)
+                            )
+                        ),
+                        use_symlinks=use_symlinks,
+                    )
+                else:
+                    install_mod(
+                        packing_type=packing_type,
+                        mod_name=mod_info["mod_name"],
+                        compression_type=None,
+                        use_symlinks=use_symlinks,
+                    )
+
 
 
 @hook_states.hook_state_decorator(
