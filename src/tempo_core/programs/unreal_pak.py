@@ -74,7 +74,7 @@ def make_ue4_iostore_mod(
     exe_path: str,
     intermediate_pak_file: str,
     mod_name: str,
-    compression_str: str,
+    compression_str: str | None,
     dest_pak_file: str,
     use_symlinks: bool,
 ):
@@ -91,7 +91,7 @@ def make_ue4_iostore_mod(
     temp_dir = tempo_core.settings.get_temp_directory()
     unreal_engine_dir = tempo_core.settings.get_unreal_engine_dir()
     unreal_engine_editor_cmd_executable_path = unreal_engine.get_editor_cmd_path(
-        unreal_engine_dir
+        str(unreal_engine_dir)
     )
     ue_win_dir_str = unreal_engine.get_win_dir_str(str(unreal_engine_dir))
     uproject_dir = utilities.get_uproject_dir()
@@ -145,7 +145,7 @@ def make_ue4_iostore_mod(
     os.makedirs(os.path.dirname(dest_ubulk_manifest), exist_ok=True)
 
     file_io.verify_directories_exists(
-        [cooked_content_dir, src_metadata_dir, unreal_engine_dir]
+        [cooked_content_dir, src_metadata_dir, str(unreal_engine_dir)]
     )
     file_io.verify_files_exists(
         [
@@ -154,7 +154,7 @@ def make_ue4_iostore_mod(
             commands_txt_path,
             src_ubulk_manifest,
             # unreal_engine_editor_cmd_executable_path,
-            uproject_file,
+            str(uproject_file),
         ]
     )
 
@@ -236,16 +236,16 @@ def make_ue5_iostore_mods(
     exe_path: str,
     intermediate_pak_file: str,
     mod_name: str,
-    compression_str: str,
+    compression_str: str | None,
     dest_pak_file: str,
     use_symlinks: bool,
 ):
     unreal_engine_dir = tempo_core.settings.get_unreal_engine_dir()
     # unreal_pak = unreal_engine.get_unreal_pak_exe_path(unreal_engine_dir)
     unreal_engine_editor_cmd_executable_path = unreal_engine.get_editor_cmd_path(
-        unreal_engine_dir
+        str(unreal_engine_dir)
     )
-    ue_win_dir_str = unreal_engine.get_win_dir_str(unreal_engine_dir)
+    ue_win_dir_str = unreal_engine.get_win_dir_str(str(unreal_engine_dir))
     uproject_name = tempo_core.settings.get_uproject_name()
     if not uproject_name:
         raise FileNotFoundError("uproject name returned None at a critical moment")
@@ -276,7 +276,7 @@ def make_ue5_iostore_mods(
     os.makedirs(dest_ubulk_manifest_dir, exist_ok=True)
 
     file_io.verify_directories_exists(
-        [cooked_content_dir, unreal_engine_dir, meta_data_dir]
+        [cooked_content_dir, str(unreal_engine_dir), meta_data_dir]
     )
     file_io.verify_files_exists(
         [
@@ -293,7 +293,7 @@ def make_ue5_iostore_mods(
     shutil.copy(src_ubulk_manifest, dest_ubulk_manifest)
 
     platform_string = unreal_engine.get_win_dir_str(
-        tempo_core.settings.get_unreal_engine_dir()
+        str(tempo_core.settings.get_unreal_engine_dir())
     )
     iostore_txt_location = os.path.normpath(
         f"{tempo_core.settings.get_temp_directory()}/iostore_packaging/{mod_name}_iostore.txt"
@@ -331,11 +331,11 @@ def make_iostore_unreal_pak_mod(
     exe_path: str,
     intermediate_pak_file: str,
     mod_name: str,
-    compression_str: str,
+    compression_str: str | None,
     dest_pak_file: str,
     use_symlinks: bool,
 ):
-    if unreal_engine.is_game_ue4(tempo_core.settings.get_unreal_engine_dir()):
+    if unreal_engine.is_game_ue4(str(tempo_core.settings.get_unreal_engine_dir())):
         make_ue4_iostore_mod(
             mod_name=mod_name,
             exe_path=exe_path,
@@ -360,12 +360,13 @@ def make_non_iostore_unreal_pak_mod(
     exe_path: str,
     intermediate_pak_file: str,
     mod_name: str,
-    compression_str: str,
+    compression_str: str | None,
     dest_pak_file: str,
     use_symlinks: bool,
 ):
     command = f'"{exe_path}" "{intermediate_pak_file}" -Create="{make_response_file_non_iostore(mod_name)}"'
-    if compression_str != "None":
+    if compression_str != "None" and compression_str:
+        # find out which version compressed instead of compressed was added and pass either based on that
         command = f"{command} -compress -compressionformat={compression_str}"
     tempo_core.app_runner.run_app(command)
     if os.path.islink(dest_pak_file):
@@ -380,10 +381,14 @@ def make_non_iostore_unreal_pak_mod(
 
 
 def install_unreal_pak_mod(
-    mod_name: str, compression_type: CompressionType, *, use_symlinks: bool
+    mod_name: str, compression_type: CompressionType | None, *, use_symlinks: bool
 ):
     move_files_for_packing(mod_name)
-    compression_str = CompressionType(compression_type).value
+    # add a check for if compression type is None here
+    if compression_type:
+        compression_str = CompressionType(compression_type).value
+    else:
+        compression_str = None
     output_pak_dir = f"{tempo_core.settings.get_temp_directory()}/{utilities.get_pak_dir_structure(mod_name)}"
     intermediate_pak_file = f"{tempo_core.settings.get_temp_directory()}/{utilities.get_pak_dir_structure(mod_name)}/{mod_name}.pak"
     dest_pak_file = f"{utilities.custom_get_game_paks_dir()}/{utilities.get_pak_dir_structure(mod_name)}/{mod_name}.pak"
@@ -399,7 +404,7 @@ def install_unreal_pak_mod(
     if not uproject_file:
         raise FileNotFoundError("get uproject file returned None at a critical moment")
     is_game_iostore = unreal_engine.get_is_game_iostore(
-        uproject_file, utilities.custom_get_game_dir()
+        str(uproject_file), utilities.custom_get_game_dir()
     )
 
     if is_game_iostore:

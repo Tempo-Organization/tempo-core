@@ -190,7 +190,7 @@ def handle_install_logic(packing_type: PackingType, *, use_symlinks: bool):
                     mod_name=mod_info["mod_name"],
                     compression_type=CompressionType(
                         get_enum_from_val(
-                            CompressionType, mod_info.get("compression_type", "Zlib")
+                            CompressionType, mod_info.get("compression_type", None)
                         )
                     ),
                     use_symlinks=use_symlinks,
