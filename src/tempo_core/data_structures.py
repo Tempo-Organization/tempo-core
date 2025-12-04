@@ -201,7 +201,7 @@ def get_enum_from_val(enum_cls: Type[Enum], value: Any) -> Enum:
     raise ValueError(f"{value} is not a valid value for {enum_cls.__name__}")
 
 
-def get_enum_from_val_can_return_none(enum_cls: Type[Enum], value: Any) -> Enum | None:
+def get_enum_from_val_loose(enum_cls: Type[Enum], value: Any) -> Enum | None:
     for entry in enum_cls:
         if entry.value == value:
             return entry
