@@ -18,6 +18,7 @@ from tempo_core.data_structures import (
     HookStateType,
     PackingType,
     get_enum_from_val,
+    get_enum_from_val_can_return_none
 )
 from tempo_core.programs import repak, unreal_engine, unreal_pak, retoc
 
@@ -189,7 +190,7 @@ def handle_install_logic(packing_type: PackingType, *, use_symlinks: bool):
                     packing_type=packing_type,
                     mod_name=mod_info["mod_name"],
                     compression_type=CompressionType(
-                        get_enum_from_val(
+                        get_enum_from_val_can_return_none(
                             CompressionType, mod_info.get("compression_type", None)
                         )
                     ),
