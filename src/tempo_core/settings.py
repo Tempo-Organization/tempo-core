@@ -376,11 +376,12 @@ def get_persistent_mods_dir() -> pathlib.Path:
     return final_dir
 
 
-# still need to do relative and .. below
 def get_persistent_mod_dir(mod_name: str) -> pathlib.Path:
     default_dir = pathlib.Path(get_persistent_mods_dir(), mod_name)
     mod_info = utilities.get_mods_info_dict_from_mod_name(mod_name)
     dir_override = mod_info.get('persistent_files_directory', None)
+    if dir_override and not os.path.abspath(dir_override):
+        dir_override = os.path.normpath(f'{settings_information.settings_json_dir}/{dir_override}')
     final_dir = dir_override or default_dir
     os.makedirs(final_dir, exist_ok=True)
     return pathlib.Path(final_dir).resolve()
