@@ -103,7 +103,7 @@ def get_mod_name_dir_files(mod_name: str) -> list:
 
 
 def get_persistent_mod_files(mod_name: str) -> list:
-    return file_io.get_files_in_tree(settings.get_persistent_mod_dir(mod_name))
+    return file_io.get_files_in_tree(str(settings.get_persistent_mod_dir(mod_name)))
 
 
 def clean_temp_dir():

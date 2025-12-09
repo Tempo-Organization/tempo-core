@@ -281,14 +281,6 @@ if __name__ == "__main__":
 
 # To Do
 #
-# add mod supplies "" as compression type when none provided which seems to cause errors for packaging fix this somehow
-#
-# mods_info main_persistent_files
-# mods_info mod_category persistent_files_directory
-# allow specification of the mod packaging directory where the reused preedited files are stored, which commands need this param?
-# # generic for all, and then allow specification for specific mod names through various methods
-# # allow use of relative paths, and .. and stuff
-#
 # have it install ue4ss into each game, and cache these installs, does it hash verify currently, and ensure valid zip?
 # after releases are made unzip them into the game?
 # check the files all exist at the right place, and are appropriate sizes

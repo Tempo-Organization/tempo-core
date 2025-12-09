@@ -10,7 +10,7 @@ import subprocess
 from dataclasses import dataclass
 
 from tempo_core.programs import unreal_engine
-from tempo_core import file_io, logger, process_management, data_structures
+from tempo_core import file_io, logger, process_management, data_structures, utilities
 
 
 class SettingsOrigin(enum.Enum):
@@ -363,16 +363,27 @@ def get_window_management_events() -> dict:
     return settings_information.settings.get("window_management_events", [])
 
 
-def get_persistent_mod_dir(mod_name: str) -> str:
-    return os.path.normpath(
-        f"{settings_information.settings_json_dir}/mod_packaging/persistent_files/{mod_name}"
-    )
+def get_persistent_mods_dir() -> pathlib.Path:
+    env_dir = os.environ.get('TEMPO_PERSISTENT_MODS_DIRECTORY', None)
+    if env_dir and not os.path.isabs(env_dir):
+            env_dir = os.path.normpath(f'{os.getcwd()}/{env_dir}')
+    persistent_dir_from_settings_file = settings_information.settings.get('mods_info', {}).get('persistent_files_directory')
+    if persistent_dir_from_settings_file and not os.path.isabs(persistent_dir_from_settings_file):
+            persistent_dir_from_settings_file = os.path.normpath(f'{settings_information.settings_json_dir}/{persistent_dir_from_settings_file}')
+    default_dir = os.path.normpath(f"{settings_information.settings_json_dir}/mod_packaging/persistent_files")
+    final_dir = pathlib.Path(env_dir or persistent_dir_from_settings_file or default_dir).resolve()
+    os.makedirs(final_dir, exist_ok=True)
+    return final_dir
 
 
-def get_persistent_mods_dir() -> str:
-    return os.path.normpath(
-        f"{settings_information.settings_json_dir}/mod_packaging/persistent_files"
-    )
+# still need to do relative and .. below
+def get_persistent_mod_dir(mod_name: str) -> pathlib.Path:
+    default_dir = pathlib.Path(get_persistent_mods_dir(), mod_name)
+    mod_info = utilities.get_mods_info_dict_from_mod_name(mod_name)
+    dir_override = mod_info.get('persistent_files_directory', None)
+    final_dir = dir_override or default_dir
+    os.makedirs(final_dir, exist_ok=True)
+    return pathlib.Path(final_dir).resolve()
 
 
 def get_alt_packing_dir_name() -> str | None:

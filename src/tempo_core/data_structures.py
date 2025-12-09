@@ -89,7 +89,6 @@ class CompressionType(Enum):
     enum for the types of mod pak compression
     """
 
-    NONE = "None"
     ZLIB = "Zlib"
     GZIP = "Gzip"
     OODLE = "Oodle"
