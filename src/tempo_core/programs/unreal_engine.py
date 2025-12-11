@@ -59,9 +59,9 @@ def get_game_content_dir(game_dir: str):
     return os.path.join(game_dir, "Content")
 
 
-def get_game_pak_folder_archives(uproject_file_path: str, game_dir: str) -> list:
+def get_game_pak_folder_archives(uproject_file_path: str, game_dir: str) -> list[str]:
     if get_is_game_iostore(uproject_file_path, game_dir):
-        return data_structures.unreal_non_iostore_no_sigs_archive_extensions
+        return data_structures.unreal_iostore_no_sigs_archive_extensions
     return data_structures.unreal_non_iostore_no_sigs_archive_extensions
 
 

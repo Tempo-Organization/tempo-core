@@ -14,6 +14,8 @@ from tempo_core import (
 from tempo_core.programs import unreal_engine
 
 
+ORIGINAL_CWD = os.getcwd()
+
 def uproject_check():
     uproject_file = settings.get_uproject_file()
 

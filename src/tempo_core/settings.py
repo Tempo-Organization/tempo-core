@@ -1,16 +1,16 @@
-import os
-import sys
-import json
 import enum
-import shutil
-import typing
+import json
+import os
 import pathlib
 import platform
+import shutil
 import subprocess
+import sys
+import typing
 from dataclasses import dataclass
 
+from tempo_core import data_structures, file_io, logger, process_management, utilities
 from tempo_core.programs import unreal_engine
-from tempo_core import file_io, logger, process_management, data_structures, utilities
 
 
 class SettingsOrigin(enum.Enum):
@@ -97,9 +97,13 @@ def init_settings(settings_json_path: pathlib.Path):
         else:
             raise NotImplementedError(f"Unsupported OS: {current_os}")
     settings_information.init_settings_done = True
-    print(f'settings_json_path: {settings_json_path}')
-    settings_information.settings_json = SettingSpecificInfo(path=pathlib.Path(settings_json_path), origin=SettingsOrigin.COMMAND_LINE)
-    settings_information.settings_json_dir = SettingSpecificInfo(path=pathlib.Path(settings_json_path).parent, origin=SettingsOrigin.COMMAND_LINE)
+    print(f"settings_json_path: {settings_json_path}")
+    settings_information.settings_json = SettingSpecificInfo(
+        path=pathlib.Path(settings_json_path), origin=SettingsOrigin.COMMAND_LINE
+    )
+    settings_information.settings_json_dir = SettingSpecificInfo(
+        path=pathlib.Path(settings_json_path).parent, origin=SettingsOrigin.COMMAND_LINE
+    )
 
 
 def load_settings(settings_json: str):
@@ -109,15 +113,19 @@ def load_settings(settings_json: str):
 
 
 def get_unreal_engine_dir() -> pathlib.Path | None:
-    unreal_engine_directory = settings_information.settings.get("engine_info", {}).get("unreal_engine_dir", None)
+    unreal_engine_directory = settings_information.settings.get("engine_info", {}).get(
+        "unreal_engine_dir", None
+    )
     if unreal_engine_directory and not os.path.isabs(unreal_engine_directory):
-        unreal_engine_directory = pathlib.Path(str(settings_information.settings_json_dir.path), unreal_engine_directory)
+        unreal_engine_directory = pathlib.Path(
+            str(settings_information.settings_json_dir.path), unreal_engine_directory
+        )
     else:
         unreal_version = get_unreal_engine_version(engine_path=None)
-        env_var_string_one = 'UNREAL_ENGINE_DIRECTORY'
-        env_var_string_two = f'TEMPO_{env_var_string_one}'
-        env_var_string_three = f'{env_var_string_one}_{unreal_version.major_version}_{unreal_version.minor_version}'
-        env_var_string_four = f'TEMPO_{env_var_string_three}'
+        env_var_string_one = "UNREAL_ENGINE_DIRECTORY"
+        env_var_string_two = f"TEMPO_{env_var_string_one}"
+        env_var_string_three = f"{env_var_string_one}_{unreal_version.major_version}_{unreal_version.minor_version}"
+        env_var_string_four = f"TEMPO_{env_var_string_three}"
         var_one = os.environ.get(env_var_string_one)
         var_two = os.environ.get(env_var_string_two)
         var_three = os.environ.get(env_var_string_three)
@@ -137,74 +145,86 @@ def get_unreal_engine_dir() -> pathlib.Path | None:
 
 def is_unreal_pak_packing_enum_in_use() -> bool:
     is_in_use = False
-    for entry in get_mods_info_list_from_json():
-        if entry["packing_type"] == "unreal_pak":
+    mod_info_dict = get_mods_info_dict_from_json()
+    for mod_key in mod_info_dict.keys():
+        if mod_info_dict[mod_key]["packing_type"] == "unreal_pak":
             is_in_use = True
     return is_in_use
 
 
 def is_engine_packing_enum_in_use() -> bool:
     is_in_use = False
-    for entry in get_mods_info_list_from_json():
-        if entry["packing_type"] == "engine":
+    mod_info_dict = get_mods_info_dict_from_json()
+    for mod_key in mod_info_dict.keys():
+        if mod_info_dict[mod_key]["packing_type"] == "engine":
             is_in_use = True
     return is_in_use
 
 
 def is_repak_packing_enum_in_use() -> bool:
     is_in_use = False
-    for entry in get_mods_info_list_from_json():
-        if entry["packing_type"] == "repak":
+    mod_info_dict = get_mods_info_dict_from_json()
+    for mod_key in mod_info_dict.keys():
+        if mod_info_dict[mod_key]["packing_type"] == "repak":
             is_in_use = True
     return is_in_use
 
 
 def is_retoc_packing_enum_in_use() -> bool:
     is_in_use = False
-    for entry in get_mods_info_list_from_json():
-        if entry["packing_type"] == "retoc":
+    mod_info_dict = get_mods_info_dict_from_json()
+    for mod_key in mod_info_dict.keys():
+        if mod_info_dict[mod_key]["packing_type"] == "retoc":
             is_in_use = True
     return is_in_use
 
 
 def is_loose_packing_enum_in_use() -> bool:
     is_in_use = False
-    for entry in get_mods_info_list_from_json():
-        if entry["packing_type"] == "loose":
+    mod_info_dict = get_mods_info_dict_from_json()
+    for mod_key in mod_info_dict.keys():
+        if mod_info_dict[mod_key]["packing_type"] == "loose":
             is_in_use = True
     return is_in_use
 
 
 def get_game_exe_path() -> pathlib.Path | None:
-    game_exe_path = settings_information.settings.get("game_info", {}).get("game_exe_path", None)
+    game_exe_path = settings_information.settings.get("game_info", {}).get(
+        "game_exe_path", None
+    )
     if game_exe_path and not os.path.isabs(game_exe_path):
-        game_exe_path = pathlib.Path(str(settings_information.settings_json_dir.path), game_exe_path)
+        game_exe_path = pathlib.Path(
+            str(settings_information.settings_json_dir.path), game_exe_path
+        )
     if game_exe_path:
         return game_exe_path
     return None
 
 
 def get_git_info_repo_path() -> pathlib.Path | None:
-    raw_path = settings_information.settings.get("git_info", {}).get(
-        "repo_path", None
-    )
+    raw_path = settings_information.settings.get("git_info", {}).get("repo_path", None)
     if not raw_path:
         return None
 
     if not os.path.isabs(raw_path):
-        return pathlib.Path(str(settings_information.settings_json_dir.path), raw_path).resolve()
+        return pathlib.Path(
+            str(settings_information.settings_json_dir.path), raw_path
+        ).resolve()
     else:
         return pathlib.Path(raw_path).resolve()
 
 
-
 def get_game_launcher_exe_path() -> pathlib.Path | None:
-        game_launcher_exe_path = settings_information.settings.get("game_info", {}).get("game_launcher_exe", None)
-        if game_launcher_exe_path and not os.path.isabs(game_launcher_exe_path):
-            game_launcher_exe_path = pathlib.Path(str(settings_information.settings_json_dir.path), game_launcher_exe_path)
-        if game_launcher_exe_path:
-            return game_launcher_exe_path
-        return None
+    game_launcher_exe_path = settings_information.settings.get("game_info", {}).get(
+        "game_launcher_exe", None
+    )
+    if game_launcher_exe_path and not os.path.isabs(game_launcher_exe_path):
+        game_launcher_exe_path = pathlib.Path(
+            str(settings_information.settings_json_dir.path), game_launcher_exe_path
+        )
+    if game_launcher_exe_path:
+        return game_launcher_exe_path
+    return None
 
 
 def get_uproject_file() -> pathlib.Path | None:
@@ -305,14 +325,14 @@ def get_unreal_engine_building_main_command() -> str:
 
 
 def get_cleanup_repo_path() -> pathlib.Path | None:
-    raw_path = settings_information.settings.get("git_info", {}).get(
-        "repo_path", None
-    )
+    raw_path = settings_information.settings.get("git_info", {}).get("repo_path", None)
     if not raw_path:
         return None
 
     if not os.path.isabs(raw_path):
-        return pathlib.Path(str(settings_information.settings_json_dir.path), raw_path).resolve()
+        return pathlib.Path(
+            str(settings_information.settings_json_dir.path), raw_path
+        ).resolve()
     else:
         return pathlib.Path(raw_path).resolve()
 
@@ -364,14 +384,26 @@ def get_window_management_events() -> dict:
 
 
 def get_persistent_mods_dir() -> pathlib.Path:
-    env_dir = os.environ.get('TEMPO_PERSISTENT_MODS_DIRECTORY', None)
+    from tempo_core import initialization
+    env_dir = os.environ.get("TEMPO_PERSISTENT_MODS_DIRECTORY", None)
     if env_dir and not os.path.isabs(env_dir):
-            env_dir = os.path.normpath(f'{os.getcwd()}/{env_dir}')
-    persistent_dir_from_settings_file = settings_information.settings.get('mods_info', {}).get('persistent_files_directory')
-    if persistent_dir_from_settings_file and not os.path.isabs(persistent_dir_from_settings_file):
-            persistent_dir_from_settings_file = os.path.normpath(f'{settings_information.settings_json_dir}/{persistent_dir_from_settings_file}')
-    default_dir = os.path.normpath(f"{settings_information.settings_json_dir}/mod_packaging/persistent_files")
-    final_dir = pathlib.Path(env_dir or persistent_dir_from_settings_file or default_dir).resolve()
+        print(initialization.ORIGINAL_CWD)
+        env_dir = os.path.normpath(f"{initialization.ORIGINAL_CWD}/{env_dir}")
+    persistent_dir_from_settings_file = settings_information.settings.get(
+        "mods_info", {}
+    ).get("persistent_files_directory", None)
+    if persistent_dir_from_settings_file and not os.path.isabs(
+        persistent_dir_from_settings_file
+    ):
+        persistent_dir_from_settings_file = os.path.normpath(
+            f"{settings_information.settings_json_dir.path}/{persistent_dir_from_settings_file}"
+        )
+    default_dir = os.path.normpath(
+        f"{settings_information.settings_json_dir.path}/mod_packaging/persistent_files"
+    )
+    final_dir = pathlib.Path(
+        env_dir or persistent_dir_from_settings_file or default_dir
+    ).resolve()
     os.makedirs(final_dir, exist_ok=True)
     return final_dir
 
@@ -379,9 +411,11 @@ def get_persistent_mods_dir() -> pathlib.Path:
 def get_persistent_mod_dir(mod_name: str) -> pathlib.Path:
     default_dir = pathlib.Path(get_persistent_mods_dir(), mod_name)
     mod_info = utilities.get_mods_info_dict_from_mod_name(mod_name)
-    dir_override = mod_info.get('persistent_files_directory', None)
+    dir_override = mod_info.get("persistent_files_directory", None)
     if dir_override and not os.path.abspath(dir_override):
-        dir_override = os.path.normpath(f'{settings_information.settings_json_dir}/{dir_override}')
+        dir_override = os.path.normpath(
+            f"{settings_information.settings_json_dir.path}/{dir_override}"
+        )
     final_dir = dir_override or default_dir
     os.makedirs(final_dir, exist_ok=True)
     return pathlib.Path(final_dir).resolve()
@@ -393,8 +427,8 @@ def get_alt_packing_dir_name() -> str | None:
     )
 
 
-def get_mods_info_list_from_json() -> list:
-    return settings_information.settings.get("mods_info", [])
+def get_mods_info_dict_from_json() -> dict:
+    return settings_information.settings.get("mods_info", {})
 
 
 def get_exec_events() -> list:
@@ -402,14 +436,14 @@ def get_exec_events() -> list:
 
 
 def get_ide_path() -> pathlib.Path | None:
-    raw_path = settings_information.settings.get("optionals", {}).get(
-        "ide_path", None
-    )
+    raw_path = settings_information.settings.get("optionals", {}).get("ide_path", None)
     if not raw_path:
         return None
 
     if not os.path.isabs(raw_path):
-        return pathlib.Path(str(settings_information.settings_json_dir.path), raw_path).resolve()
+        return pathlib.Path(
+            str(settings_information.settings_json_dir.path), raw_path
+        ).resolve()
     else:
         return pathlib.Path(raw_path).resolve()
 
@@ -422,7 +456,9 @@ def get_blender_path() -> pathlib.Path | None:
         return None
 
     if not os.path.isabs(raw_path):
-        return pathlib.Path(str(settings_information.settings_json_dir.path), raw_path).resolve()
+        return pathlib.Path(
+            str(settings_information.settings_json_dir.path), raw_path
+        ).resolve()
     else:
         return pathlib.Path(raw_path).resolve()
 
@@ -446,7 +482,9 @@ def get_engine_launch_args() -> list:
 
 
 # priority is not proper now for this I think
-def get_unreal_engine_version(engine_path: str | None) -> data_structures.UnrealEngineVersion:
+def get_unreal_engine_version(
+    engine_path: str | None,
+) -> data_structures.UnrealEngineVersion:
     potential_valid_minor_version = settings_information.settings.get(
         "engine_info", {}
     ).get("unreal_engine_minor_version", None)
@@ -454,10 +492,10 @@ def get_unreal_engine_version(engine_path: str | None) -> data_structures.Unreal
         "engine_info", {}
     ).get("unreal_engine_major_version", None)
     if not engine_path:
-        var_one = 'TEMPO_UNREAL_ENGINE_MAJOR_VERSION'
-        var_two = 'TEMPO_UNREAL_ENGINE_MINOR_VERSION'
-        var_three = 'UNREAL_ENGINE_MAJOR_VERSION'
-        var_four = 'UNREAL_ENGINE_MINOR_VERSION'
+        var_one = "TEMPO_UNREAL_ENGINE_MAJOR_VERSION"
+        var_two = "TEMPO_UNREAL_ENGINE_MINOR_VERSION"
+        var_three = "UNREAL_ENGINE_MAJOR_VERSION"
+        var_four = "UNREAL_ENGINE_MINOR_VERSION"
         var_five = os.environ.get(var_one)
         var_six = os.environ.get(var_two)
         var_seven = os.environ.get(var_three)
@@ -465,9 +503,14 @@ def get_unreal_engine_version(engine_path: str | None) -> data_structures.Unreal
         prioritized_major_value = var_five or var_eight
         prioritized_minor_value = var_six or var_seven
         if prioritized_major_value and prioritized_minor_value:
-            return data_structures.UnrealEngineVersion(major_version=int(prioritized_major_value), minor_version=int(prioritized_minor_value))
+            return data_structures.UnrealEngineVersion(
+                major_version=int(prioritized_major_value),
+                minor_version=int(prioritized_minor_value),
+            )
         else:
-            raise RuntimeError('There was no valid unreal engine version findeable from env var, env file, config, param, or auto detected through game install, or unreal engine build version. Please specify somehow.')
+            raise RuntimeError(
+                "There was no valid unreal engine version findeable from env var, env file, config, param, or auto detected through game install, or unreal engine build version. Please specify somehow."
+            )
     elif potential_valid_minor_version and potential_valid_major_version:
         unreal_engine_version = data_structures.UnrealEngineVersion(
             minor_version=int(potential_valid_minor_version),

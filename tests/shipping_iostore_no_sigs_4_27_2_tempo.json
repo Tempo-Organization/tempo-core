@@ -15,52 +15,46 @@
     "launch_type": "exe",
     "window_title_override": "TempoTesting"
   },
-  "mods_info": [
-    {
+  "mods_info": {
+    "UnrealPakMadeExampleMod": {
       "compression_type": "Zlib",
       "is_enabled": true,
-      "mod_name": "UnrealPakMadeExampleMod",
       "mod_name_dir_type": "Mods",
       "packing_type": "unreal_pak",
       "pak_dir_structure": "LogicMods"
     },
-    {
+    "RepakMadeExampleMod": {
       "is_enabled": true,
-      "mod_name": "RepakMadeExampleMod",
       "mod_name_dir_type": "Mods",
       "packing_type": "repak",
       "pak_dir_structure": "LogicMods"
     },
-    {
+    "MaterialTest": {
       "compression_type": "Zlib",
       "is_enabled": true,
-      "mod_name": "MaterialTest",
       "packing_type": "engine",
       "pak_chunk_num": 2,
       "pak_dir_structure": "LogicMods"
     },
-    {
+    "LooseExampleMod": {
       "is_enabled": true,
-      "mod_name": "LooseExampleMod",
       "mod_name_dir_type": "Mods",
       "packing_type": "loose",
       "pak_dir_structure": "LogicMods"
     },
-    {
+    "EngineMadeExampleMod": {
       "compression_type": "Zlib",
       "is_enabled": true,
-      "mod_name": "EngineMadeExampleMod",
       "packing_type": "engine",
       "pak_chunk_num": 1,
       "pak_dir_structure": "LogicMods"
     },
-    {
+    "RetocMadeExampleMod": {
       "compression_type": "Zlib",
       "is_enabled": true,
-      "mod_name": "RetocMadeExampleMod",
       "mod_name_dir_type": "Mods",
       "packing_type": "retoc",
       "pak_dir_structure": "LogicMods"
     }
-  ]
+  }
 }

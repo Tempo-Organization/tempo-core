@@ -49,17 +49,19 @@ def get_mod_name_dir_name(mod_name: str) -> str:
 
 
 def get_pak_dir_structure(mod_name: str) -> str:
-    for info in settings.get_mods_info_list_from_json():
-        if info["mod_name"] == mod_name:
-            return info["pak_dir_structure"]
+    mods_info_dict = settings.get_mods_info_dict_from_json()
+    for mod_key in mods_info_dict.keys():
+        if mod_key == mod_name:
+            return mods_info_dict[mod_key]["pak_dir_structure"]
     pak_dir_structure_missing_error = "Could not find the proper pak dir structure within the mod entry in the provided settings file"
     raise RuntimeError(pak_dir_structure_missing_error)
 
 
 def get_mod_compression_type(mod_name: str) -> CompressionType:
-    for info in settings.get_mods_info_list_from_json():
-        if info["mod_name"] == mod_name:
-            compression_str = info["compression_type"]
+    mods_info_dict = settings.get_mods_info_dict_from_json()
+    for mod_key in mods_info_dict.keys():
+        if mod_key == mod_name:
+            return mods_info_dict[mod_key]["compression_type"]
             return CompressionType(get_enum_from_val(CompressionType, compression_str))
     missing_compression_type_error = (
         f'Could not find the compression type for the following mod name "{mod_name}"'
@@ -68,17 +70,19 @@ def get_mod_compression_type(mod_name: str) -> CompressionType:
 
 
 def get_unreal_mod_tree_type_str(mod_name: str) -> str:
-    for info in settings.get_mods_info_list_from_json():
-        if info["mod_name"] == mod_name:
-            return info["mod_name_dir_type"]
+    mods_info_dict = settings.get_mods_info_dict_from_json()
+    for mod_key in mods_info_dict.keys():
+        if mod_key == mod_name:
+            return mods_info_dict[mod_key]["mod_name_dir_type"]
     missing_mod_tree_type_error = f'Was unable to find the unreal mod tree type for the following mod name "{mod_name}"'
     raise RuntimeError(missing_mod_tree_type_error)
 
 
 def get_mods_info_dict_from_mod_name(mod_name: str) -> dict:
-    for info in settings.get_mods_info_list_from_json():
-        if info["mod_name"] == mod_name:
-            return dict(info)
+    mods_info_dict = settings.get_mods_info_dict_from_json()
+    for mod_key in mods_info_dict.keys():
+        if mod_key == mod_name:
+            return dict(mods_info_dict[mod_key])
     missing_mods_info_dict_error = (
         f'Was unable to find the mods info dict for the following mod name "{mod_name}"'
     )
@@ -87,7 +91,7 @@ def get_mods_info_dict_from_mod_name(mod_name: str) -> dict:
 
 def is_mod_name_in_list(mod_name: str) -> bool:
     return any(
-        info["mod_name"] == mod_name for info in settings.get_mods_info_list_from_json()
+        mod_key == mod_name for mod_key in settings.get_mods_info_dict_from_json().keys()
     )
 
 

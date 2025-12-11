@@ -18,9 +18,9 @@ from tempo_core.data_structures import (
     HookStateType,
     PackingType,
     get_enum_from_val,
-    get_enum_from_val_loose
+    get_enum_from_val_loose,
 )
-from tempo_core.programs import repak, unreal_engine, unreal_pak, retoc
+from tempo_core.programs import repak, retoc, unreal_engine, unreal_pak
 
 
 @dataclass
@@ -37,54 +37,57 @@ has_populated_queue = False
 
 
 def populate_queue():
-    for mod_info in settings.get_mods_info_list_from_json():
+    mod_info_dict = settings.get_mods_info_dict_from_json()
+    for mod_key in mod_info_dict.keys():
+        mod_entry = mod_info_dict[mod_key]
         if (
-            mod_info["is_enabled"]
-            and mod_info["mod_name"] in settings.settings_information.mod_names
+            mod_entry["is_enabled"]
+            and mod_key in settings.settings_information.mod_names
         ):
             install_queue_type = PackingType(
-                get_enum_from_val(PackingType, mod_info["packing_type"])
+                get_enum_from_val(PackingType, mod_entry["packing_type"])
             )
             if install_queue_type not in queue_information.install_queue_types:
                 queue_information.install_queue_types.append(install_queue_type)
         if (
-            not mod_info["is_enabled"]
-            and mod_info["mod_name"] in settings.settings_information.mod_names
+            not mod_entry["is_enabled"]
+            and mod_key in settings.settings_information.mod_names
         ):
             uninstall_queue_type = PackingType(
-                get_enum_from_val(PackingType, mod_info["packing_type"])
+                get_enum_from_val(PackingType, mod_entry["packing_type"])
             )
             if uninstall_queue_type not in queue_information.uninstall_queue_types:
                 queue_information.uninstall_queue_types.append(uninstall_queue_type)
 
 
 def get_mod_packing_type(mod_name: str) -> PackingType:
-    for mods_info in settings.get_mods_info_list_from_json():
-        if mod_name == mods_info["mod_name"]:
-            return PackingType(
-                get_enum_from_val(PackingType, mods_info["packing_type"])
-            )
+    for mod_key in settings.get_mods_info_dict_from_json().keys():
+        if mod_name == mod_key:
+            return PackingType(get_enum_from_val(PackingType, mod_key["packing_type"]))
     invalid_packing_type_error = "invalid packing type found in config file"
     raise RuntimeError(invalid_packing_type_error)
 
 
 def get_is_mod_name_in_use(mod_name: str) -> bool:
     return any(
-        mod_name == mod_info["mod_name"]
-        for mod_info in settings.get_mods_info_list_from_json()
+        mod_name == mod_key
+        for mod_key in settings.get_mods_info_dict_from_json().keys()
     )
 
 
+# not sure if I fixed this right
 def get_mod_pak_entry(mod_name: str) -> dict:
-    for info in settings.get_mods_info_list_from_json():
-        if info["mod_name"] == mod_name:
-            return dict(info)
+    mods_info_dict = settings.get_mods_info_dict_from_json()
+    for mod_key in mods_info_dict.keys():
+        if mod_key == mod_name:
+            return dict(mods_info_dict[mod_key])
     return {}
 
 
 def get_is_mod_installed(mod_name: str) -> bool:
     return any(
-        info["mod_name"] == mod_name for info in settings.get_mods_info_list_from_json()
+        mod_key == mod_name
+        for mod_key in settings.get_mods_info_dict_from_json().keys()
     )
 
 
@@ -144,13 +147,14 @@ def run_proj_command(command: str):
 
 
 def handle_uninstall_logic(packing_type: PackingType):
-    for mod_info in settings.get_mods_info_list_from_json():
+    mods_info_dict = settings.get_mods_info_dict_from_json()
+    for mod_key in mods_info_dict.keys():
         if (
-            not mod_info["is_enabled"]
-            and mod_info["mod_name"] in settings.settings_information.mod_names
-            and get_enum_from_val(PackingType, mod_info["packing_type"]) == packing_type
+            not mods_info_dict[mod_key]["is_enabled"]
+            and mod_key["mod_name"] in settings.settings_information.mod_names
+            and get_enum_from_val(PackingType, mod_key["packing_type"]) == packing_type
         ):
-            uninstall_mod(packing_type, mod_info["mod_name"])
+            uninstall_mod(packing_type, mod_key["mod_name"])
 
 
 @hook_states.hook_state_decorator(
@@ -158,30 +162,32 @@ def handle_uninstall_logic(packing_type: PackingType):
     end_hook_state_type=HookStateType.POST_PAK_DIR_SETUP,
 )
 def handle_install_logic(packing_type: PackingType, *, use_symlinks: bool):
-    for mod_info in settings.get_mods_info_list_from_json():
+    mods_info_dict = settings.get_mods_info_dict_from_json()
+    for mod_key in mods_info_dict.keys():
+        mod_info = mods_info_dict[mod_key]
         if (
             mod_info["is_enabled"]
-            and mod_info["mod_name"] in settings.settings_information.mod_names
+            and mod_key in settings.settings_information.mod_names
             and get_enum_from_val(PackingType, mod_info["packing_type"]) == packing_type
         ):
             if packing_type == PackingType.RETOC:
                 install_mod(
                     packing_type=packing_type,
-                    mod_name=mod_info["mod_name"],
+                    mod_name=mod_key,
                     compression_type=None,
                     use_symlinks=use_symlinks,
                 )
             elif packing_type == PackingType.REPAK:
                 install_mod(
                     packing_type=packing_type,
-                    mod_name=mod_info["mod_name"],
+                    mod_name=mod_key,
                     compression_type=None,
                     use_symlinks=use_symlinks,
                 )
             elif packing_type == PackingType.LOOSE:
                 install_mod(
                     packing_type=packing_type,
-                    mod_name=mod_info["mod_name"],
+                    mod_name=mod_key,
                     compression_type=None,
                     use_symlinks=use_symlinks,
                 )
@@ -190,7 +196,7 @@ def handle_install_logic(packing_type: PackingType, *, use_symlinks: bool):
                 if test:
                     install_mod(
                         packing_type=packing_type,
-                        mod_name=mod_info["mod_name"],
+                        mod_name=mod_key,
                         compression_type=CompressionType(
                             get_enum_from_val_loose(
                                 CompressionType, mod_info.get("compression_type", None)
@@ -201,11 +207,10 @@ def handle_install_logic(packing_type: PackingType, *, use_symlinks: bool):
                 else:
                     install_mod(
                         packing_type=packing_type,
-                        mod_name=mod_info["mod_name"],
+                        mod_name=mod_key,
                         compression_type=None,
                         use_symlinks=use_symlinks,
                     )
-
 
 
 @hook_states.hook_state_decorator(
@@ -228,6 +233,8 @@ def mods_install(*, use_symlinks: bool):
 
 def generate_mods(*, use_symlinks: bool):
     populate_queue()
+    # returns zero for some reason
+    # print(len(command_queue))
     mods_uninstall()
     mods_install(use_symlinks=use_symlinks)
     for command in command_queue:
@@ -468,7 +475,6 @@ def install_mod(
     compression_type: CompressionType | None,
     use_symlinks: bool,
 ):
-
     if packing_type == PackingType.LOOSE:
         install_loose_mod(mod_name, use_symlinks=use_symlinks)
     elif packing_type == PackingType.ENGINE:
@@ -705,7 +711,9 @@ def get_mod_file_paths_for_manually_made_pak_mods_asset_paths(mod_name: str) -> 
     print(cooked_uproject_dir)
     mod_info = get_mod_pak_entry(mod_name)
     print(mod_info)
-    print(f'mod info print out: {mod_info.get("file_includes", {}).get("asset_paths", [])}')
+    print(
+        f"mod info print out: {mod_info.get('file_includes', {}).get('asset_paths', [])}"
+    )
     for asset in mod_info.get("file_includes", {}).get("asset_paths", []):
         base_path = f"{cooked_uproject_dir}/{asset}"
         print(base_path)

@@ -251,14 +251,14 @@ class TestShippingIostoreNoSigsUE4(unittest.TestCase):
     #         use_symlinks=False,
     #     )
 
-    # def test_0006_retoc(self):
-    #     tempo_core.main_logic.full_run(
-    #         input_mod_names=["RetocMadeExampleMod"],
-    #         toggle_engine=False,
-    #         base_files_directory=BASE_FILES_DIR,
-    #         output_directory=OUTPUT_DIR,
-    #         use_symlinks=False,
-    #     )
+    def test_0006_retoc(self):
+        tempo_core.main_logic.full_run(
+            input_mod_names=["RetocMadeExampleMod"],
+            toggle_engine=False,
+            base_files_directory=BASE_FILES_DIR,
+            output_directory=OUTPUT_DIR,
+            use_symlinks=False,
+        )
 
     # def test_0007_all(self):
     #     tempo_core.main_logic.full_run_all(
@@ -268,11 +268,11 @@ class TestShippingIostoreNoSigsUE4(unittest.TestCase):
     #         use_symlinks=False
     #     )
 
-    def test_0007_all(self):
-        tempo_core.main_logic.test_mods_all(
-            toggle_engine=False,
-            use_symlinks=False
-        )
+    # def test_0007_all(self):
+    #     tempo_core.main_logic.test_mods_all(
+    #         toggle_engine=False,
+    #         use_symlinks=False
+    #     )
 
 
 if __name__ == "__main__":
@@ -281,31 +281,24 @@ if __name__ == "__main__":
 
 # To Do
 #
+# currently retoc isn't generating a release zip for some reason
+#
 # have it install ue4ss into each game, and cache these installs, does it hash verify currently, and ensure valid zip?
 # after releases are made unzip them into the game?
 # check the files all exist at the right place, and are appropriate sizes
 # add a potential check for if the above is taking too long
 # retoc and unreal pak example made mods are not being packaged into releases dir properly
-
-# make all uprojects for each game version
-# make all tempo configs for each game version
 # check that the file includes are tested during testing
-# currently retoc isn't generating a release zip for some reason
-# engine packed material test mod only has pak file and not all 3 files for some reason
-
-# Later
-# account for bp only games/ones that have the exe within the Engine dir tree
-
-# Maybes:
-
 # if using iostore unreal pak made stuff, it either doesn't make a pak if there
 # are not files that go in paks avialabnle or it needs to be a sep step
 
+# Later
+# account for bp only games/ones that have the exe within the Engine dir tree
+# make all uprojects for each game version
+# make all tempo configs for each game version
 
 
-
-
-
+# Other:
 # sometimes cache zips can get corrupted, for example interrupted mid download, deal with this, maybe add a hash check
 # fix add/remove/edit mod cli functions/add questionary versions
 # make params use one-two instead of one_two
@@ -342,3 +335,4 @@ if __name__ == "__main__":
 # make unique cache/temp dir enums?
 # ability to set unreal version through commandline, and env var on top of the auto detection based on game, and settings file
 # -nullrhi compatibility
+# toggle option for the enable= for mods, right now upon running the tool it will delete the files if they exist when not enabled

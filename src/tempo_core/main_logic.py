@@ -22,10 +22,10 @@ from tempo_core.programs import (
     fmodel,
     kismet_analyzer,
     spaghetti,
+    stove,
     uasset_gui,
     umodel,
     unreal_engine,
-    stove,
 )
 from tempo_core.threads import constant, game_monitor
 
@@ -64,8 +64,12 @@ def test_mods(*, input_mod_names: list[str], toggle_engine: bool, use_symlinks: 
 def test_mods_all(*, toggle_engine: bool, use_symlinks: bool):
     if toggle_engine:
         engine.toggle_engine_off()
-    for entry in settings.settings_information.settings.get("mods_info", []):
-        settings.settings_information.mod_names.append(entry["mod_name"])
+    mod_info_dict = settings.settings_information.settings.get("mods_info", {})
+    for name in mod_info_dict.keys():
+        if name not in settings.settings_information.mod_names:
+            settings.settings_information.mod_names.append(name)
+    for mod_name in settings.settings_information.mod_names:
+        print(mod_name)
     generate_mods_other(use_symlinks=use_symlinks)
     if toggle_engine:
         engine.toggle_engine_on()
@@ -503,8 +507,8 @@ def get_solo_package_command() -> str:
 def package(*, toggle_engine: bool, use_symlinks: bool):
     if toggle_engine:
         engine.toggle_engine_off()
-    for entry in settings.get_mods_info_list_from_json():
-        settings.settings_information.mod_names.append(entry["mod_name"])
+    for entry in settings.get_mods_info_dict_from_json().keys():
+        settings.settings_information.mod_names.append(entry)
     logger.log_message("Packaging Starting")
     run_proj_build_command(get_solo_package_command())
     packing.generate_mods(use_symlinks=use_symlinks)
@@ -614,18 +618,17 @@ def generate_mods(*, input_mod_names: list[str], use_symlinks: bool):
 
 
 def generate_mods_all(*, use_symlinks: bool):
-    for entry in settings.get_mods_info_list_from_json():
-        settings.settings_information.mod_names.append(entry["mod_name"])
+    for entry in settings.get_mods_info_dict_from_json().keys():
+        settings.settings_information.mod_names.append(entry)
         logger.log_message(entry["mod_name"])
     packing.generate_mods(use_symlinks=use_symlinks)
 
 
 # doesn't account for when there are ucas/utoc to copy over
 def make_unreal_pak_mod_release(
-    singular_mod_info: dict, base_files_directory: str, output_directory: str
+    singular_mod_info: dict, base_files_directory: str, output_directory: str, mod_name: str
 ):
     # currently assumes mod was installed to game and not temporarily in the working dir, maybe?
-    mod_name = singular_mod_info["mod_name"]
     src_pak = os.path.normpath(
         f"{utilities.custom_get_game_paks_dir()}/{utilities.get_pak_dir_structure(mod_name)}/{mod_name}.pak"
     )
@@ -649,9 +652,8 @@ def make_unreal_pak_mod_release(
 
 
 def make_repak_mod_release(
-    singular_mod_info: dict, base_files_directory: str, output_directory: str
+    singular_mod_info: dict, base_files_directory: str, output_directory: str, mod_name: str
 ):
-    mod_name = singular_mod_info["mod_name"]
     src_pak = f"{settings.get_temp_directory()}/{utilities.get_pak_dir_structure(mod_name)}/{mod_name}.pak"
     dest_pak = f"{base_files_directory}/{mod_name}/{utilities.get_pak_dir_structure(mod_name)}/{mod_name}.pak"
     if os.path.isfile(dest_pak):
@@ -667,9 +669,8 @@ def make_repak_mod_release(
 
 
 def make_engine_mod_release(
-    singular_mod_info: dict, base_files_directory: str, output_directory: str
+    singular_mod_info: dict, base_files_directory: str, output_directory: str, mod_name: str
 ):
-    mod_name = singular_mod_info["mod_name"]
     uproject_file = settings.get_uproject_file()
     mod_files = []
     pak_chunk_num = singular_mod_info["pak_chunk_num"]
@@ -786,9 +787,8 @@ def get_mod_paths_for_loose_mods(mod_name: str, base_files_directory: str) -> di
 
 
 def make_loose_mod_release(
-    singular_mod_info: dict, base_files_directory: str, output_directory: str
+    singular_mod_info: dict, base_files_directory: str, output_directory: str, mod_name: str
 ):
-    mod_name = singular_mod_info["mod_name"]
     mod_files = get_mod_paths_for_loose_mods(mod_name, base_files_directory)
     dict_keys = mod_files.keys()
     for key in dict_keys:
@@ -812,10 +812,9 @@ def make_loose_mod_release(
 
 
 def make_retoc_mod_release(
-    singular_mod_info: dict, base_files_directory: str, output_directory: str
+    singular_mod_info: dict, base_files_directory: str, output_directory: str, mod_name: str
 ):
     temp_dir = settings.get_temp_directory()
-    mod_name = singular_mod_info["mod_name"]
     pak_dir_structure = utilities.get_pak_dir_structure(mod_name)
     input_dir = os.path.normpath(f"{base_files_directory}/{mod_name}")
     base_src = os.path.normpath(f"{temp_dir}/{pak_dir_structure}/{mod_name}.")
@@ -846,32 +845,26 @@ def make_retoc_mod_release(
 def generate_mod_release(
     mod_name: str, base_files_directory: str, output_directory: str
 ):
-    singular_mod_info = next(
-        (
-            mod_info
-            for mod_info in settings.get_mods_info_list_from_json()
-            if mod_info["mod_name"] == mod_name
-        ),
-    )
+    singular_mod_info = settings.get_mods_info_dict_from_json()[mod_name]
     if singular_mod_info["packing_type"] == "unreal_pak":
         make_unreal_pak_mod_release(
-            singular_mod_info, base_files_directory, output_directory
+            singular_mod_info, base_files_directory, output_directory, mod_name
         )
     elif singular_mod_info["packing_type"] == "repak":
         make_repak_mod_release(
-            singular_mod_info, base_files_directory, output_directory
+            singular_mod_info, base_files_directory, output_directory, mod_name
         )
     elif singular_mod_info["packing_type"] == "engine":
         make_engine_mod_release(
-            singular_mod_info, base_files_directory, output_directory
+            singular_mod_info, base_files_directory, output_directory, mod_name
         )
     elif singular_mod_info["packing_type"] == "loose":
         make_loose_mod_release(
-            singular_mod_info, base_files_directory, output_directory
+            singular_mod_info, base_files_directory, output_directory, mod_name
         )
     elif singular_mod_info["packing_type"] == "retoc":
         make_retoc_mod_release(
-            singular_mod_info, base_files_directory, output_directory
+            singular_mod_info, base_files_directory, output_directory, mod_name
         )
     else:
         packing_type_error = f'The following incorrect packing type was supplied "{singular_mod_info["packing_type"]}".'
@@ -886,8 +879,8 @@ def generate_mod_releases(
 
 
 def generate_mod_releases_all(base_files_directory: str, output_directory: str):
-    for entry in settings.get_mods_info_list_from_json():
-        generate_mod_release(entry["mod_name"], base_files_directory, output_directory)
+    for mod_key in settings.get_mods_info_dict_from_json().keys():
+        generate_mod_release(mod_key, base_files_directory, output_directory)
 
 
 def resync_dir_with_repo():
