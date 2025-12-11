@@ -61,9 +61,10 @@ def populate_queue():
 
 
 def get_mod_packing_type(mod_name: str) -> PackingType:
-    for mod_key in settings.get_mods_info_dict_from_json().keys():
+    mods_info_dict = settings.get_mods_info_dict_from_json()
+    for mod_key in mods_info_dict.keys():
         if mod_name == mod_key:
-            return PackingType(get_enum_from_val(PackingType, mod_key["packing_type"]))
+            return PackingType(get_enum_from_val(PackingType, mods_info_dict[mod_key]["packing_type"]))
     invalid_packing_type_error = "invalid packing type found in config file"
     raise RuntimeError(invalid_packing_type_error)
 
@@ -152,7 +153,7 @@ def handle_uninstall_logic(packing_type: PackingType):
         if (
             not mods_info_dict[mod_key]["is_enabled"]
             and mod_key in settings.settings_information.mod_names
-            and get_enum_from_val(PackingType, mod_key["packing_type"]) == packing_type
+            and get_enum_from_val(PackingType, mods_info_dict[mod_key]["packing_type"]) == packing_type
         ):
             uninstall_mod(packing_type, mod_key)
 
