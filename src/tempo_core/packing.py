@@ -151,10 +151,10 @@ def handle_uninstall_logic(packing_type: PackingType):
     for mod_key in mods_info_dict.keys():
         if (
             not mods_info_dict[mod_key]["is_enabled"]
-            and mod_key["mod_name"] in settings.settings_information.mod_names
+            and mod_key in settings.settings_information.mod_names
             and get_enum_from_val(PackingType, mod_key["packing_type"]) == packing_type
         ):
-            uninstall_mod(packing_type, mod_key["mod_name"])
+            uninstall_mod(packing_type, mod_key)
 
 
 @hook_states.hook_state_decorator(
