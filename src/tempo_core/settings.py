@@ -481,47 +481,56 @@ def get_engine_launch_args() -> list:
     )
 
 
-# priority is not proper now for this I think
+# priority is not proper now for this I think, yeah it says invalid even when specified properly in config
+# command line > env var > env file > config > default
+# currently we only have env var > config > default/auto detected
+# add other ways to grab this later, like patternsleuth through game scan
+
+def get_unreal_engine_version_from_config() -> data_structures.UnrealEngineVersion | None:
+    config_valid_major_version = settings_information.settings.get("engine_info", {}).get("unreal_engine_major_version", None)
+    config_valid_minor_version = settings_information.settings.get("engine_info", {}).get("unreal_engine_minor_version", None)
+    if config_valid_major_version and config_valid_minor_version:
+        return data_structures.UnrealEngineVersion(
+            major_version=int(config_valid_major_version),
+            minor_version=int(config_valid_minor_version)
+        )
+    return None
+
+
+def get_unreal_engine_version_from_env_vars() -> data_structures.UnrealEngineVersion | None:
+    tempo_unreal_major_version_string = "TEMPO_UNREAL_ENGINE_MAJOR_VERSION"
+    tempo_unreal_minor_version_string = "TEMPO_UNREAL_ENGINE_MINOR_VERSION"
+    unreal_major_version_string = "UNREAL_ENGINE_MAJOR_VERSION"
+    unreal_minor_version_string = "UNREAL_ENGINE_MINOR_VERSION"
+    tempo_unreal_major_version_env_var = os.environ.get(tempo_unreal_major_version_string)
+    tempo_unreal_minor_version_env_var = os.environ.get(tempo_unreal_minor_version_string)
+    unreal_major_version_env_var = os.environ.get(unreal_major_version_string)
+    unreal_minor_version_env_var = os.environ.get(unreal_minor_version_string)
+    prioritized_major_value = tempo_unreal_major_version_env_var or unreal_major_version_env_var
+    prioritized_minor_value = tempo_unreal_minor_version_env_var or unreal_minor_version_env_var
+    if prioritized_major_value and prioritized_minor_value:
+        return data_structures.UnrealEngineVersion(
+            major_version=int(prioritized_major_value),
+            minor_version=int(prioritized_minor_value),
+        )
+    return None
+
+
 def get_unreal_engine_version(
     engine_path: str | None,
 ) -> data_structures.UnrealEngineVersion:
-    potential_valid_minor_version = settings_information.settings.get(
-        "engine_info", {}
-    ).get("unreal_engine_minor_version", None)
-    potential_valid_major_version = settings_information.settings.get(
-        "engine_info", {}
-    ).get("unreal_engine_major_version", None)
-    if not engine_path:
-        var_one = "TEMPO_UNREAL_ENGINE_MAJOR_VERSION"
-        var_two = "TEMPO_UNREAL_ENGINE_MINOR_VERSION"
-        var_three = "UNREAL_ENGINE_MAJOR_VERSION"
-        var_four = "UNREAL_ENGINE_MINOR_VERSION"
-        var_five = os.environ.get(var_one)
-        var_six = os.environ.get(var_two)
-        var_seven = os.environ.get(var_three)
-        var_eight = os.environ.get(var_four)
-        prioritized_major_value = var_five or var_eight
-        prioritized_minor_value = var_six or var_seven
-        if prioritized_major_value and prioritized_minor_value:
-            return data_structures.UnrealEngineVersion(
-                major_version=int(prioritized_major_value),
-                minor_version=int(prioritized_minor_value),
-            )
-        else:
-            raise RuntimeError(
-                "There was no valid unreal engine version findeable from env var, env file, config, param, or auto detected through game install, or unreal engine build version. Please specify somehow."
-            )
-    elif potential_valid_minor_version and potential_valid_major_version:
-        unreal_engine_version = data_structures.UnrealEngineVersion(
-            minor_version=int(potential_valid_minor_version),
-            major_version=int(potential_valid_major_version),
+    config_unreal_engine_version = get_unreal_engine_version_from_config()
+
+    auto_detected_from_unreal_editor_unreal_engine_version = unreal_engine.get_unreal_engine_version_from_build_version_file(engine_path)
+
+    env_var_unreal_engine_version = get_unreal_engine_version_from_env_vars()
+
+    version_to_return = env_var_unreal_engine_version or config_unreal_engine_version or auto_detected_from_unreal_editor_unreal_engine_version
+    if not version_to_return:
+        raise RuntimeError(
+            "There was no valid unreal engine version findable from env var, env file, config, param, or auto detected through game install, or unreal engine build version. Please specify somehow."
         )
-    else:
-        unreal_engine_version = (
-            unreal_engine.get_unreal_engine_version_from_build_version_file(engine_path)
-        )
-    # add other ways to grab this later, like patternsleuth through game scan
-    return unreal_engine_version
+    return version_to_return
 
 
 def get_temp_directory() -> str:

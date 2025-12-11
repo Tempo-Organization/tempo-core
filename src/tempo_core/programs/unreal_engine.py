@@ -10,10 +10,11 @@ def get_game_process_name(input_game_exe_path: str) -> str:
 
 
 def get_unreal_engine_version_from_build_version_file(
-    engine_path: str,
+    engine_path: str | None,
 ) -> UnrealEngineVersion:
     version_file_path = f"{engine_path}/Engine/Build/Build.version"
-    file_io.check_path_exists(version_file_path)
+    if not os.path.isfile(version_file_path):
+        return None
     with open(version_file_path) as f:
         version_info = json.load(f)
         return UnrealEngineVersion(
