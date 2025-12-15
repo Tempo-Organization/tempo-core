@@ -53,17 +53,17 @@ def is_hook_state_used(state: HookStateType) -> bool:
             )
             if "processes" in process_kill_events:
                 for process in process_kill_events["processes"]:
-                    if process.get("hook_state") == state:
+                    if process.get("hook_state") == state.value:
                         return True
 
         if "window_management_events" in settings.settings_information.settings:
             for window in settings.get_window_management_events():
-                if window.get("hook_state") == state:
+                if window.get("hook_state") == state.value:
                     return True
 
         if "exec_events" in settings.settings_information.settings:
             for method in settings.get_exec_events():
-                if method.get("hook_state") == state:
+                if method.get("hook_state") == state.value:
                     return True
 
     return False
@@ -105,6 +105,7 @@ def window_checks(current_state: HookStateType):
 def hook_state_checks(hook_state: HookStateType):
     if hook_state != HookStateType.CONSTANT:
         logger.log_message(f"Hook State Check: {hook_state} is running")
+        print(hook_state)
     if is_hook_state_used(hook_state):
         process_management.kill_processes(hook_state)
         window_checks(hook_state)

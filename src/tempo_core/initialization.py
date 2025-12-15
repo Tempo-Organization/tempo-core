@@ -99,13 +99,13 @@ def initialization():
     else:
         logger.set_log_base_dir(os.path.normpath(f"{file_io.SCRIPT_DIR}/logs"))
         logger.configure_logging()
-        customization.enable_vt100()
-        main_logic.init_thread_system()
     if "--log_name_prefix" in sys.argv:
         index = sys.argv.index("--log_name_prefix") + 1
         if index < len(sys.argv):
             logger.log_information.log_prefix = sys.argv[index]
 
+    customization.enable_vt100()
+    main_logic.init_thread_system()
     check_generate_wrapper()
     check_settings()
 

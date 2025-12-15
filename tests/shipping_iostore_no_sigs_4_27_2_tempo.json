@@ -1,6 +1,8 @@
 {
   "engine_info": {
-    "unreal_project_file": "../src/tempo_core/temp/tests/shipping_iostore_no_sigs_4_27_2/unreal_project/TempoTesting.uproject"
+    "unreal_project_file": "../src/tempo_core/temp/tests/shipping_iostore_no_sigs_4_27_2/unreal_project/TempoTesting.uproject",
+    "unreal_engine_major_version": 4,
+    "unreal_engine_minor_version": 27
   },
   "game_info": {
     "game_exe_path": "../src/tempo_core/temp/tests/shipping_iostore_no_sigs_4_27_2/packaged_game/TempoTesting/Binaries/Win64/TempoTesting-Win64-Shipping.exe",
@@ -14,6 +16,21 @@
     ],
     "launch_type": "exe",
     "window_title_override": "TempoTesting"
+  },
+  "process_kill_events": {
+    "processes": [
+      {
+        "hook_state": "constant",
+        "process_name": "Fmodel",
+        "use_substring_check": true
+      },
+      {
+        "hook_state": "constant",
+        "process_name": "Umodel",
+        "use_substring_check": true
+      }
+    ],
+    "auto_close_game": true
   },
   "mods_info": {
     "UnrealPakMadeExampleMod": {

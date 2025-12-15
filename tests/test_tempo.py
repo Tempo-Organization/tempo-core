@@ -336,3 +336,8 @@ if __name__ == "__main__":
 # ability to set unreal version through commandline, and env var on top of the auto detection based on game, and settings file
 # -nullrhi compatibility
 # toggle option for the enable= for mods, right now upon running the tool it will delete the files if they exist when not enabled
+
+
+# saw the below on 5.6, Ghost, spongebob titans of the tide
+# LogCook: Display: FULL COOK: Neither -legacyiterative nor -cookincremental were specified. Deleting previously cooked
+# packages for platform Windows and recooking all packages discovered in the current cook.

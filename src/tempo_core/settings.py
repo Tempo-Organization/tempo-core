@@ -519,18 +519,22 @@ def get_unreal_engine_version_from_env_vars() -> data_structures.UnrealEngineVer
 def get_unreal_engine_version(
     engine_path: str | None,
 ) -> data_structures.UnrealEngineVersion:
-    config_unreal_engine_version = get_unreal_engine_version_from_config()
-
-    auto_detected_from_unreal_editor_unreal_engine_version = unreal_engine.get_unreal_engine_version_from_build_version_file(engine_path)
 
     env_var_unreal_engine_version = get_unreal_engine_version_from_env_vars()
+    if env_var_unreal_engine_version:
+        return env_var_unreal_engine_version
 
-    version_to_return = env_var_unreal_engine_version or config_unreal_engine_version or auto_detected_from_unreal_editor_unreal_engine_version
-    if not version_to_return:
-        raise RuntimeError(
-            "There was no valid unreal engine version findable from env var, env file, config, param, or auto detected through game install, or unreal engine build version. Please specify somehow."
-        )
-    return version_to_return
+    config_unreal_engine_version = get_unreal_engine_version_from_config()
+    if config_unreal_engine_version:
+        return config_unreal_engine_version
+
+    auto_detected_version = unreal_engine.get_unreal_engine_version_from_build_version_file(engine_path)
+    if auto_detected_version:
+        return auto_detected_version
+
+    raise RuntimeError(
+        "There was no valid unreal engine version findable from env var, env file, config, param, or auto detected through game install, or unreal engine build version. Please specify somehow."
+    )
 
 
 def get_temp_directory() -> str:

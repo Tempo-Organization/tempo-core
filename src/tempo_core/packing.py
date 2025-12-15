@@ -234,8 +234,6 @@ def mods_install(*, use_symlinks: bool):
 
 def generate_mods(*, use_symlinks: bool):
     populate_queue()
-    # returns zero for some reason
-    # print(len(command_queue))
     mods_uninstall()
     mods_install(use_symlinks=use_symlinks)
     for command in command_queue:
