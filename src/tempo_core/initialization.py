@@ -85,7 +85,7 @@ def clear_temp_dir():
 def initialization():
     # window_management.change_window_name("tempo")
 
-    # clear_temp_dir()
+    clear_temp_dir()
 
     if "--logs_directory" in sys.argv:
         index = sys.argv.index("--logs_directory") + 1

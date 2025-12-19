@@ -68,8 +68,6 @@ def test_mods_all(*, toggle_engine: bool, use_symlinks: bool):
     for name in mod_info_dict.keys():
         if name not in settings.settings_information.mod_names:
             settings.settings_information.mod_names.append(name)
-    for mod_name in settings.settings_information.mod_names:
-        print(mod_name)
     generate_mods_other(use_symlinks=use_symlinks)
     if toggle_engine:
         engine.toggle_engine_on()
@@ -148,7 +146,7 @@ def install_kismet_analyzer(*, output_directory: str, run_after_install: bool):
                 ),
             )
         except Exception as e:
-            print(f"Failed to run kismet-analyzer: {e}")
+            logger.log_message(f"Failed to run kismet-analyzer: {e}")
 
 
 def install_uasset_gui(*, output_directory: str, run_after_install: bool):

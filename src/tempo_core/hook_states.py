@@ -105,7 +105,6 @@ def window_checks(current_state: HookStateType):
 def hook_state_checks(hook_state: HookStateType):
     if hook_state != HookStateType.CONSTANT:
         logger.log_message(f"Hook State Check: {hook_state} is running")
-        print(hook_state)
     if is_hook_state_used(hook_state):
         process_management.kill_processes(hook_state)
         window_checks(hook_state)

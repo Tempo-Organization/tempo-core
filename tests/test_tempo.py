@@ -4,6 +4,8 @@ import shutil
 import pathlib
 import unittest
 
+from tempo_core import logger
+
 import ue4ss_installer_gui.ue4ss
 import ue4ss_installer_gui.file_io
 
@@ -50,7 +52,7 @@ UPROJECT_DIR = os.path.normpath(f"{GAME_SPECIFIC_TEST_DIR}/unreal_project")
 UPROJECT_CONTENT_DIR = os.path.normpath(f"{UPROJECT_DIR}/Content")
 UPROJECT_CONFIG_DIR = os.path.normpath(f"{UPROJECT_DIR}/Config")
 UPROJECT_FILE = os.path.normpath(f"{UPROJECT_DIR}/TempoTesting.uproject")
-print(f'uproject_file: {UPROJECT_FILE}')
+logger.log_message(f'uproject_file: {UPROJECT_FILE}')
 
 
 os.makedirs(OUTPUT_DIR, exist_ok=True)
@@ -110,7 +112,7 @@ def cache_files() -> list[str]:
 
 
 def init_tempo_core():
-    print("started tempo core init")
+    logger.log_message("started tempo core init")
     sys.argv.append("--settings_json")
     sys.argv.append(SETTINGS_FILE)
 
@@ -122,7 +124,10 @@ def init_tempo_core():
     )
 
     tempo_core.initialization.initialization()
-    print("finished tempo core init")
+
+    tempo_core.main_logic.generate_uproject(
+        project_file=UPROJECT_FILE, ignore_safety_checks=True
+    )
 
 
 def copy_files_from_cache(cache_info):
@@ -278,11 +283,13 @@ class TestShippingIostoreNoSigsUE4(unittest.TestCase):
 if __name__ == "__main__":
     unittest.main()
 
-
 # To Do
+#
+# currently the temp dir and working dir is not being wiped on startup and ending
 #
 # currently retoc isn't generating a release zip for some reason
 #
+# optional ue4ss tag specification
 # have it install ue4ss into each game, and cache these installs, does it hash verify currently, and ensure valid zip?
 # after releases are made unzip them into the game?
 # check the files all exist at the right place, and are appropriate sizes
