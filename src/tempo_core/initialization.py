@@ -50,7 +50,7 @@ def unreal_engine_check():
 
     if should_do_check:
         engine_str = "UE4Editor"
-        if unreal_engine.is_game_ue5(settings.get_unreal_engine_dir()):
+        if unreal_engine.is_game_ue5(str(settings.get_unreal_engine_dir())):
             engine_str = "UnrealEditor"
         file_io.verify_file_exists(
             f"{settings.get_unreal_engine_dir()}/Engine/Binaries/Win64/{engine_str}.exe"
@@ -61,7 +61,7 @@ def unreal_engine_check():
 def game_launcher_exe_override_check():
     potential_game_launcher_path = settings.get_game_launcher_exe_path()
     if potential_game_launcher_path:
-        file_io.verify_file_exists(potential_game_launcher_path)
+        file_io.verify_file_exists(str(potential_game_launcher_path))
 
 
 def git_info_check():
@@ -69,7 +69,7 @@ def git_info_check():
     if git_repo_path is None or git_repo_path == "":
         return
 
-    file_io.verify_directory_exists(git_repo_path)
+    file_io.verify_directory_exists(str(git_repo_path))
 
 
 def game_exe_check():
@@ -84,8 +84,6 @@ def clear_temp_dir():
 
 def initialization():
     # window_management.change_window_name("tempo")
-
-    clear_temp_dir()
 
     if "--logs_directory" in sys.argv:
         index = sys.argv.index("--logs_directory") + 1
@@ -129,6 +127,9 @@ def initialization():
         logger.log_message("Check: Game exists")
 
         logger.log_message("Check: Passed all init checks")
+
+    clear_temp_dir()
+
     cache.init_cache()
 
 

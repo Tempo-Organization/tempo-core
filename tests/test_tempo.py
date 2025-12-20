@@ -285,10 +285,6 @@ if __name__ == "__main__":
 
 # To Do
 #
-# normalize all paths to output
-#
-# make all print outs colored
-#
 # fix issue with uproject for tests
 #
 # currently the temp dir and working dir is not being wiped on startup and ending

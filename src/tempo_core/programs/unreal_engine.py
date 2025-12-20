@@ -11,7 +11,7 @@ def get_game_process_name(input_game_exe_path: str) -> str:
 
 def get_unreal_engine_version_from_build_version_file(
     engine_path: str | None,
-) -> UnrealEngineVersion:
+) -> UnrealEngineVersion | None:
     version_file_path = f"{engine_path}/Engine/Build/Build.version"
     if not os.path.isfile(version_file_path):
         return None

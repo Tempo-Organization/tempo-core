@@ -109,7 +109,7 @@ def run_repak_pack_command(input_directory: str, output_pak_file: str):
     if compression_type_str:
         command = f"{command} --compression {compression_type_str}"
     # when not manually overriding, check the toml for unreal version, before getting it from the engine directory
-    default = settings.get_unreal_engine_version(settings.get_unreal_engine_dir()).get_repak_unreal_version_str()
+    default = settings.get_unreal_engine_version(str(settings.get_unreal_engine_dir())).get_repak_unreal_version_str()
     command = f"{command} --version {settings.settings_information.settings.get("repak_info", {}).get("repak_version", default)}"
     app_runner.run_app(command)
 
@@ -152,7 +152,7 @@ def get_repak_compression_type() -> RepakCompressionType:
 def get_repak_pack_version() -> str:
     # finish this to do
     # have it first try and get it all three non default ways, and if not possible then get version directly from the toml, then check engine, then throw error otherwise
-    unreal_version = settings.get_unreal_engine_version(settings.get_unreal_engine_dir())
+    unreal_version = settings.get_unreal_engine_version(str(settings.get_unreal_engine_dir()))
 
     default_value = unreal_version.get_repak_unreal_version_str()
 
