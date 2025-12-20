@@ -82,7 +82,7 @@ def cache_files() -> list[str]:
         zip_path = os.path.normpath(f"{PACKAGED_GAMES_CACHE_DIR}/{game_zip}")
         # add some verification to make sure the zip was valid here
         if not os.path.isfile(zip_path):
-            print("the following game zip is being downloaded/cached. Please wait...")
+            logger.log_message("the following game zip is being downloaded/cached. Please wait...")
             tempo_core.file_io.download_file(game_url, zip_path)
 
     template_files = [
@@ -160,9 +160,9 @@ def install_ue4ss(cache_dir: str, game_exe_directory: str):
     ue4ss_zip_path = pathlib.Path(f"{cache_dir}/ue4ss.zip")
 
     if not ue4ss_zip_path.exists():
-        print("started caching ue4ss release info")
+        logger.log_message("started caching ue4ss release info")
         ue4ss_installer_gui.ue4ss.cache_repo_releases_info("UE4SS-RE", "RE-UE4SS")
-        print("finished caching ue4ss release info")
+        logger.log_message("finished caching ue4ss release info")
         tag = ue4ss_installer_gui.ue4ss.get_default_ue4ss_version_tag()
         file_names_to_download_links = (
             ue4ss_installer_gui.ue4ss.get_file_name_to_download_links_from_tag(tag)
@@ -284,6 +284,12 @@ if __name__ == "__main__":
     unittest.main()
 
 # To Do
+#
+# normalize all paths to output
+#
+# make all print outs colored
+#
+# fix issue with uproject for tests
 #
 # currently the temp dir and working dir is not being wiped on startup and ending
 #

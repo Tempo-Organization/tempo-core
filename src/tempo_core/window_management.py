@@ -1,5 +1,8 @@
 import platform
 
+from tempo_core import logger
+
+
 IS_WINDOWS = platform.system() == "Windows"
 
 if IS_WINDOWS:
@@ -91,7 +94,7 @@ if IS_WINDOWS:
                     if title.strip() == window_title.strip()
                 ]
         except Exception as e:
-            print(f"Error in get_windows_by_title: {e}")
+            logger.log_message(f"Error in get_windows_by_title: {e}")
         return matched_windows
 
     def get_window_by_title(window_title: str, *, use_substring_check: bool = False):
@@ -99,7 +102,7 @@ if IS_WINDOWS:
             window_title=window_title, use_substring_check=use_substring_check
         )
         if not windows:
-            print(f'Warning: No windows found with title "{window_title}"')
+            logger.log_message(f'Warning: No windows found with title "{window_title}"')
             return None
         return windows[0]
 
@@ -118,7 +121,7 @@ if IS_WINDOWS:
     def move_window_to_monitor(hwnd, monitor_index=0):
         monitors = screeninfo.get_monitors()
         if monitor_index >= len(monitors):
-            print("Invalid monitor index")
+            logger.log_message("Invalid monitor index")
             return
         monitor = monitors[monitor_index]
         move_window(hwnd, monitor.x, monitor.y, None, None)
@@ -126,7 +129,7 @@ if IS_WINDOWS:
     def set_window_size(hwnd, width, height):
         rect = wintypes.RECT()
         if not user32.GetWindowRect(hwnd, ctypes.byref(rect)):
-            print("Failed to get window rect")
+            logger.log_message("Failed to get window rect")
             return
         x, y = rect.left, rect.top
         user32.MoveWindow(hwnd, x, y, width, height, True)
@@ -134,7 +137,7 @@ if IS_WINDOWS:
     def move_window(hwnd, x, y, width=None, height=None):
         rect = wintypes.RECT()
         if not user32.GetWindowRect(hwnd, ctypes.byref(rect)):
-            print("Failed to get window rect")
+            logger.log_message("Failed to get window rect")
             return
         cur_width = rect.right - rect.left
         cur_height = rect.bottom - rect.top
@@ -142,11 +145,11 @@ if IS_WINDOWS:
         h = height if height is not None else cur_height
         success = user32.MoveWindow(hwnd, x, y, w, h, True)
         if not success:
-            print("Failed to move window")
+            logger.log_message("Failed to move window")
 
     def change_window_name(hwnd, new_title: str):
         if not user32.SetWindowTextW(hwnd, new_title):
-            print(f"Failed to set window title to {new_title}")
+            logger.log_message(f"Failed to set window title to {new_title}")
 
     def move_window_with_settings(hwnd, window_settings: dict):
         monitor_index = window_settings.get("monitor")
@@ -185,7 +188,7 @@ if IS_WINDOWS:
 else:
 
     def not_supported(*args, **kwargs):
-        print("Warning: Window control functions are only supported on Windows.")
+        logger.log_message("Warning: Window control functions are only supported on Windows.")
 
     # Define dummy versions of functions
     enum_windows = does_window_exist = get_windows_by_title = get_window_by_title = (

@@ -6,7 +6,7 @@ from typing import cast
 
 import requests
 
-from tempo_core import settings, app_runner, cache, data_structures
+from tempo_core import settings, app_runner, cache, data_structures, logger
 
 
 class RepakCompressionType(Enum):
@@ -51,7 +51,7 @@ def get_current_repak_release_tag() -> str:
             response.raise_for_status()
             return response.json().get("tag_name", "latest")
         except Exception as e:
-            print(f"[Warning] Failed to fetch latest Repak release tag from GitHub: {e}")
+            logger.log_message(f"[Warning] Failed to fetch latest Repak release tag from GitHub: {e}")
             return "latest"
 
     return prioritized_value
@@ -202,7 +202,7 @@ def get_repak_tool_entry() -> cache.Tool | None:
     for tool in cache.TempoCache.tool_entries:
         if tool.get_repo_name().lower() == "repak":
             return tool
-    print("Repak tool not found in cache. Please install it first.")
+    logger.log_message("Repak tool not found in cache. Please install it first.")
     return None
 
 

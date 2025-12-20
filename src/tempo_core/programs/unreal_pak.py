@@ -4,7 +4,7 @@ import shutil
 import tempo_core.settings
 import tempo_core.app_runner
 from tempo_core.programs import unreal_engine
-from tempo_core import file_io, packing, utilities
+from tempo_core import file_io, packing, utilities, logger
 from tempo_core.data_structures import CompressionType
 
 
@@ -78,8 +78,8 @@ def make_ue4_iostore_mod(
     dest_pak_file: str,
     use_symlinks: bool,
 ):
-    print(f'intermediate pak file path: "{intermediate_pak_file}"')
-    print(f'destination pak file: "{dest_pak_file}"')
+    logger.log_message(f'intermediate pak file path: "{intermediate_pak_file}"')
+    logger.log_message(f'destination pak file: "{dest_pak_file}"')
 
     # installs packing tool if need be,
     # moves files from various locations over to temp packaging location,
@@ -202,15 +202,15 @@ def make_ue4_iostore_mod(
     )
 
     if os.path.isfile(intermediary_utoc_file):
-        print("chunk utoc was file")
-        print(f'chunk utoc location: "{intermediary_utoc_file}"')
+        logger.log_message("chunk utoc was file")
+        logger.log_message(f'chunk utoc location: "{intermediary_utoc_file}"')
     else:
         missing_intermediary_chunk_utoc_error = f'chunk utoc file was not found at the following location: "{intermediary_utoc_file}"'
         raise FileNotFoundError(missing_intermediary_chunk_utoc_error)
 
     if os.path.isfile(intermediate_ucas_file):
-        print("chunk utoc was file")
-        print(f'chunk utoc location: "{intermediate_ucas_file}"')
+        logger.log_message("chunk utoc was file")
+        logger.log_message(f'chunk utoc location: "{intermediate_ucas_file}"')
     else:
         missing_intermediary_chunk_ucas_error = f'chunk ucas file was not found at the following location: "{intermediate_ucas_file}"'
         raise FileNotFoundError(missing_intermediary_chunk_ucas_error)

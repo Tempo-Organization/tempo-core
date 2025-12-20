@@ -6,7 +6,7 @@ import subprocess
 
 import requests
 
-from tempo_core import settings, data_structures, utilities, cache
+from tempo_core import settings, data_structures, utilities, cache, logger
 from tempo_core.programs import unreal_pak
 
 
@@ -39,7 +39,7 @@ def get_current_retoc_release_tag() -> str:
             response.raise_for_status()
             return response.json().get("tag_name", "latest")
         except Exception as e:
-            print(
+            logger.log_message(
                 f"[Warning] Failed to fetch latest Retoc release tag from GitHub: {e}"
             )
             return "latest"
@@ -113,7 +113,7 @@ def run_retoc_to_zen_command(
     if not pathlib.Path.is_dir(input_directory):
         raise NotADirectoryError(f'Input directory "{input_directory}" does not exist.')
 
-    print(unreal_version.get_retoc_unreal_version_str())
+    logger.log_message(unreal_version.get_retoc_unreal_version_str())
 
     command = [
         get_retoc_package_path(),
