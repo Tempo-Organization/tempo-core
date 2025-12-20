@@ -11,7 +11,6 @@ from tempo_core import (
     file_io,
     game_runner,
     hook_states,
-    log_info,
     logger,
     packing,
     process_management,
@@ -528,7 +527,7 @@ def resave_packages_and_fix_up_redirectors():
 
 
 def cleanup_full():
-    repo_path = settings.get_cleanup_repo_path()
+    repo_path = str(settings.get_cleanup_repo_path())
     logger.log_message(f'Cleaning up repo at: "{repo_path}"')
     exe = "git"
     args = ["clean", "-d", "-X", "--force"]
@@ -552,7 +551,7 @@ def cleanup_full():
 
 
 def cleanup_cooked():
-    repo_path = settings.get_cleanup_repo_path()
+    repo_path = str(settings.get_cleanup_repo_path())
 
     logger.log_message(
         f'Starting cleanup of Unreal Engine build directories in: "{repo_path}"'
@@ -569,7 +568,7 @@ def cleanup_cooked():
 
 
 def cleanup_build():
-    repo_path = settings.get_cleanup_repo_path()
+    repo_path = str(settings.get_cleanup_repo_path())
 
     logger.log_message(
         f'Starting cleanup of Unreal Engine build directories in: "{repo_path}"'
@@ -593,7 +592,7 @@ def cleanup_build():
 def cleanup_game():
     game_directory = os.path.dirname(utilities.custom_get_game_dir())
     file_list_json = os.path.join(
-        settings.settings_information.settings_json_dir, "game_file_list.json"
+        str(settings.settings_information.settings_json_dir.path), "game_file_list.json"
     )
     delete_unlisted_files(game_directory, file_list_json)
 
@@ -601,7 +600,7 @@ def cleanup_game():
 def generate_game_file_list_json():
     game_directory = os.path.dirname(utilities.custom_get_game_dir())
     file_list_json = os.path.join(
-        settings.settings_information.settings_json_dir, "game_file_list.json"
+        str(settings.settings_information.settings_json_dir.path), "game_file_list.json"
     )
     generate_file_paths_json(game_directory, file_list_json)
 
@@ -893,7 +892,7 @@ def resync_dir_with_repo():
 
     :param repo_path: The path to the root of the git repository.
     """
-    repo_path = os.path.abspath(repo_path)
+    repo_path = os.path.abspath(str(repo_path))
 
     if not os.path.isdir(repo_path):
         repo_not_exist_error = (
