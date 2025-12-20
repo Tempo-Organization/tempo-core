@@ -159,8 +159,7 @@ def install_uasset_gui(*, output_directory: str, run_after_install: bool):
 
 
 def open_latest_log():
-    log_prefix = logger.get_default_log_name_prefix()
-    file_to_open = f"{file_io.SCRIPT_DIR}/logs/{log_prefix}latest.log"
+    file_to_open = f"{logger.log_information.log_base_dir}/{logger.log_information.log_prefix}_latest.log"
     file_io.open_file_in_default(file_to_open)
 
 
