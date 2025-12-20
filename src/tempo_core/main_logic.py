@@ -159,7 +159,7 @@ def install_uasset_gui(*, output_directory: str, run_after_install: bool):
 
 
 def open_latest_log():
-    log_prefix = log_info.LOG_INFO["log_name_prefix"]
+    log_prefix = logger.get_default_log_name_prefix()
     file_to_open = f"{file_io.SCRIPT_DIR}/logs/{log_prefix}latest.log"
     file_io.open_file_in_default(file_to_open)
 
@@ -371,7 +371,6 @@ def add_mod(
     packing_type: str,
     pak_dir_structure: str,
     mod_name_dir_type: str,
-    use_mod_name_dir_name_override: str,
     mod_name_dir_name_override: str,
     pak_chunk_num: int,
     compression_type: str,
@@ -389,7 +388,6 @@ def add_mod(
         mod_data = {
             "pak_dir_structure": pak_dir_structure,
             "mod_name_dir_type": mod_name_dir_type,
-            "use_mod_name_dir_name_override": use_mod_name_dir_name_override,
             "mod_name_dir_name_override": mod_name_dir_name_override,
             "pak_chunk_num": pak_chunk_num,
             "packing_type": packing_type,

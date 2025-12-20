@@ -285,6 +285,8 @@ if __name__ == "__main__":
 
 # To Do
 #
+# add_mod command auto does "pak_dir_structure": "C:\\Users\\mods" for some reason
+#
 # currently retoc isn't generating a release zip for some reason
 #
 # timers are not running for every command, for example the build command
