@@ -342,9 +342,9 @@ def disable_mods(settings_json: str, mod_names: list):
                 if mods_info[mod_name]["is_enabled"]:
                     mods_info[mod_name]["is_enabled"] = False
                     mods_disabled = True
-                    logger.log_message(f"Mod '{mod_name['mod_name']}' has been disabled.")
+                    logger.log_message(f"Mod '{mod_name}' has been disabled.")
                 else:
-                    logger.log_message(f"Mod '{mod_name['mod_name']}' is already disabled.")
+                    logger.log_message(f"Mod '{mod_name}' is already disabled.")
 
         if mods_disabled:
             updated_json_str = json.dumps(
