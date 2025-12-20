@@ -285,11 +285,9 @@ if __name__ == "__main__":
 
 # To Do
 #
-# fix issue with uproject for tests
-#
-# currently the temp dir and working dir is not being wiped on startup and ending
-#
 # currently retoc isn't generating a release zip for some reason
+#
+# timers are not running for every command, for example the build command
 #
 # optional ue4ss tag specification
 # have it install ue4ss into each game, and cache these installs, does it hash verify currently, and ensure valid zip?
@@ -350,3 +348,5 @@ if __name__ == "__main__":
 # saw the below on 5.6, Ghost, spongebob titans of the tide
 # LogCook: Display: FULL COOK: Neither -legacyiterative nor -cookincremental were specified. Deleting previously cooked
 # packages for platform Windows and recooking all packages discovered in the current cook.
+# refine timers eventually
+#

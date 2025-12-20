@@ -383,8 +383,10 @@ def add_mod(
         with open(settings_json) as file:
             settings = json.load(file)
 
-        new_mod = {
-            "mod_name": mod_name,
+        if "mods_info" not in settings or not isinstance(settings["mods_info"], dict):
+            settings["mods_info"] = {}
+
+        mod_data = {
             "pak_dir_structure": pak_dir_structure,
             "mod_name_dir_type": mod_name_dir_type,
             "use_mod_name_dir_name_override": use_mod_name_dir_name_override,
@@ -393,29 +395,24 @@ def add_mod(
             "packing_type": packing_type,
             "compression_type": compression_type,
             "is_enabled": is_enabled,
-            "file_includes": {"asset_paths": asset_paths, "tree_paths": tree_paths},
+            "file_includes": {
+                "asset_paths": asset_paths,
+                "tree_paths": tree_paths,
+            },
         }
 
-        if "mods_info" not in settings:
-            settings["mods_info"] = []
-
-        existing_mod = next(
-            (mod for mod in settings["mods_info"] if mod["mod_name"] == mod_name), None
-        )
-        if existing_mod:
+        if mod_name in settings["mods_info"]:
             logger.log_message(f"Mod '{mod_name}' already exists. Updating its data.")
-            settings["mods_info"].remove(existing_mod)
 
-        settings["mods_info"].append(new_mod)
-
-        settings = json.dumps(settings, indent=4)
+        settings["mods_info"][mod_name] = mod_data
 
         with open(settings_json, "w") as file:
-            file.write(settings)
+            json.dump(settings, file, indent=4)
 
         logger.log_message(
             f"Mod '{mod_name}' successfully added/updated in '{settings_json}'."
         )
+
     except json.JSONDecodeError:
         logger.log_message(
             f"Error decoding JSON from file '{settings_json}'. Please check the file format."
@@ -427,30 +424,41 @@ def remove_mods(settings_json: str, mod_names: list):
         with open(settings_json, encoding="utf-8") as file:
             settings = json.load(file)
 
-        mods_removed = False
+        mods_info = settings.get("mods_info", {})
 
-        mods_info = settings.get("mods_info", [])
-        mods_info = [mod for mod in mods_info if mod["mod_name"] not in mod_names]
+        if not isinstance(mods_info, dict):
+            logger.log_message(
+                "Invalid mods_info format. Expected a dictionary keyed by mod name."
+            )
+            return
 
-        if len(mods_info) < len(settings.get("mods_info", [])):
-            mods_removed = True
-            logger.log_message(f"Mods {', '.join(mod_names)} have been removed.")
+        removed_mods = []
+
+        for mod_name in mod_names:
+            if mod_name in mods_info:
+                del mods_info[mod_name]
+                removed_mods.append(mod_name)
+
+        if removed_mods:
+            settings["mods_info"] = mods_info
+
+            with open(settings_json, "w", encoding="utf-8") as file:
+                json.dump(
+                    settings,
+                    file,
+                    indent=4,
+                    ensure_ascii=False,
+                    separators=(",", ": "),
+                )
+
+            logger.log_message(
+                f"Mods successfully removed: {', '.join(removed_mods)}."
+            )
+            logger.log_message(f"Settings updated in '{settings_json}'.")
         else:
             logger.log_message(
                 "No mods were removed because none of the specified mods were found."
             )
-
-        settings["mods_info"] = mods_info
-
-        if mods_removed:
-            updated_json_str = json.dumps(
-                settings, indent=4, ensure_ascii=False, separators=(",", ": ")
-            )
-
-            with open(settings_json, "w", encoding="utf-8") as file:
-                file.write(updated_json_str)
-
-            logger.log_message(f"Mods successfully removed from '{settings_json}'.")
 
     except json.JSONDecodeError:
         logger.log_message(

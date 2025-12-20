@@ -138,17 +138,6 @@ def check_generate_wrapper():
         wrapper.generate_wrapper()
 
 
-# def check_settings():
-#     if "--settings_json" in sys.argv:
-#         index = sys.argv.index("--settings_json") + 1
-#         if index < len(sys.argv):
-#             settings_file = f"{os.path.normpath(sys.argv[index].strip("'").strip('"'))}"
-#             return settings.load_settings(settings_file)
-#         logger.log_message("Error: No file path provided after --settings_json.")
-#         sys.exit(1)
-#     return
-
-
 def check_settings():
     if "--settings_json" in sys.argv:
         index = sys.argv.index("--settings_json") + 1
