@@ -104,8 +104,9 @@ def full_run_all(
 ):
     if toggle_engine:
         engine.toggle_engine_off()
-    for entry in settings.settings_information.settings.get("mods_info", {}):
-        settings.settings_information.mod_names.append(entry["mod_name"])
+    mods_info = settings.settings_information.settings.get("mods_info", {})
+    for key in mods_info.keys():
+        settings.settings_information.mod_names.append(key)
     packing.cooking()
     generate_mods_all(use_symlinks=use_symlinks)
     generate_mod_releases_all(
@@ -297,14 +298,15 @@ def enable_mods(settings_json: str, mod_names: list):
 
         mods_enabled = False
 
-        for mod in settings.get("mods_info", []):
-            if mod["mod_name"] in mod_names:
-                if not mod["is_enabled"]:
-                    mod["is_enabled"] = True
+        mods_info = settings.get("mods_info", {})
+        for mod_name in mods_info:
+            if mod_name in mod_names:
+                if not mods_info[mod_name]["is_enabled"]:
+                    mods_info[mod_name]["is_enabled"] = True
                     mods_enabled = True
-                    logger.log_message(f"Mod '{mod['mod_name']}' has been enabled.")
+                    logger.log_message(f"Mod '{mod_name}' has been enabled.")
                 else:
-                    logger.log_message(f"Mod '{mod['mod_name']}' is already enabled.")
+                    logger.log_message(f"Mod '{mod_name}' is already enabled.")
 
         if mods_enabled:
             updated_json_str = json.dumps(
@@ -333,14 +335,16 @@ def disable_mods(settings_json: str, mod_names: list):
 
         mods_disabled = False
 
-        for mod in settings.get("mods_info", []):
-            if mod["mod_name"] in mod_names:
-                if mod["is_enabled"]:
-                    mod["is_enabled"] = False
+        mods_info = settings.get("mods_info", {})
+
+        for mod_name in mods_info.keys():
+            if mod_name in mod_names:
+                if mods_info[mod_name]["is_enabled"]:
+                    mods_info[mod_name]["is_enabled"] = False
                     mods_disabled = True
-                    logger.log_message(f"Mod '{mod['mod_name']}' has been disabled.")
+                    logger.log_message(f"Mod '{mod_name['mod_name']}' has been disabled.")
                 else:
-                    logger.log_message(f"Mod '{mod['mod_name']}' is already disabled.")
+                    logger.log_message(f"Mod '{mod_name['mod_name']}' is already disabled.")
 
         if mods_disabled:
             updated_json_str = json.dumps(
@@ -620,9 +624,9 @@ def generate_mods(*, input_mod_names: list[str], use_symlinks: bool):
 
 
 def generate_mods_all(*, use_symlinks: bool):
-    for entry in settings.get_mods_info_dict_from_json().keys():
-        settings.settings_information.mod_names.append(entry)
-        logger.log_message(entry["mod_name"])
+    for mod_name in settings.get_mods_info_dict_from_json().keys():
+        settings.settings_information.mod_names.append(mod_name)
+        logger.log_message(mod_name)
     packing.generate_mods(use_symlinks=use_symlinks)
 
 
