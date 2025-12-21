@@ -3,6 +3,7 @@ import os
 import shutil
 import subprocess
 import sys
+import pathlib
 
 from tempo_core import (
     app_runner,
@@ -593,19 +594,25 @@ def cleanup_build():
                 logger.log_message(f"Removed directory: {full_path}")
 
 
-def cleanup_game():
+def cleanup_game(output_json: pathlib.Path | None = None):
+    if output_json:
+        file_list_json = output_json
+    else:
+        file_list_json = os.path.join(
+            str(settings.settings_information.settings_json_dir.path), "game_file_list.json"
+        )
     game_directory = os.path.dirname(utilities.custom_get_game_dir())
-    file_list_json = os.path.join(
-        str(settings.settings_information.settings_json_dir.path), "game_file_list.json"
-    )
     delete_unlisted_files(game_directory, file_list_json)
 
 
-def generate_game_file_list_json():
+def generate_game_file_list_json(output_json: pathlib.Path | None = None):
+    if output_json:
+        file_list_json = output_json
+    else:
+        file_list_json = os.path.join(
+            str(settings.settings_information.settings_json_dir.path), "game_file_list.json"
+        )
     game_directory = os.path.dirname(utilities.custom_get_game_dir())
-    file_list_json = os.path.join(
-        str(settings.settings_information.settings_json_dir.path), "game_file_list.json"
-    )
     generate_file_paths_json(game_directory, file_list_json)
 
 
