@@ -935,7 +935,7 @@ def generate_uproject(
     engine_major_association: int = 4,
     engine_minor_association: int = 27,
     category: str = "Modding",
-    description: str = "Uproject for modding, generated with ",
+    description: str = "Uproject for modding, generated with tempo.",
     ignore_safety_checks: bool = False,
 ) -> str:
     project_dir = os.path.dirname(project_file)
