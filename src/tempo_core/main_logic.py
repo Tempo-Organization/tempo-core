@@ -219,7 +219,7 @@ def run_proj_build_command(command: str):
     executable = command_parts[0]
     args = command_parts[1:]
     app_runner.run_app(
-        exe_path=executable, args=args, temp_dir=settings.get_unreal_engine_dir()
+        exe_path=executable, args=args, temp_dir=str(settings.get_unreal_engine_dir())
     )
 
 
@@ -374,9 +374,9 @@ def add_mod(
     packing_type: str,
     pak_dir_structure: str,
     mod_name_dir_type: str,
-    mod_name_dir_name_override: str,
-    pak_chunk_num: int,
-    compression_type: str,
+    mod_name_dir_name_override: str | None,
+    pak_chunk_num: int | None,
+    compression_type: str | None,
     is_enabled: bool,
     asset_paths: list,
     tree_paths: list,
@@ -690,12 +690,12 @@ def make_engine_mod_release(
     uproject_file = settings.get_uproject_file()
     uproject_dir = unreal_engine.get_uproject_dir(str(uproject_file))
     win_dir_str = unreal_engine.get_win_dir_str(str(settings.get_unreal_engine_dir()))
-    uproject_name = unreal_engine.get_uproject_name(uproject_file)
+    uproject_name = unreal_engine.get_uproject_name(str(uproject_file))
     prefix = f"{uproject_dir}/Saved/StagedBuilds/{win_dir_str}/{uproject_name}/Content/Paks/pakchunk{pak_chunk_num}-{win_dir_str}."
     mod_files.append(prefix)
     for file in mod_files:
         for suffix in unreal_engine.get_game_pak_folder_archives(
-            uproject_file, utilities.custom_get_game_dir()
+            str(uproject_file), utilities.custom_get_game_dir()
         ):
             dir_engine_mod = f"{utilities.custom_get_game_dir()}/Content/Paks/{utilities.get_pak_dir_structure(mod_name)}"
             os.makedirs(dir_engine_mod, exist_ok=True)
