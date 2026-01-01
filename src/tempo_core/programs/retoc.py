@@ -6,7 +6,7 @@ import subprocess
 
 import requests
 
-from tempo_core import settings, data_structures, utilities, cache, logger
+from tempo_core import settings, data_structures, utilities, cache, logger, app_runner
 from tempo_core.programs import unreal_pak
 
 
@@ -274,3 +274,25 @@ def install_retoc_mod(*, mod_name: str, use_symlinks: bool):
             os.symlink(output_file, dest_file)
         else:
             shutil.copy(output_file, dest_file)
+
+
+def run_gen_script_objects_retoc_command(
+    retoc_executable: pathlib.Path,
+    jmap_file: pathlib.Path,
+    output: pathlib.Path
+):
+    exe_path = os.path.normpath(str(retoc_executable))
+    exec_mode = data_structures.ExecutionMode.SYNC
+    args = [
+        "gen-script-objects",
+        "--version",
+        settings.get_unreal_engine_version(settings.get_unreal_engine_dir()).get_retoc_unreal_version_str(),
+        os.path.normpath(jmap_file),
+        os.path.normpath(output)
+    ]
+
+    app_runner.run_app(
+        exe_path=exe_path,
+        exec_mode=exec_mode,
+        args=args
+    )

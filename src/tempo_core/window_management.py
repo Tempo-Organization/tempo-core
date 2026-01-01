@@ -51,6 +51,11 @@ if IS_WINDOWS:
     user32.PostMessageW.restype = wintypes.BOOL
     user32.GetWindowRect.argtypes = [wintypes.HWND, ctypes.POINTER(wintypes.RECT)]
     user32.GetWindowRect.restype = wintypes.BOOL
+    user32.GetWindowThreadProcessId.argtypes = [
+        wintypes.HWND,
+        ctypes.POINTER(wintypes.DWORD),
+    ]
+    user32.GetWindowThreadProcessId.restype = wintypes.DWORD
 
     def enum_windows():
         windows = []
@@ -185,6 +190,41 @@ if IS_WINDOWS:
                 except (psutil.NoSuchProcess, psutil.AccessDenied):
                     continue
         return None
+
+    def get_pid_from_window_title(
+        window_title: str, *, use_substring_check: bool = False
+    ) -> int | None:
+        """
+        Returns the PID for the first window matching the given title.
+        """
+        try:
+            windows = get_windows_by_title(
+                window_title, use_substring_check=use_substring_check
+            )
+
+            if not windows:
+                logger.log_message(
+                    f'Warning: No windows found with title "{window_title}"'
+                )
+                return None
+
+            hwnd, title = windows[0]
+
+            pid = wintypes.DWORD()
+            user32.GetWindowThreadProcessId(hwnd, ctypes.byref(pid))
+
+            if pid.value == 0:
+                logger.log_message(
+                    f'Warning: Failed to retrieve PID for window "{title}"'
+                )
+                return None
+
+            return pid.value
+
+        except Exception as e:
+            logger.log_message(f"Error in get_pid_from_window_title: {e}")
+            return None
+
 else:
 
     def not_supported(*args, **kwargs):

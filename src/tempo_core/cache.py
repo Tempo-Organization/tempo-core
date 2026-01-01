@@ -270,7 +270,6 @@ def install_tool_to_cache(
     logger.log_message(f"[Warning] Tool '{tool_name}' not found in tool list.")
 
 
-
 def save_tools_to_toml_file(tools: Tools, filepath: str) -> None:
     doc = document()
     entries = []

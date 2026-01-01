@@ -222,11 +222,18 @@ class UnrealEngineVersion:
     def get_uasset_gui_unreal_version_str(self) -> str:
         return f"VER_UE{self.major_version}_{self.minor_version}"
 
+    def get_kismet_analyzer_unreal_version_str(self) -> str:
+        return f"VER_UE{self.major_version}_{self.minor_version}"
+
     def get_repak_unreal_version_str(self) -> str:
         version_key = f"{self.major_version}.{self.minor_version}"
         return UnrealEngineVersion.engine_version_to_repak_version.get(
             version_key, "Unknown"
         )
+
+    def get_jmap_unreal_version_str(self) -> str:
+        return f"{self.major_version}.{self.minor_version}"
+
 
     engine_version_to_repak_version = {
         "4.0": "V1",
