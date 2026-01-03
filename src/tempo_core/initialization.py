@@ -9,6 +9,7 @@ from tempo_core import (
     logger,
     main_logic,
     settings,
+    utilities,
     wrapper,
     cache,
 )
@@ -19,7 +20,13 @@ ORIGINAL_CWD = os.getcwd()
 
 
 def get_editor_preferences_ini_path() -> pathlib.Path:
-    return pathlib.Path(f'{os.path.dirname(str(settings.get_uproject_file()))}/Saved/Config/Windows/EditorPerProjectUserSettings.ini')
+    unreal_engine_dir = settings.get_unreal_engine_dir()
+    if unreal_engine_dir:
+        win_dir_str = unreal_engine.get_win_dir_str(str(unreal_engine_dir))
+    else:
+        win_dir_str = unreal_engine.get_win_dir_str(None)
+    uproject_dir = os.path.dirname(str(settings.get_uproject_file()))
+    return pathlib.Path(f'{uproject_dir}/Saved/Config/{win_dir_str}/EditorPerProjectUserSettings.ini')
 
 
 def is_assign_chunk_id_warning_being_suppressed() -> bool:

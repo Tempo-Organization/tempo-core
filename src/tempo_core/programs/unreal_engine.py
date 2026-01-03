@@ -87,11 +87,11 @@ def get_editor_cmd_path(unreal_engine_dir: str) -> str:
         return f'"{unreal_engine_dir}/Engine/Binaries/Linux/{engine_path_suffix}"'
 
 
-def is_game_ue5(unreal_engine_dir: str) -> bool:
+def is_game_ue5(unreal_engine_dir: str | None) -> bool:
     return settings.get_unreal_engine_version(unreal_engine_dir).major_version == 5
 
 
-def is_game_ue4(unreal_engine_dir: str) -> bool:
+def is_game_ue4(unreal_engine_dir: str | None) -> bool:
     return settings.get_unreal_engine_version(unreal_engine_dir).major_version == 4
 
 
@@ -114,7 +114,7 @@ def get_unreal_editor_exe_path(unreal_engine_dir: str) -> str:
         )
 
 
-def get_win_dir_str(unreal_engine_dir: str) -> str:
+def get_win_dir_str(unreal_engine_dir: str | None) -> str:
     if settings.is_windows():
         win_dir_type = "Windows"
         if is_game_ue4(unreal_engine_dir):
