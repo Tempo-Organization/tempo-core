@@ -9,7 +9,6 @@ from tempo_core import (
     logger,
     main_logic,
     settings,
-    utilities,
     wrapper,
     cache,
 )
@@ -22,9 +21,12 @@ ORIGINAL_CWD = os.getcwd()
 def get_editor_preferences_ini_path() -> pathlib.Path:
     unreal_engine_dir = settings.get_unreal_engine_dir()
     if unreal_engine_dir:
-        win_dir_str = unreal_engine.get_win_dir_str(str(unreal_engine_dir))
+        unreal_version = settings.get_unreal_engine_version(str(unreal_engine_dir))
     else:
-        win_dir_str = unreal_engine.get_win_dir_str(None)
+        unreal_version = settings.get_unreal_engine_version(str(None))
+    win_dir_str = 'Windows'
+    if unreal_version.major_version == 5:
+        win_dir_str = f'{win_dir_str}Editor'
     uproject_dir = os.path.dirname(str(settings.get_uproject_file()))
     return pathlib.Path(f'{uproject_dir}/Saved/Config/{win_dir_str}/EditorPerProjectUserSettings.ini')
 
@@ -51,16 +53,16 @@ def get_compare_string() -> str:
 
 def throw_avoid_assign_chunk_id_usage_warning():
     warning_message = f"""
-    Warning: The use of manually assigning chunk ids through the right click context menu of unreal is often bugged.
-    It will result in unexpected packaging issues.
-    It is reccomended to disable this setting, and do a fresh project clean before starting more work.
-    You can disable this through the editor preferences in unreal, or manually.
-    To manually disable chunk ids open "{get_editor_preferences_ini_path()}" and change {get_compare_string()} to False.
-    To clean your project, close unreal editor and run the tempo_cli cleanup_full command, or you can manually delete
-    the following directories within your unreal uproject directory.
-    Saved, Cooked, Intermediate, DerivedDataCache, Build, and Binaries.
-    If you would like to suppress this error, you can set the TEMPO_SUPPRESS_ASSIGN_CHUNK_ID_WARNING env var to True
-    You can also set SUPPRESS_ASSIGN_CHUNK_ID_WARNING env var to True as well, but this will be checked secondarily.
+Warning: The use of manually assigning chunk ids through the right click context menu of unreal is often bugged.
+It will result in unexpected packaging issues.
+It is reccomended to disable this setting, and do a fresh project clean before starting more work.
+You can disable this through the editor preferences in unreal, or manually.
+To manually disable chunk ids open "{get_editor_preferences_ini_path()}" and change {get_compare_string()} to False.
+To clean your project, close unreal editor and run the tempo_cli cleanup_full command, or you can manually delete
+the following directories within your unreal uproject directory.
+Saved, Cooked, Intermediate, DerivedDataCache, Build, and Binaries.
+If you would like to suppress this error, you can set the TEMPO_SUPPRESS_ASSIGN_CHUNK_ID_WARNING env var to True
+You can also set SUPPRESS_ASSIGN_CHUNK_ID_WARNING env var to True as well, but this will be checked secondarily.
     """
     logger.log_message(warning_message)
 
@@ -69,8 +71,9 @@ def assign_chunk_id_usage_check():
     ini_path = get_editor_preferences_ini_path()
     if ini_path.exists():
         lines = file_io.get_all_lines_in_config(str(ini_path))
-        if get_compare_string() in lines:
-            throw_avoid_assign_chunk_id_usage_warning()
+        for line in lines:
+            if get_compare_string() == line.strip():
+                throw_avoid_assign_chunk_id_usage_warning()
 
 
 def uproject_check():
@@ -94,9 +97,6 @@ def uproject_check():
     logger.log_message(
         f"Error: Uproject file not found at '{uproject_file}' or '{relative_path}'."
     )
-
-    if not is_assign_chunk_id_warning_being_suppressed():
-        assign_chunk_id_usage_check()
 
 
 def unreal_engine_check():
@@ -169,6 +169,10 @@ def initialization():
 
     if settings.settings_information.init_settings_done:
         uproject_check()
+        uproject_file = settings.get_uproject_file()
+        if uproject_file and uproject_file.exists():
+            if not is_assign_chunk_id_warning_being_suppressed():
+                assign_chunk_id_usage_check()
         unreal_engine_check()
         game_launcher_exe_override_check()
         # git_info_check()
