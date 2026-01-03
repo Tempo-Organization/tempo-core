@@ -1,4 +1,5 @@
 import os
+import pathlib
 import sys
 import shutil
 
@@ -15,6 +16,55 @@ from tempo_core.programs import unreal_engine
 
 
 ORIGINAL_CWD = os.getcwd()
+
+
+def get_editor_preferences_ini_path() -> pathlib.Path:
+    return pathlib.Path(f'{os.path.dirname(str(settings.get_uproject_file()))}/Saved/Config/Windows/EditorPerProjectUserSettings.ini')
+
+
+def is_assign_chunk_id_warning_being_suppressed() -> bool:
+    def env_var_is_true(name: str) -> bool:
+        value = os.getenv(name)
+        if value is None:
+            return False
+        return value.strip().lower() in {"1", "true", "yes", "on"}
+
+    if env_var_is_true("TEMPO_SUPPRESS_ASSIGN_CHUNK_ID_WARNING"):
+        return True
+
+    if env_var_is_true("SUPPRESS_ASSIGN_CHUNK_ID_WARNING"):
+        return True
+
+    return False
+
+
+def get_compare_string() -> str:
+    return "bContextMenuChunkAssignments=True"
+
+
+def throw_avoid_assign_chunk_id_usage_warning():
+    warning_message = f"""
+    Warning: The use of manually assigning chunk ids through the right click context menu of unreal is often bugged.
+    It will result in unexpected packaging issues.
+    It is reccomended to disable this setting, and do a fresh project clean before starting more work.
+    You can disable this through the editor preferences in unreal, or manually.
+    To manually disable chunk ids open "{get_editor_preferences_ini_path()}" and change {get_compare_string()} to False.
+    To clean your project, close unreal editor and run the tempo_cli cleanup_full command, or you can manually delete
+    the following directories within your unreal uproject directory.
+    Saved, Cooked, Intermediate, DerivedDataCache, Build, and Binaries.
+    If you would like to suppress this error, you can set the TEMPO_SUPPRESS_ASSIGN_CHUNK_ID_WARNING env var to True
+    You can also set SUPPRESS_ASSIGN_CHUNK_ID_WARNING env var to True as well, but this will be checked secondarily.
+    """
+    logger.log_message(warning_message)
+
+
+def assign_chunk_id_usage_check():
+    ini_path = get_editor_preferences_ini_path()
+    if ini_path.exists():
+        lines = file_io.get_all_lines_in_config(str(ini_path))
+        if get_compare_string() in lines:
+            throw_avoid_assign_chunk_id_usage_warning()
+
 
 def uproject_check():
     uproject_file = settings.get_uproject_file()
@@ -37,6 +87,9 @@ def uproject_check():
     logger.log_message(
         f"Error: Uproject file not found at '{uproject_file}' or '{relative_path}'."
     )
+
+    if not is_assign_chunk_id_warning_being_suppressed():
+        assign_chunk_id_usage_check()
 
 
 def unreal_engine_check():
