@@ -13,6 +13,7 @@ from tempo_core import (
     cache,
 )
 from tempo_core.programs import unreal_engine
+# from tempo_core.threads import input_monitor
 
 
 ORIGINAL_CWD = os.getcwd()
@@ -143,7 +144,7 @@ def clear_temp_dir():
 
 
 def initialization():
-    # window_management.change_window_name("tempo")
+    # input_monitor.InputMonitor().start()
 
     if "--logs_directory" in sys.argv:
         index = sys.argv.index("--logs_directory") + 1
