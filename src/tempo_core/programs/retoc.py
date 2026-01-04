@@ -198,13 +198,30 @@ def get_file_to_download() -> str:
 
 
 def get_download_url() -> str:
-    base_url_prefix = f"https://github.com/trumank/retoc/releases/download/{get_current_retoc_release_tag()}/retoc-x86_64-"
+    from packaging.version import Version
+    release_tag = get_current_retoc_release_tag()  # e.g. "v0.1.5"
+
+    # Strip leading "v" and compare versions properly
+    version = Version(release_tag.lstrip("v"))
+
+    if version >= Version("0.1.5"):
+        base_url_prefix = (
+            f"https://github.com/trumank/retoc/releases/download/"
+            f"{release_tag}/retoc_cli-x86_64-"
+        )
+    else:
+        base_url_prefix = (
+            f"https://github.com/trumank/retoc/releases/download/"
+            f"{release_tag}/retoc-x86_64-"
+        )
+
     if settings.is_windows():
         return f"{base_url_prefix}pc-windows-msvc.zip"
     elif settings.is_linux():
         return f"{base_url_prefix}unknown-linux-gnu.tar.xz"
     else:
         raise ValueError("unsupported os")
+
 
 
 def install_tool_retoc():
