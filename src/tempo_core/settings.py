@@ -330,7 +330,7 @@ def get_persistent_mods_dir() -> pathlib.Path:
             f"{settings_information.settings_json_dir.path}/{persistent_dir_from_settings_file}"
         )
     default_dir = os.path.normpath(
-        f"{settings_information.settings_json_dir.path}/mod_packaging/persistent_files"
+        f"{settings_information.settings_json_dir.path}/Modding/mod_packaging/persistent_files"
     )
     final_dir = pathlib.Path(
         env_dir or persistent_dir_from_settings_file or default_dir
