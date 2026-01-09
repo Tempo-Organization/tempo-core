@@ -217,11 +217,16 @@ def zip_directory_tree(input_dir, output_dir, zip_name="archive.zip"):
     os.makedirs(output_dir, exist_ok=True)
 
     zip_path = os.path.join(output_dir, zip_name)
+    zip_path = os.path.abspath(zip_path)
 
     with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zipf:
         for root, _, files in os.walk(input_dir):
             for file in files:
-                file_path = os.path.join(root, file)
+                file_path = os.path.abspath(os.path.join(root, file))
+
+                if file_path == zip_path:
+                    continue
+
                 arcname = os.path.relpath(file_path, input_dir)
                 zipf.write(file_path, arcname)
 
