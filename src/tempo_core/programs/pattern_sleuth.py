@@ -272,8 +272,8 @@ def run_patternsleuth_engine_version_scan_command(
     engine_version = parse_engine_version(output)
     if not engine_version:
         raise RuntimeError('parsing unreal engine version with patternsleuth failed.')
-    print(f'unreal engine major version: {engine_version["major"]}')
-    print(f'unreal engine minor version: {engine_version["minor"]}')
+    logger.log_message(f'unreal engine major version: {engine_version["major"]}')
+    logger.log_message(f'unreal engine minor version: {engine_version["minor"]}')
     return engine_version
 
 
@@ -340,5 +340,5 @@ def run_patternsleuth_build_configuration_scan_command(
             f'Parsing build configuration with PatternSleuth failed.\n\nOutput:\n{output}'
         )
 
-    print(f'Build Configuration: {build_configuration}')
+    logger.log_message(f'Build Configuration: {build_configuration}')
     return build_configuration

@@ -19,17 +19,19 @@ from tempo_core.programs import unreal_engine
 ORIGINAL_CWD = os.getcwd()
 
 
-def get_editor_preferences_ini_path() -> pathlib.Path:
+def get_editor_preferences_ini_path() -> pathlib.Path | None:
     unreal_engine_dir = settings.get_unreal_engine_dir()
     if unreal_engine_dir:
         unreal_version = settings.get_unreal_engine_version(str(unreal_engine_dir))
     else:
         unreal_version = settings.get_unreal_engine_version(str(None))
     win_dir_str = 'Windows'
-    if unreal_version.major_version == 5:
-        win_dir_str = f'{win_dir_str}Editor'
-    uproject_dir = os.path.dirname(str(settings.get_uproject_file()))
-    return pathlib.Path(f'{uproject_dir}/Saved/Config/{win_dir_str}/EditorPerProjectUserSettings.ini')
+    if unreal_version:
+        if unreal_version.major_version == 5:
+            win_dir_str = f'{win_dir_str}Editor'
+        uproject_dir = os.path.dirname(str(settings.get_uproject_file()))
+        return pathlib.Path(f'{uproject_dir}/Saved/Config/{win_dir_str}/EditorPerProjectUserSettings.ini')
+    return None
 
 
 def is_assign_chunk_id_warning_being_suppressed() -> bool:
@@ -70,11 +72,12 @@ You can also set SUPPRESS_ASSIGN_CHUNK_ID_WARNING env var to True as well, but t
 
 def assign_chunk_id_usage_check():
     ini_path = get_editor_preferences_ini_path()
-    if ini_path.exists():
-        lines = file_io.get_all_lines_in_config(str(ini_path))
-        for line in lines:
-            if get_compare_string() == line.strip():
-                throw_avoid_assign_chunk_id_usage_warning()
+    if ini_path:
+        if ini_path.exists():
+            lines = file_io.get_all_lines_in_config(str(ini_path))
+            for line in lines:
+                if get_compare_string() == line.strip():
+                    throw_avoid_assign_chunk_id_usage_warning()
 
 
 def uproject_check():

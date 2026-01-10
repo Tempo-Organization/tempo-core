@@ -123,15 +123,21 @@ def get_unreal_engine_dir() -> pathlib.Path | None:
         unreal_version = get_unreal_engine_version(engine_path=None)
         env_var_string_one = "UNREAL_ENGINE_DIRECTORY"
         env_var_string_two = f"TEMPO_{env_var_string_one}"
-        env_var_string_three = f"{env_var_string_one}_{unreal_version.major_version}_{unreal_version.minor_version}"
-        env_var_string_four = f"TEMPO_{env_var_string_three}"
+        if unreal_version:
+            env_var_string_three = f"{env_var_string_one}_{unreal_version.major_version}_{unreal_version.minor_version}"
+            env_var_string_four = f"TEMPO_{env_var_string_three}"
+            var_three = os.environ.get(env_var_string_three)
+            var_four = os.environ.get(env_var_string_four)
+        else:
+            var_four = None
+            var_three = None
         var_one = os.environ.get(env_var_string_one)
         var_two = os.environ.get(env_var_string_two)
-        var_three = os.environ.get(env_var_string_three)
-        var_four = os.environ.get(env_var_string_four)
         unreal_engine_directory = var_four or var_three or var_two or var_one
-    file_io.check_path_exists(str(unreal_engine_directory))
-    return unreal_engine_directory
+    if unreal_engine_directory:
+        return pathlib.Path(unreal_engine_directory)
+    else:
+        return None
 
 
 def is_unreal_pak_packing_enum_in_use() -> bool:
@@ -449,7 +455,7 @@ def get_unreal_engine_version_from_env_vars() -> data_structures.UnrealEngineVer
 
 def get_unreal_engine_version(
     engine_path: str | None,
-) -> data_structures.UnrealEngineVersion:
+) -> data_structures.UnrealEngineVersion | None:
 
     env_var_unreal_engine_version = get_unreal_engine_version_from_env_vars()
     if env_var_unreal_engine_version:
@@ -463,9 +469,7 @@ def get_unreal_engine_version(
     if auto_detected_version:
         return auto_detected_version
 
-    raise RuntimeError(
-        "There was no valid unreal engine version findable from env var, env file, config, param, or auto detected through game install, or unreal engine build version. Please specify somehow."
-    )
+    return None
 
 
 def get_temp_directory() -> str:
