@@ -418,6 +418,13 @@ def get_engine_launch_args() -> list:
     )
 
 
+# Debug, DebugGame, Development, Shipping, Test
+def get_build_configuration_state() -> str:
+    return settings_information.settings.get("engine_info", {}).get(
+        "build_type", "Shipping"
+    )
+
+
 # priority is not proper now for this I think, yeah it says invalid even when specified properly in config
 # command line > env var > env file > config > default
 # currently we only have env var > config > default/auto detected
@@ -498,3 +505,14 @@ def is_linux():
 def get_is_game_iostore_from_config() -> bool | None:
     # Have this check manually passed param, env file, env var, config param, check from game, default to none
     return settings_information.settings.get("game_info", {}).get("is_iostore", None)
+
+
+# maybe allow multiple specification later on?
+def get_target_platform() -> str:
+    def get_default_platforn() -> str
+        if is_windows():
+            default_target_platform = 'Win64'
+        else:
+            default_target_platform = 'Linux'
+        return default_target_platform
+    return settings_information.settings.get('engine_info', {}).get('target_platform', get_default_platforn())

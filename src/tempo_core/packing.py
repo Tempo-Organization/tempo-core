@@ -518,11 +518,6 @@ def package_project_iostore_ue4():
         str(settings.get_unreal_engine_dir())
     )
     archive_directory = f"{settings.get_temp_directory()}/iostore_packaging/output"
-    if settings.is_windows():
-        target_platform = "Win64"
-    else:
-        target_platform = "Linux"
-    client_config = "Development"
     args = [
         f'-ScriptsForProject="{uproject_path}"',
         "BuildCookRun",
@@ -543,8 +538,8 @@ def package_project_iostore_ue4():
         "-prereqs",
         "-nodebuginfo",
         "-manifests",
-        f"-targetplatform={target_platform}",
-        f'-clientconfig="{client_config}"',
+        f"-targetplatform={settings.get_target_platform()}",
+        f'-clientconfig="{settings.get_build_configuration_state()}"',
         "-utf8output",
     ]
     app_runner.run_app(
@@ -559,11 +554,6 @@ def package_project_iostore_ue5():
         str(settings.get_unreal_engine_dir())
     )
     archive_directory = f"{settings.get_temp_directory()}/iostore_packaging/output"
-    if settings.is_windows():
-        target_platform = "Win64"
-    else:
-        target_platform = "Linux"
-    client_config = "Development"
     args = [
         f'-ScriptsForProject="{uproject_path}"',
         "BuildCookRun",
@@ -584,8 +574,8 @@ def package_project_iostore_ue5():
         "-prereqs",
         "-nodebuginfo",
         "-manifests",
-        f"-targetplatform={target_platform}",
-        f'-clientconfig="{client_config}"',
+        f"-targetplatform={settings.get_target_platform()}",
+        f'-clientconfig="{settings.get_build_configuration_state()}"',
         "-utf8output",
     ]
     app_runner.run_app(

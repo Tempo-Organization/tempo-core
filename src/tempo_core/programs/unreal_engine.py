@@ -161,12 +161,8 @@ def get_engine_process_name(unreal_dir: str) -> str:
 def get_build_target_file_path(uproject_file_path: str) -> str:
     uproject_dir = get_uproject_dir(uproject_file_path)
     uproject_name = get_uproject_name(uproject_file_path)
-    if settings.is_windows():
-        target_platform = "Win64"
-    else:
-        target_platform = "Linux"
     return os.path.join(
-        uproject_dir, "Binaries", target_platform, f"{uproject_name}.target"
+        uproject_dir, "Binaries", settings.get_target_platform(), f"{uproject_name}.target"
     )
 
 
