@@ -143,6 +143,7 @@ def uninstall_tool_from_cache(tools: Tools, tool_name: str, version_tag: str, ca
                         except FileNotFoundError:
                             logger.log_message(f"  Not found: {file}")
                     tool.cache_entries.remove(entry)
+                    persist_cache()
                     return
             logger.log_message(f"[Warning] Version '{version_tag}' not found for '{tool_name}'.")
             return
@@ -194,7 +195,6 @@ def get_tool_install_dir(tool_name: str, version_tag: str) -> str:
     ))
 
 
-# currently does not store the data in the cache toml
 def install_tool_to_cache(
         tools: Tools,
         tool_name: str,
@@ -252,22 +252,40 @@ def install_tool_to_cache(
             unpacked_files.append(dest)
 
     # Register in cache
-    for tool in tools.tool_entries:
-        if tool.get_repo_name().lower() == tool_name.lower():
-            logger.log_message(f"Installing {tool_name} version {version_tag}...")
-            entry = CacheEntry(
-                release_tag=version_tag,
-                installed_files=unpacked_files,
-                executable_path=executable_path,
-                file_to_download=file_to_download,
-                download_url=download_url
-            )
-            tool.cache_entries.append(entry)
-            logger.log_message(f"  Installed to: {install_dir}")
-            logger.log_message(f"  Total files installed: {len(unpacked_files)}")
+    tool = next(
+        (t for t in tools.tool_entries if t.get_repo_name().lower() == tool_name.lower()),
+        None
+    )
+
+    if tool is None:
+        logger.log_message(f"Registering new tool '{tool_name}' in cache")
+        tool = Tool(
+            tool_repo_url=f"https://github.com/Tempo-Organization/{tool_name}",
+            cache_entries=[]
+        )
+        tools.tool_entries.append(tool)
+
+    # Prevent duplicate installs
+    for existing in tool.cache_entries:
+        if existing.release_tag == version_tag and existing.is_cache_valid():
+            logger.log_message(f"{tool_name} {version_tag} already installed")
             return
 
-    logger.log_message(f"[Warning] Tool '{tool_name}' not found in tool list.")
+    logger.log_message(f"Installing {tool_name} version {version_tag}...")
+
+    entry = CacheEntry(
+        release_tag=version_tag,
+        installed_files=unpacked_files,
+        executable_path=executable_path,
+        file_to_download=file_to_download,
+        download_url=download_url
+    )
+
+    tool.cache_entries.append(entry)
+    persist_cache()
+
+    logger.log_message(f"  Installed to: {install_dir}")
+    logger.log_message(f"  Total files installed: {len(unpacked_files)}")
 
 
 def save_tools_to_toml_file(tools: Tools, filepath: str) -> None:
@@ -413,3 +431,27 @@ def init_cache() -> None:
             file.write('')
     global TempoCache
     TempoCache = load_tools_from_toml_file(cache)
+
+
+def get_tool_entry(tool_name: str) -> Tool | None:
+    for tool in TempoCache.tool_entries:
+        if tool.get_repo_name().lower() == tool_name:
+            return tool
+    logger.log_message(f"{tool_name} tool not found in cache. Please install it first.")
+    return None
+
+
+def get_cache_entry(tool_name: str, tag: str) -> CacheEntry:
+    tool = get_tool_entry(tool_name)
+    if not tool:
+        raise RuntimeError(f'invalid {tool_name} tool entry')
+    for entry in tool.cache_entries:
+        if entry.release_tag == tag:
+            return entry
+    raise RuntimeError(f"{tool_name} cache entry with tag '{tag}' not found.")
+
+
+def persist_cache() -> None:
+    if not isinstance(TempoCache, Tools):
+        raise RuntimeError("Cache not initialized")
+    save_tools_to_toml_file(TempoCache, get_main_cache_settings_file())

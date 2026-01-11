@@ -97,39 +97,8 @@ def is_current_preferred_patternsleuth_version_installed() -> bool:
     return False
 
 
-def get_patternsleuth_tool_entry() -> cache.Tool | None:
-    # Return the Patternsleuth tool entry if present
-    for tool in cache.TempoCache.tool_entries:
-        if tool.get_repo_name().lower() == "patternsleuth":
-            return tool
-    logger.log_message("Patternsleuth tool not found in cache. Please install it first.")
-    return None
-
-
-def get_patternsleuth_cache_entry_by_tag(tag: str) -> cache.CacheEntry:
-    patternsleuth_tool = get_patternsleuth_tool_entry()
-    if not patternsleuth_tool:
-        raise RuntimeError('invalid patternsleuth tool entry')
-    for entry in patternsleuth_tool.cache_entries:
-        if entry.release_tag == tag:
-            return entry
-    raise RuntimeError(f"Patternsleuth cache entry with tag '{tag}' not found.")
-
-
-def get_tool_install_dir(tool_name: str) -> str:
-    if settings.is_windows():
-        platform_name = 'windows'
-    # elif settings.is_linux():
-    #     platform_name = 'linux'
-    else:
-        raise RuntimeError('You are on an unsupported os')
-    return os.path.normpath(os.path.join(
-        cache.get_cache_dir(), "tools", tool_name, platform_name, get_current_patternsleuth_release_tag()
-    ))
-
-
 def get_patternsleuth_directory() -> pathlib.Path | None:
-    default_value = get_tool_install_dir("patternsleuth")
+    default_value = cache.get_tool_install_dir("patternsleuth", get_current_patternsleuth_release_tag())
 
     config_value = None
     if settings.settings_information.settings:
