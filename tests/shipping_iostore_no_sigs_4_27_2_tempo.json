@@ -1,0 +1,77 @@
+{
+  "engine_info": {
+    "unreal_project_file": "../src/tempo_core/temp/tests/shipping_iostore_no_sigs_4_27_2/unreal_project/TempoTesting.uproject",
+    "unreal_engine_major_version": 4,
+    "unreal_engine_minor_version": 27
+  },
+  "game_info": {
+    "game_exe_path": "../src/tempo_core/temp/tests/shipping_iostore_no_sigs_4_27_2/packaged_game/TempoTesting/Binaries/Win64/TempoTesting-Win64-Shipping.exe",
+    "is_iostore": true,
+    "launch_params": [
+      "-ResX=1280",
+      "-ResY=720",
+      "-WinX=100",
+      "-WinY=100",
+      "-WINDOWED"
+    ],
+    "launch_type": "exe",
+    "window_title_override": "TempoTesting"
+  },
+  "process_kill_events": {
+    "processes": [
+      {
+        "hook_state": "constant",
+        "process_name": "Fmodel",
+        "use_substring_check": true
+      },
+      {
+        "hook_state": "constant",
+        "process_name": "Umodel",
+        "use_substring_check": true
+      }
+    ],
+    "auto_close_game": true
+  },
+  "mods_info": {
+    "UnrealPakMadeExampleMod": {
+      "compression_type": "Zlib",
+      "is_enabled": true,
+      "mod_name_dir_type": "Mods",
+      "packing_type": "unreal_pak",
+      "pak_dir_structure": "LogicMods"
+    },
+    "RepakMadeExampleMod": {
+      "is_enabled": true,
+      "mod_name_dir_type": "Mods",
+      "packing_type": "repak",
+      "pak_dir_structure": "LogicMods"
+    },
+    "MaterialTest": {
+      "compression_type": "Zlib",
+      "is_enabled": true,
+      "packing_type": "engine",
+      "pak_chunk_num": 2,
+      "pak_dir_structure": "LogicMods"
+    },
+    "LooseExampleMod": {
+      "is_enabled": true,
+      "mod_name_dir_type": "Mods",
+      "packing_type": "loose",
+      "pak_dir_structure": "LogicMods"
+    },
+    "EngineMadeExampleMod": {
+      "compression_type": "Zlib",
+      "is_enabled": true,
+      "packing_type": "engine",
+      "pak_chunk_num": 1,
+      "pak_dir_structure": "LogicMods"
+    },
+    "RetocMadeExampleMod": {
+      "compression_type": "Zlib",
+      "is_enabled": true,
+      "mod_name_dir_type": "Mods",
+      "packing_type": "retoc",
+      "pak_dir_structure": "LogicMods"
+    }
+  }
+}

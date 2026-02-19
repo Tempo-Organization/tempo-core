@@ -89,7 +89,6 @@ class CompressionType(Enum):
     enum for the types of mod pak compression
     """
 
-    NONE = "None"
     ZLIB = "Zlib"
     GZIP = "Gzip"
     OODLE = "Oodle"
@@ -182,21 +181,6 @@ class LoadingPhases(Enum):
     MAX = "max"
 
 
-class UnrealIostoreFileExtensions(Enum):
-    """
-    Enum for the file extensions for files that should end up in iostore utoc and ucas files
-    If creating an iostore mod all files with extensions not within this list's corresponding string values
-    will be assumed to be pak assets
-    """
-
-    UMAP = "umap"
-    UEXP = "uexp"
-    UPTNL = "uptnl"
-    UBULK = "ubulk"
-    UASSET = "uasset"
-    USHADERBYTECODE = "ushaderbytecode"
-
-
 class SigMethodType(Enum):
     """
     Enum for the way to provide a sig when creating a mod release
@@ -216,6 +200,13 @@ def get_enum_from_val(enum_cls: Type[Enum], value: Any) -> Enum:
     raise ValueError(f"{value} is not a valid value for {enum_cls.__name__}")
 
 
+def get_enum_from_val_loose(enum_cls: Type[Enum], value: Any) -> Enum | None:
+    for entry in enum_cls:
+        if entry.value == value:
+            return entry
+    return None
+
+
 def get_enum_strings_from_enum(enum_cls: Type[Enum]) -> list[str]:
     return [entry.value for entry in enum_cls]
 
@@ -226,16 +217,23 @@ class UnrealEngineVersion:
     minor_version: int
 
     def get_retoc_unreal_version_str(self) -> str:
-        return f'UE{self.major_version}_{self.minor_version}'
+        return f"UE{self.major_version}_{self.minor_version}"
 
     def get_uasset_gui_unreal_version_str(self) -> str:
-        return f'VER_UE{self.major_version}_{self.minor_version}'
+        return f"VER_UE{self.major_version}_{self.minor_version}"
+
+    def get_kismet_analyzer_unreal_version_str(self) -> str:
+        return f"VER_UE{self.major_version}_{self.minor_version}"
 
     def get_repak_unreal_version_str(self) -> str:
         version_key = f"{self.major_version}.{self.minor_version}"
         return UnrealEngineVersion.engine_version_to_repak_version.get(
             version_key, "Unknown"
         )
+
+    def get_jmap_unreal_version_str(self) -> str:
+        return f"{self.major_version}.{self.minor_version}"
+
 
     engine_version_to_repak_version = {
         "4.0": "V1",
@@ -274,4 +272,23 @@ class UnrealEngineVersion:
         "5.4": "V11",
         "5.5": "V11",
         "5.6": "V11",
+        "5.7": "V11",
     }
+
+
+unreal_iostore_file_extensions = [
+    "umap",
+    "uexp",
+    "uptnl",
+    "ubulk",
+    "uasset",
+    "ushaderbytecode",
+]
+
+unreal_iostore_no_sigs_archive_extensions = ["pak", "ucas", "utoc"]
+
+unreal_non_iostore_no_sigs_archive_extensions = ["pak"]
+
+unreal_iostore_sigs_archive_extensions = ["pak", "ucas", "utoc", "sigs"]
+
+unreal_non_iostore_sigs_archive_extensions = ["pak", "sigs"]

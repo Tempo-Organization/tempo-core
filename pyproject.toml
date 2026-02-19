@@ -17,6 +17,7 @@ classifiers = [
   "Programming Language :: Python :: Implementation :: CPython",
 ]
 dependencies = [
+    "platformdirs>=4.3.8",
     "psutil>=7.0.0",
     "requests>=2.32.4",
     "rich>=14.0.0",
@@ -28,10 +29,18 @@ dev = [
     "commitizen>=4.8.3",
     "mkdocs-material>=9.6.15",
     "mkdocstrings-python>=1.16.12",
-    "pre-commit>=4.2.0",
+    "pre-commit>=4.3.0",
     "pyright>=1.1.403",
     "ruff>=0.12.2",
+    "ue4ss-installer-gui",
 ]
+
+[project.scripts]
+tempo-core = "tempo_core:main"
+
+[build-system]
+requires = ["uv_build>=0.7.19,<0.8"]
+build-backend = "uv_build"
 
 [project.urls]
 Documentation = "https://github.com/Tempo-Organization/tempo_core/blob/main/README.md"
@@ -51,3 +60,6 @@ tag_format = "$version"
 version_scheme = "semver2"
 version_provider = "pep621"
 update_changelog_on_bump = true
+
+[tool.uv.sources]
+ue4ss-installer-gui = { git = "https://github.com/Mythical-Github/ue4ss_installer_gui" }

@@ -84,23 +84,38 @@ def log_message(message: str):
         default_text_color = f"rgb({default_text_color[0]},{default_text_color[1]},{default_text_color[2]})"
 
         terminal_width = get_terminal_size().columns
-        wrapped_lines = textwrap.wrap(message, width=terminal_width)
+        lines = message.splitlines()
 
-        for line in enumerate(wrapped_lines):
-            padded_line = line[1].ljust(terminal_width)
-            for keyword, color in color_options.items():
-                if keyword in message:
-                    rgb_color = f"rgb({color[0]},{color[1]},{color[2]})"
-                    console.print(
-                        padded_line, style=f"{rgb_color} on {default_background_color}", markup=False
-                    )
-                    break
-            else:
+        for original_line in lines:
+            if not original_line.strip():
                 console.print(
-                    padded_line,
+                    "".ljust(terminal_width),
                     style=f"{default_text_color} on {default_background_color}",
                     markup=False
                 )
+                continue
+
+            wrapped = textwrap.wrap(original_line, width=terminal_width) or [""]
+
+            for line in wrapped:
+                padded_line = line.ljust(terminal_width)
+
+                for keyword, color in color_options.items():
+                    if keyword in original_line:
+                        rgb_color = f"rgb({color[0]},{color[1]},{color[2]})"
+                        console.print(
+                            padded_line,
+                            style=f"{rgb_color} on {default_background_color}",
+                            markup=False
+                        )
+                        break
+                else:
+                    console.print(
+                        padded_line,
+                        style=f"{default_text_color} on {default_background_color}",
+                        markup=False
+                    )
+
 
         log_dir = os.path.join(log_information.log_base_dir)
         log_path = os.path.join(log_dir, f"{log_information.log_prefix}_latest.log")

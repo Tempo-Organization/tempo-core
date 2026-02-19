@@ -1,0 +1,21 @@
+[
+  {
+    "label": "Unit Tests",
+    "adapter": "Debugpy",
+    "request": "launch",
+    "module": "unittest",
+    "cwd": "$ZED_WORKTREE_ROOT",
+    "justMyCode": true
+  },
+  {
+    "label": "Serve Docs",
+    "adapter": "Debugpy",
+    "request": "launch",
+    "module": "mkdocs",
+    "cwd": "$ZED_WORKTREE_ROOT",
+    "args": [
+      "serve"
+    ],
+    "justMyCode": true
+  }
+]
