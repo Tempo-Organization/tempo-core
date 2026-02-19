@@ -7,23 +7,21 @@ from tempo_core.programs import unreal_engine
 
 
 def custom_get_game_dir():
-    return unreal_engine.get_game_dir(settings.get_game_exe_path())
+    return unreal_engine.get_game_dir(str(settings.get_game_exe_path()))
 
 
 def custom_get_game_paks_dir() -> str:
     alt_game_dir = os.path.dirname(custom_get_game_dir())
     potential_alt_dir_name = settings.get_alt_packing_dir_name()
     if potential_alt_dir_name:
-        return os.path.join(
-            alt_game_dir, alt_game_dir, "Content", "Paks"
-        )
+        return os.path.join(alt_game_dir, alt_game_dir, "Content", "Paks")
     return unreal_engine.get_game_paks_dir(
-        settings.get_uproject_file(), custom_get_game_dir()
+        str(settings.get_uproject_file()), custom_get_game_dir()
     )
 
 
 def get_uproject_dir():
-    return os.path.dirname(settings.get_uproject_file())
+    return os.path.dirname(str(settings.get_uproject_file()))
 
 
 def get_uproject_tempo_dir():
@@ -35,7 +33,9 @@ def get_uproject_tempo_resources_dir():
 
 
 def get_use_mod_name_dir_name_override(mod_name: str) -> bool:
-    return get_mods_info_dict_from_mod_name(mod_name).get("use_mod_name_dir_name_override", False)
+    return get_mods_info_dict_from_mod_name(mod_name).get(
+        "use_mod_name_dir_name_override", False
+    )
 
 
 def get_mod_name_dir_name_override(mod_name: str) -> str:
@@ -49,17 +49,19 @@ def get_mod_name_dir_name(mod_name: str) -> str:
 
 
 def get_pak_dir_structure(mod_name: str) -> str:
-    for info in settings.get_mods_info_list_from_json():
-        if info["mod_name"] == mod_name:
-            return info["pak_dir_structure"]
+    mods_info_dict = settings.get_mods_info_dict_from_json()
+    for mod_key in mods_info_dict.keys():
+        if mod_key == mod_name:
+            return mods_info_dict[mod_key]["pak_dir_structure"]
     pak_dir_structure_missing_error = "Could not find the proper pak dir structure within the mod entry in the provided settings file"
     raise RuntimeError(pak_dir_structure_missing_error)
 
 
 def get_mod_compression_type(mod_name: str) -> CompressionType:
-    for info in settings.get_mods_info_list_from_json():
-        if info["mod_name"] == mod_name:
-            compression_str = info["compression_type"]
+    mods_info_dict = settings.get_mods_info_dict_from_json()
+    for mod_key in mods_info_dict.keys():
+        if mod_key == mod_name:
+            return mods_info_dict[mod_key]["compression_type"]
             return CompressionType(get_enum_from_val(CompressionType, compression_str))
     missing_compression_type_error = (
         f'Could not find the compression type for the following mod name "{mod_name}"'
@@ -68,17 +70,19 @@ def get_mod_compression_type(mod_name: str) -> CompressionType:
 
 
 def get_unreal_mod_tree_type_str(mod_name: str) -> str:
-    for info in settings.get_mods_info_list_from_json():
-        if info["mod_name"] == mod_name:
-            return info["mod_name_dir_type"]
+    mods_info_dict = settings.get_mods_info_dict_from_json()
+    for mod_key in mods_info_dict.keys():
+        if mod_key == mod_name:
+            return mods_info_dict[mod_key]["mod_name_dir_type"]
     missing_mod_tree_type_error = f'Was unable to find the unreal mod tree type for the following mod name "{mod_name}"'
     raise RuntimeError(missing_mod_tree_type_error)
 
 
 def get_mods_info_dict_from_mod_name(mod_name: str) -> dict:
-    for info in settings.get_mods_info_list_from_json():
-        if info["mod_name"] == mod_name:
-            return dict(info)
+    mods_info_dict = settings.get_mods_info_dict_from_json()
+    for mod_key in mods_info_dict.keys():
+        if mod_key == mod_name:
+            return dict(mods_info_dict[mod_key])
     missing_mods_info_dict_error = (
         f'Was unable to find the mods info dict for the following mod name "{mod_name}"'
     )
@@ -87,13 +91,13 @@ def get_mods_info_dict_from_mod_name(mod_name: str) -> dict:
 
 def is_mod_name_in_list(mod_name: str) -> bool:
     return any(
-        info["mod_name"] == mod_name for info in settings.get_mods_info_list_from_json()
+        mod_key == mod_name for mod_key in settings.get_mods_info_dict_from_json().keys()
     )
 
 
 def get_mod_name_dir(mod_name: str) -> str:
     if is_mod_name_in_list(mod_name):
-        return f"{unreal_engine.get_uproject_dir(settings.get_uproject_file())}/Saved/Cooked/{get_unreal_mod_tree_type_str(mod_name)}/{mod_name}"
+        return f"{unreal_engine.get_uproject_dir(str(settings.get_uproject_file()))}/Saved/Cooked/{get_unreal_mod_tree_type_str(mod_name)}/{mod_name}"
     get_mod_name_dir_name_error = "Was unable to find the mod name dir name"
     raise RuntimeError(get_mod_name_dir_name_error)
 
@@ -103,13 +107,13 @@ def get_mod_name_dir_files(mod_name: str) -> list:
 
 
 def get_persistent_mod_files(mod_name: str) -> list:
-    return file_io.get_files_in_tree(settings.get_persistent_mod_dir(mod_name))
+    return file_io.get_files_in_tree(str(settings.get_persistent_mod_dir(mod_name)))
 
 
-def clean_working_dir():
-    working_dir = settings.get_working_dir()
-    if os.path.isdir(working_dir):
-        shutil.rmtree(working_dir)
+def clean_temp_dir():
+    temp_dir = settings.get_temp_directory()
+    if os.path.isdir(temp_dir):
+        shutil.rmtree(temp_dir)
 
 
 def filter_file_paths(paths_dict: dict) -> dict:
@@ -126,4 +130,4 @@ def get_game_window_title() -> str:
     if potential_window_title_override:
         return potential_window_title_override
     else:
-        return unreal_engine.get_game_process_name(settings.get_game_exe_path())
+        return unreal_engine.get_game_process_name(str(settings.get_game_exe_path()))

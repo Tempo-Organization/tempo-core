@@ -5,15 +5,16 @@ import subprocess
 
 from tempo_core import file_io, logger
 from tempo_core.data_structures import ExecutionMode
+import tempo_core.settings
 
 
 def run_app(
     exe_path: str,
     exec_mode: ExecutionMode = ExecutionMode.SYNC,
     args: list[str] | None = None,
-    working_dir: str = os.path.normpath(f"{file_io.SCRIPT_DIR}/working_dir"),
+    temp_dir: str = tempo_core.settings.get_temp_directory(),
 ):
-    os.makedirs(working_dir, exist_ok=True)
+    os.makedirs(temp_dir, exist_ok=True)
 
     if not args:
         args = []
@@ -29,17 +30,17 @@ def run_app(
             logger.log_message(f"Command: arg: {arg}")
         logger.log_message("----------------------------------------------------")
         logger.log_message(f"Command: {command} running with the {exec_mode} enum")
-        os.makedirs(working_dir, exist_ok=True)
-        if working_dir and os.path.isdir(working_dir):
-            os.chdir(working_dir)
+        os.makedirs(temp_dir, exist_ok=True)
+        if temp_dir and os.path.isdir(temp_dir):
+            os.chdir(temp_dir)
 
         process = subprocess.Popen(
             command,
-            cwd=working_dir,
+            cwd=temp_dir,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             text=True,
-            shell=True
+            shell=True,
         )
 
         if process.stdout:
@@ -56,4 +57,4 @@ def run_app(
         for arg in args:
             command = f"{command} {arg}"
         logger.log_message(f"Command: {command} started with the {exec_mode} enum")
-        subprocess.Popen(command, cwd=working_dir, start_new_session=True)
+        subprocess.Popen(command, cwd=temp_dir, start_new_session=True)

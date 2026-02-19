@@ -43,7 +43,8 @@ def get_processes_by_substring(substring: str) -> list:
 
 
 def get_process_kill_events() -> list:
-    return settings.settings_information.settings["process_kill_events"]["processes"]
+    value_to_return = settings.settings_information.settings["process_kill_events"]["processes"]
+    return value_to_return
 
 
 def kill_processes(state: HookStateType):

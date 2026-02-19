@@ -5,7 +5,7 @@ from tempo_core import file_io, settings
 
 def download_umodel():
     url = "https://github.com/Mythical-Github/UEViewer/releases/download/vStatic/umodel_win32.zip"
-    download_path = f"{settings.get_working_dir()}/umodel_win32.zip"
+    download_path = f"{settings.get_temp_directory()}/umodel_win32.zip"
 
     file_io.download_file(url, download_path)
 
@@ -13,7 +13,7 @@ def download_umodel():
 def install_umodel(output_directory: str):
     download_umodel()
     os.makedirs(output_directory, exist_ok=True)
-    zip_path = os.path.join(settings.get_working_dir(), "umodel_win32.zip")
+    zip_path = os.path.join(settings.get_temp_directory(), "umodel_win32.zip")
     file_io.unzip_zip(zip_path, output_directory)
 
 

@@ -1,11 +1,12 @@
 import os
 import sys
+import pathlib
 from enum import Enum
 from typing import cast
 
 import requests
 
-from tempo_core import settings, app_runner, utilities, cache, data_structures
+from tempo_core import settings, app_runner, cache, data_structures, logger
 
 
 class RepakCompressionType(Enum):
@@ -50,7 +51,7 @@ def get_current_repak_release_tag() -> str:
             response.raise_for_status()
             return response.json().get("tag_name", "latest")
         except Exception as e:
-            print(f"[Warning] Failed to fetch latest Repak release tag from GitHub: {e}")
+            logger.log_message(f"[Warning] Failed to fetch latest Repak release tag from GitHub: {e}")
             return "latest"
 
     return prioritized_value
@@ -86,15 +87,15 @@ def get_download_url() -> str:
 
 def install_tool_repak():
     cache.install_tool_to_cache(
-        tools = cache.TempoCache, 
-        tool_name = 'repak', 
-        version_tag = get_current_repak_release_tag(), 
-        file_paths = [], 
-        executable_path = get_executable_name(), 
-        file_to_download = get_file_to_download(), 
+        tools = cache.TempoCache,
+        tool_name = 'repak',
+        version_tag = get_current_repak_release_tag(),
+        file_paths = [],
+        executable_path = get_executable_name(),
+        file_to_download = get_file_to_download(),
         download_url = get_download_url()
     )
-    
+
 
 def run_repak_pack_command(input_directory: str, output_pak_file: str):
     repak_path = get_repak_package_path()
@@ -108,7 +109,7 @@ def run_repak_pack_command(input_directory: str, output_pak_file: str):
     if compression_type_str:
         command = f"{command} --compression {compression_type_str}"
     # when not manually overriding, check the toml for unreal version, before getting it from the engine directory
-    default = settings.get_unreal_engine_version(settings.get_unreal_engine_dir()).get_repak_unreal_version_str()
+    default = settings.get_unreal_engine_version(str(settings.get_unreal_engine_dir())).get_repak_unreal_version_str()
     command = f"{command} --version {settings.settings_information.settings.get("repak_info", {}).get("repak_version", default)}"
     app_runner.run_app(command)
 
@@ -142,7 +143,7 @@ def get_repak_compression_type() -> RepakCompressionType:
 
     if default_value is not None and default_value not in valid_values:
         raise ValueError(f'Invalid default value: {default_value}. Must be one of {valid_values}.')
-    
+
     prioritized_value = cli_value or env_value or config_value or default_value
 
     return cast(RepakCompressionType, data_structures.get_enum_from_val(RepakCompressionType, prioritized_value))
@@ -151,7 +152,7 @@ def get_repak_compression_type() -> RepakCompressionType:
 def get_repak_pack_version() -> str:
     # finish this to do
     # have it first try and get it all three non default ways, and if not possible then get version directly from the toml, then check engine, then throw error otherwise
-    unreal_version = settings.get_unreal_engine_version(settings.get_unreal_engine_dir())
+    unreal_version = settings.get_unreal_engine_version(str(settings.get_unreal_engine_dir()))
 
     default_value = unreal_version.get_repak_unreal_version_str()
 
@@ -181,7 +182,7 @@ def get_repak_pack_version() -> str:
 
     if default_value is not None and default_value not in valid_values:
         raise ValueError(f'Invalid default value: {default_value}. Must be one of {valid_values}.')
-    
+
     return cli_value or env_value or config_value or default_value
 
 
@@ -201,7 +202,7 @@ def get_repak_tool_entry() -> cache.Tool | None:
     for tool in cache.TempoCache.tool_entries:
         if tool.get_repo_name().lower() == "repak":
             return tool
-    print("Repak tool not found in cache. Please install it first.")
+    logger.log_message("Repak tool not found in cache. Please install it first.")
     return None
 
 
@@ -227,31 +228,35 @@ def get_tool_install_dir(tool_name: str) -> str:
     ))
 
 
-def get_repak_directory() -> str:
-    
-    default_value = get_tool_install_dir('repak')
+def get_repak_directory() -> pathlib.Path | None:
+    default_value = get_tool_install_dir("repak")
 
     config_value = None
     if settings.settings_information.settings:
-        config_value = settings.settings_information.settings.get('repak_info', {}).get('repak_dir', None)
+        config_value = settings.settings_information.settings.get("repak_info", {}).get(
+            "repak_dir", None
+        )
 
-    env_value = os.environ.get('TEMPO_REPAK_DIR')
+    env_value = os.environ.get("TEMPO_REPAK_DIR")
 
     cli_value = None
-    if '--repak-dir' in sys.argv:
-        idx = sys.argv.index('--repak-dir')
+    if "--repak-dir" in sys.argv:
+        idx = sys.argv.index("--repak-dir")
         if idx + 1 < len(sys.argv):
             cli_value = sys.argv[idx + 1]
         else:
-            raise RuntimeError('you passed --repak-dir without a tag after')
-    
+            raise RuntimeError("you passed --repak-dir without a tag after")
+
     prioritized_value = cli_value or env_value or config_value or default_value
 
-    return prioritized_value
+    if not os.path.isabs(prioritized_value):
+        return pathlib.Path(str(settings.settings_information.settings_json_dir.path), prioritized_value).resolve()
+    else:
+        return pathlib.Path(prioritized_value).resolve()
 
 
     # finish this to do
-        
+
         # default cache dir
         # ['repak_info']['repak_dir']
         # TEMPO_REPAK_DIR

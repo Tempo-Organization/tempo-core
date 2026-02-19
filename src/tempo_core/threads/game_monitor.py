@@ -72,6 +72,11 @@ def game_monitor_thread_logic():
         game_monitor_thread_information.window_closed = True
 
 
+# finish this later
+def get_should_skip_game_monitoring() -> bool:
+    return False
+
+
 def start_game_monitor_thread():
     game_monitor_thread_information.run_game_monitor_thread = True
     game_monitor_thread_information.game_monitor_thread = threading.Thread(
@@ -86,10 +91,12 @@ def stop_game_monitor_thread():
 
 
 def game_monitor_thread():
-    start_game_monitor_thread()
-    logger.log_message("Thread: Game Monitoring Thread Started")
-    game_monitor_thread_information.game_monitor_thread.join()
-    logger.log_message("Thread: Game Monitoring Thread Ended")
-    logger.log_message(
-        f"Timer: Time since script execution: {tempo_core.timer.get_running_time()}"
-    )
+    # check for a skip via env var, settings file, launch param for skipping finding game window
+    if not get_should_skip_game_monitoring():
+        start_game_monitor_thread()
+        logger.log_message("Thread: Game Monitoring Thread Started")
+        game_monitor_thread_information.game_monitor_thread.join()
+        logger.log_message("Thread: Game Monitoring Thread Ended")
+        logger.log_message(
+            f"Timer: Time since script execution: {tempo_core.timer.get_running_time()}"
+        )
