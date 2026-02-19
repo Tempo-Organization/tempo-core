@@ -598,6 +598,7 @@ def does_iostore_game_need_utoc_ucas() -> bool:
 def cooking():
     populate_queue()
     is_game_iostore = settings.get_is_game_iostore_from_config()
+    # why not using below?
     # is_game_iostore = unreal_engine.get_is_game_iostore(settings.get_uproject_file(), utilities.custom_get_game_dir())
     if is_game_iostore:
         if does_iostore_game_need_utoc_ucas():

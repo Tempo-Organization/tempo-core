@@ -507,7 +507,6 @@ def get_is_game_iostore_from_config() -> bool | None:
     return settings_information.settings.get("game_info", {}).get("is_iostore", None)
 
 
-# maybe allow multiple specification later on?
 def get_target_platform() -> str:
     if is_windows():
         default_target_platform = 'Win64'
