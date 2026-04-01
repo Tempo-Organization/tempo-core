@@ -587,12 +587,32 @@ def package_project_iostore_ue5():
     )
 
 
+def get_debug_engine_building_args() -> list:
+    return [
+        "-build",
+        "-skipstage",
+        "-nodebuginfo",
+        "-noP4",
+        f"-targetplatform={settings.get_target_platform()}",
+        '-clientconfig=Debug'
+    ]
+
+
 # for if you are just repacking an ini for an iostore game and don't need a ucas or utoc for example
 # actually implement this later on
 def does_iostore_game_need_utoc_ucas() -> bool:
     # needs_more_than_pak = True
     # return needs_more_than_pak
     return True
+
+def get_debug_build_project_command() -> str:
+    command = (
+        f'"Engine\\Build\\BatchFiles\\RunUAT.{file_io.get_platform_wrapper_extension()}" {settings.get_unreal_engine_building_main_command()} '
+        f'-project="{settings.get_uproject_file()}" '
+    )
+    for arg in get_debug_engine_building_args():
+        command = f"{command} {arg}"
+    return command
 
 
 @hook_states.hook_state_decorator(
@@ -606,8 +626,14 @@ def cooking():
     # is_game_iostore = unreal_engine.get_is_game_iostore(settings.get_uproject_file(), utilities.custom_get_game_dir())
     if is_game_iostore:
         if does_iostore_game_need_utoc_ucas():
+            if not os.path.isfile(
+                os.path.normpath(f'{unreal_engine.get_uproject_dir(str(settings.get_uproject_file()))}/Binaries/{settings.get_target_platform()}/{unreal_engine.get_uproject_name}Editor.target')
+            ):
+                from tempo_core import main_logic
+                main_logic.run_proj_build_command(get_debug_build_project_command())
             package_project_iostore()
         else:
+            # not sure if this needs the target as well, check by cooking the project probably after a clean using command
             cook_uproject()
     elif PackingType.ENGINE in queue_information.install_queue_types:
         package_uproject_non_iostore()
