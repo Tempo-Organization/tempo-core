@@ -292,3 +292,12 @@ unreal_non_iostore_no_sigs_archive_extensions = ["pak"]
 unreal_iostore_sigs_archive_extensions = ["pak", "ucas", "utoc", "sigs"]
 
 unreal_non_iostore_sigs_archive_extensions = ["pak", "sigs"]
+
+# allow this to be customized later probably
+unreal_engine_build_targets = [
+    "Debug",
+    "DebugGame",
+    "Development",
+    "Shipping",
+    "Test"
+]

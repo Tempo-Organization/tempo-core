@@ -402,6 +402,24 @@ def add_mod(
             },
         }
 
+        def remove_none_values(data):
+            if isinstance(data, dict):
+                return {
+                    key: remove_none_values(value)
+                    for key, value in data.items()
+                    if value is not None
+                }
+            elif isinstance(data, list):
+                return [
+                    remove_none_values(item)
+                    for item in data
+                    if item is not None
+                ]
+            else:
+                return data
+
+        mod_data = remove_none_values(mod_data)
+
         if mod_name in settings["mods_info"]:
             logger.log_message(f"Mod '{mod_name}' already exists. Updating its data.")
 

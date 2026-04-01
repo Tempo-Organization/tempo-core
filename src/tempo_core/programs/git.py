@@ -31,4 +31,4 @@ def download_files_from_github_repo(
         os.makedirs(os.path.dirname(local_file_path), exist_ok=True)
         with open(local_file_path, "wb") as f:
             f.write(response.content)
-            logger.log_message(f"Downloaded: {file_path} -> {local_file_path}")
+            logger.log_message(f"Downloaded: {file_path} → {local_file_path}")
