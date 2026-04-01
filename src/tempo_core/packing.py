@@ -542,6 +542,8 @@ def package_project_iostore_ue4():
         f'-clientconfig="{settings.get_build_configuration_state()}"',
         "-utf8output",
     ]
+    if not os.path.isfile(unreal_engine.get_build_target_file_path(str(uproject_path))):
+        args.append('-build')
     app_runner.run_app(
         exe_path=main_exec, args=args, temp_dir=str(settings.get_unreal_engine_dir())
     )
@@ -578,6 +580,8 @@ def package_project_iostore_ue5():
         f'-clientconfig="{settings.get_build_configuration_state()}"',
         "-utf8output",
     ]
+    if not os.path.isfile(unreal_engine.get_build_target_file_path(str(uproject_path))):
+        args.append('-build')
     app_runner.run_app(
         exe_path=main_exec, args=args, temp_dir=str(settings.get_unreal_engine_dir())
     )
