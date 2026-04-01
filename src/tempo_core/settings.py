@@ -303,6 +303,7 @@ def get_engine_packaging_args() -> list:
         "-unversionedcookedcontent",
         "-SkipCookingEditorContent",
         "-iterate",
+        "-cookincremental",
         "-noP4",
         "-compressed",
     ]
@@ -317,6 +318,7 @@ def get_engine_cooking_args() -> list:
         "-unversionedcookedcontent",
         "-SkipCookingEditorContent",
         "-iterate",
+        "-cookincremental",
         "-noP4",
     ]
     return settings_information.settings.get("engine_info", {}).get(
