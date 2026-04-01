@@ -2,7 +2,7 @@ import json
 import os
 
 from tempo_core import file_io, process_management, settings, data_structures
-from tempo_core.data_structures import PackagingDirType, UnrealEngineVersion
+from tempo_core.data_structures import PackagingDirType, UnrealEngineVersion, unreal_engine_build_targets
 
 
 def get_game_process_name(input_game_exe_path: str) -> str:
@@ -159,11 +159,17 @@ def get_engine_process_name(unreal_dir: str) -> str:
 
 
 def get_build_target_file_path(uproject_file_path: str) -> str:
+    build_target = settings.get_build_configuration_state()
+    if build_target not in unreal_engine_build_targets:
+        unsupported_build_configuration_error_message = f'Unsupported build configuration chosen "{build_target}"'
+        raise RuntimeError(unsupported_build_configuration_error_message)
     uproject_dir = get_uproject_dir(uproject_file_path)
     uproject_name = get_uproject_name(uproject_file_path)
-    return os.path.join(
-        uproject_dir, "Binaries", settings.get_target_platform(), f"{uproject_name}.target"
-    )
+    target_platform = settings.get_target_platform()
+    if build_target == "Development":
+        return os.path.normpath(f'{uproject_dir}/Binaries/{target_platform}/{uproject_name}.target')
+    else:
+        return os.path.normpath(f'{uproject_dir}/Binaries/{target_platform}/{uproject_name}-{target_platform}-{build_target}.target')
 
 
 def has_build_target_been_built(uproject_file_path: str) -> bool:

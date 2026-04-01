@@ -6,7 +6,6 @@ import platform
 import shutil
 import subprocess
 import sys
-from threading import RLock
 import typing
 from dataclasses import dataclass
 
@@ -514,15 +513,3 @@ def get_target_platform() -> str:
     else:
         default_target_platform = 'Linux'
     return settings_information.settings.get('engine_info', {}).get('target_platform', default_target_platform)
-
-
-def get_default_release_dir() -> str:
-    dir_to_return =  os.path.normpath(f'{os.getcwd()}/Modding/releases')
-    os.makedirs(dir_to_return, exist_ok=True)
-    return dir_to_return
-
-
-def get_default_release_base_files_dir() -> str:
-    dir_to_return = os.path.normpath(f'{os.getcwd()}/Modding/release_base_files')
-    os.makedirs(dir_to_return, exist_ok=True)
-    return dir_to_return
