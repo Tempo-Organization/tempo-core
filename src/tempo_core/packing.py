@@ -541,6 +541,8 @@ def package_project_iostore_ue4():
         f"-targetplatform={settings.get_target_platform()}",
         f'-clientconfig="{settings.get_build_configuration_state()}"',
         "-utf8output",
+        "-cookincremental",
+        "-iterate"
     ]
     if not os.path.isfile(unreal_engine.get_build_target_file_path(str(uproject_path))):
         args.append('-build')
@@ -579,6 +581,8 @@ def package_project_iostore_ue5():
         f"-targetplatform={settings.get_target_platform()}",
         f'-clientconfig="{settings.get_build_configuration_state()}"',
         "-utf8output",
+        "-cookincremental",
+        "-iterate"
     ]
     if not os.path.isfile(unreal_engine.get_build_target_file_path(str(uproject_path))):
         args.append('-build')
@@ -622,13 +626,14 @@ def get_debug_build_project_command() -> str:
 def cooking():
     populate_queue()
     is_game_iostore = settings.get_is_game_iostore_from_config()
+    uproject_file = str(settings.get_uproject_file())
     # why not using below?
     # is_game_iostore = unreal_engine.get_is_game_iostore(settings.get_uproject_file(), utilities.custom_get_game_dir())
     if is_game_iostore:
         if does_iostore_game_need_utoc_ucas():
-            if not os.path.isfile(
-                os.path.normpath(f'{unreal_engine.get_uproject_dir(str(settings.get_uproject_file()))}/Binaries/{settings.get_target_platform()}/{unreal_engine.get_uproject_name}Editor.target')
-            ):
+            file_to_check = os.path.normpath(f'{unreal_engine.get_uproject_dir(uproject_file)}/Binaries/{settings.get_target_platform()}/{unreal_engine.get_uproject_name(uproject_file)}Editor.target')
+            print(f'file_to_check: {file_to_check}')
+            if not os.path.isfile(file_to_check):
                 from tempo_core import main_logic
                 main_logic.run_proj_build_command(get_debug_build_project_command())
             package_project_iostore()
