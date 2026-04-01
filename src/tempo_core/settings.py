@@ -282,7 +282,14 @@ def get_window_title_override() -> str | None:
 
 
 def get_engine_building_args() -> list:
-    default_args = ["-build", "-skipstage", "-nodebuginfo", "-noP4"]
+    default_args = [
+        "-build",
+        "-skipstage",
+        "-nodebuginfo",
+        "-noP4",
+        f"-targetplatform={get_target_platform()}",
+        f'-clientconfig="{get_build_configuration_state()}"'
+    ]
     return settings_information.settings.get("engine_info", {}).get(
         "engine_building_args", default_args
     )
