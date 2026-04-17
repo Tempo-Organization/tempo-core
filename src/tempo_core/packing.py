@@ -541,7 +541,6 @@ def package_project_iostore_ue4():
         f"-targetplatform={settings.get_target_platform()}",
         f'-clientconfig="{settings.get_build_configuration_state()}"',
         "-utf8output",
-        "-cookincremental",
         "-iterate"
     ]
     if not os.path.isfile(unreal_engine.get_build_target_file_path(str(uproject_path))):
@@ -552,6 +551,7 @@ def package_project_iostore_ue4():
 
 
 def package_project_iostore_ue5():
+    # add an option here for -legacyiterative instead of -cookincremental later
     main_exec = f'"{settings.get_unreal_engine_dir()}/Engine/Build/BatchFiles/RunUAT.{file_io.get_platform_wrapper_extension()}"'
     uproject_path = settings.get_uproject_file()
     editor_cmd_exe_path = unreal_engine.get_editor_cmd_path(
@@ -581,8 +581,7 @@ def package_project_iostore_ue5():
         f"-targetplatform={settings.get_target_platform()}",
         f'-clientconfig="{settings.get_build_configuration_state()}"',
         "-utf8output",
-        "-cookincremental",
-        "-iterate"
+        "-cookincremental"
     ]
     if not os.path.isfile(unreal_engine.get_build_target_file_path(str(uproject_path))):
         args.append('-build')
@@ -632,7 +631,7 @@ def cooking():
     if is_game_iostore:
         if does_iostore_game_need_utoc_ucas():
             file_to_check = os.path.normpath(f'{unreal_engine.get_uproject_dir(uproject_file)}/Binaries/{settings.get_target_platform()}/{unreal_engine.get_uproject_name(uproject_file)}Editor.target')
-            print(f'file_to_check: {file_to_check}')
+            logger.log_message(f'file_to_check: {file_to_check}')
             if not os.path.isfile(file_to_check):
                 from tempo_core import main_logic
                 main_logic.run_proj_build_command(get_debug_build_project_command())

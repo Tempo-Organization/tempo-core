@@ -46,7 +46,7 @@ def run_game_steam():
     for param in new_params:
         launch_params.append(param)
     app_runner.run_app(
-        exe_path=steam_exe, exec_mode=ExecutionMode.ASYNC, args=launch_params
+        exe_path=steam_exe, exec_mode=ExecutionMode.ASYNC, args=launch_params # ty: ignore
     )
 
 

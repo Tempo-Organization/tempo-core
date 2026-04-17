@@ -6,16 +6,17 @@ import unittest
 
 from tempo_core import logger
 
-import ue4ss_installer_gui.ue4ss
-import ue4ss_installer_gui.file_io
+import ue4ss_installer_core.ue4ss
+import ue4ss_installer_core.file_io
 
-import tempo_core.cache
 import tempo_core.file_io
 import tempo_core.settings
 import tempo_core.main_logic
 import tempo_core.programs.git
 import tempo_core.initialization
+import tempo_core.online_check
 
+from tempo_cache import cache
 
 CWD = os.getcwd()
 TEMP_DIR = tempo_core.settings.get_temp_directory()
@@ -66,7 +67,9 @@ SETTINGS_FILE = os.path.normpath(f"{CWD}/tests/{GAME_STR}_tempo.json")
 
 
 def cache_files() -> list[str]:
-    TEMPO_CACHE_DIR = tempo_core.cache.get_cache_dir()
+    cache.logging_function = logger.log_message
+    cache._cache_dir = tempo_core.settings.settings_information.settings.get("cache", {}).get("cache_dir", None)
+    TEMPO_CACHE_DIR = cache.get_cache_dir()
     TESTS_CACHE_DIR = os.path.normpath(f"{TEMPO_CACHE_DIR}/testing")
     UE4SS_ZIP_CACHE_DIR = os.path.normpath(f"{TESTS_CACHE_DIR}/ue4ss_zip")
     PACKAGED_GAMES_CACHE_DIR = os.path.normpath(f"{TESTS_CACHE_DIR}/packaged_games")
@@ -151,6 +154,7 @@ def copy_files_from_cache(cache_info):
 
 def init_tests() -> list[str]:
     init_tempo_core()
+
     cache_info = cache_files()
     copy_files_from_cache(cache_info)
     return cache_info
@@ -160,12 +164,15 @@ def install_ue4ss(cache_dir: str, game_exe_directory: str):
     ue4ss_zip_path = pathlib.Path(f"{cache_dir}/ue4ss.zip")
 
     if not ue4ss_zip_path.exists():
+        if not tempo_core.online_check.is_online:
+            raise RuntimeError('You do not have ue4ss downloaded to cache, and cannot download because you are not connected to the web.')
+
         logger.log_message("started caching ue4ss release info")
-        ue4ss_installer_gui.ue4ss.cache_repo_releases_info("UE4SS-RE", "RE-UE4SS")
+        ue4ss_installer_core.ue4ss.cache_repo_releases_info("UE4SS-RE", "RE-UE4SS")
         logger.log_message("finished caching ue4ss release info")
-        tag = ue4ss_installer_gui.ue4ss.get_default_ue4ss_version_tag()
+        tag = ue4ss_installer_core.ue4ss.get_default_ue4ss_version_tag()
         file_names_to_download_links = (
-            ue4ss_installer_gui.ue4ss.get_file_name_to_download_links_from_tag(tag)
+            ue4ss_installer_core.ue4ss.get_file_name_to_download_links_from_tag(tag)
         )
 
         final_download_link = next(
@@ -181,12 +188,12 @@ def install_ue4ss(cache_dir: str, game_exe_directory: str):
                 f'Unable to find a compatible UE4SS release for tag "{tag}"'
             )
 
-        ue4ss_installer_gui.file_io.download_file(
+        ue4ss_installer_core.file_io.download_file(
             final_download_link,
             os.path.normpath(f"{cache_dir}/ue4ss.zip"),
         )
 
-    ue4ss_installer_gui.file_io.unzip_zip(
+    ue4ss_installer_core.file_io.unzip_zip(
         ue4ss_zip_path, pathlib.Path(game_exe_directory)
     )
 

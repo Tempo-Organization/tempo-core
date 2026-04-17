@@ -17,17 +17,12 @@ from tempo_core import (
     process_management,
     settings,
     utilities,
+    online_check
 )
-from tempo_core.programs import (
-    fmodel,
-    kismet_analyzer,
-    spaghetti,
-    stove,
-    uasset_gui,
-    umodel,
-    unreal_engine,
-)
+from tempo_core.programs import unreal_engine
 from tempo_core.threads import constant, game_monitor
+
+from tempo_cache_tools import spaghetti, stove, uasset_gui, umodel, fmodel, kismet_analyzer
 
 
 @hook_states.hook_state_decorator(
@@ -117,46 +112,35 @@ def full_run_all(
         engine.toggle_engine_on()
 
 
-def install_spaghetti(*, output_directory: str, run_after_install: bool):
-    if not os.path.isfile(spaghetti.get_spaghetti_path(output_directory)):
-        spaghetti.install_spaghetti(output_directory)
+def install_spaghetti(run_after_install: bool):
+    tool_path = spaghetti.SpaghettiToolInfo().get_executable_path()
     if run_after_install:
-        app_runner.run_app(spaghetti.get_spaghetti_path(output_directory))
+        app_runner.run_app(tool_path)
 
 
-def install_stove(*, output_directory: str, run_after_install: bool):
-    if not stove.does_stove_exist(output_directory):
-        stove.install_stove(output_directory)
+def install_stove(run_after_install: bool):
+    tool_path = stove.StoveToolInfo().get_executable_path()
     if run_after_install:
-        app_runner.run_app(stove.get_stove_path(output_directory))
+        app_runner.run_app(tool_path)
 
 
-def install_kismet_analyzer(*, output_directory: str, run_after_install: bool):
-    analyzer_path = kismet_analyzer.get_kismet_analyzer_path(output_directory)
-
-    if not os.path.isfile(analyzer_path):
-        kismet_analyzer.install_kismet_analyzer(output_directory)
-
+def install_kismet_analyzer(run_after_install: bool):
+    tool_path = kismet_analyzer.KismetAnalyzerToolInfo().get_executable_path()
     if run_after_install:
         try:
             subprocess.Popen(
-                "start cmd /k kismet-analyzer.exe -h",
+                f'start cmd /k "{tool_path}"" -h',
                 shell=True,
-                cwd=os.path.dirname(
-                    kismet_analyzer.get_kismet_analyzer_path(output_directory)
-                ),
+                cwd=os.path.dirname(tool_path),
             )
         except Exception as e:
             logger.log_message(f"Failed to run kismet-analyzer: {e}")
 
 
-def install_uasset_gui(*, output_directory: str, run_after_install: bool):
-    if not os.path.isfile(uasset_gui.get_uasset_gui_path(output_directory)):
-        uasset_gui.install_uasset_gui(output_directory)
-    else:
-        logger.log_message(f'uasset_gui is already installed at: "{output_directory}"')
+def install_uasset_gui(run_after_install: bool):
+    tool_path = uasset_gui.UassetGuiToolInfo().get_executable_path()
     if run_after_install:
-        app_runner.run_app(uasset_gui.get_uasset_gui_path(output_directory))
+        app_runner.run_app(tool_path)
 
 
 def open_latest_log():
@@ -188,20 +172,16 @@ def close_engine():
     engine.close_game_engine()
 
 
-def install_umodel(*, output_directory: str, run_after_install: bool):
-    if not umodel.does_umodel_exist(output_directory):
-        umodel.install_umodel(output_directory)
-    # Sets dir, so it's the dir opened by default in umodel
-    # os.chdir(os.path.dirname(utilities.custom_get_game_dir()))
+def install_umodel(run_after_install: bool):
+    tool_path = umodel.UmodelToolInfo().get_executable_path()
     if run_after_install:
-        app_runner.run_app(umodel.get_umodel_path(output_directory))
+        app_runner.run_app(tool_path)
 
 
-def install_fmodel(*, output_directory: str, run_after_install: bool):
-    if not os.path.isfile(fmodel.get_fmodel_path(output_directory)):
-        fmodel.install_fmodel(output_directory)
+def install_fmodel(run_after_install: bool):
+    tool_path = fmodel.FmodelToolInfo().get_executable_path()
     if run_after_install:
-        app_runner.run_app(fmodel.get_fmodel_path(output_directory))
+        app_runner.run_app(tool_path)
 
 
 def get_solo_build_project_command() -> str:
@@ -234,6 +214,8 @@ def build(*, toggle_engine: bool):
 
 
 def upload_changes_to_repo():
+    if not online_check.is_online:
+        raise RuntimeError('You are not able to upload changes to repos when not connected to the web.')
     repo_path = settings.settings_information.settings["git_info"]["repo_path"]
     branch = settings.settings_information.settings["git_info"]["repo_branch"]
     desc = input("Enter commit description: ")

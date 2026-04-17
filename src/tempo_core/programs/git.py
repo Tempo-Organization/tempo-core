@@ -1,7 +1,8 @@
 import os
 import requests
 
-from tempo_core import logger
+from tempo_core import logger, online_check
+
 
 def download_files_from_github_repo(
     repo_url: str,
@@ -9,6 +10,8 @@ def download_files_from_github_repo(
     file_paths: list[str] = [],
     output_directory: str = os.getcwd(),
 ):
+    if not online_check.is_online:
+        raise RuntimeError('You are not able to download files from github repos when not connected to the web.')
     try:
         parts = repo_url.strip("/").split("/")
         user, repo = parts[-2], parts[-1]
@@ -31,4 +34,4 @@ def download_files_from_github_repo(
         os.makedirs(os.path.dirname(local_file_path), exist_ok=True)
         with open(local_file_path, "wb") as f:
             f.write(response.content)
-            logger.log_message(f"Downloaded: {file_path} → {local_file_path}")
+            logger.log_message(f"Downloaded: {file_path} to {local_file_path}")

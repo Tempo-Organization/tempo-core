@@ -36,9 +36,9 @@ def kill_process(process_name: str):
 def get_processes_by_substring(substring: str) -> list:
     all_processes = psutil.process_iter(["pid", "name"])
     return [
-        proc.info  # type: ignore
+        proc.info
         for proc in all_processes
-        if substring.lower() in proc.info["name"].lower()  # type: ignore
+        if substring.lower() in proc.info["name"].lower()
     ]
 
 
@@ -63,7 +63,7 @@ def kill_processes(state: HookStateType):
 
 
 def get_game_process_name():
-    return unreal_engine.get_game_process_name(settings.get_game_exe_path())
+    return unreal_engine.get_game_process_name(settings.get_game_exe_path()) # ty: ignore
 
 
 def close_programs(exe_names: list[str]):
@@ -73,7 +73,7 @@ def close_programs(exe_names: list[str]):
         found = False
         for proc in psutil.process_iter(["pid", "name"]):
             try:
-                if proc.info["name"] and proc.info["name"].lower() == exe_name.lower():  # type: ignore
+                if proc.info["name"] and proc.info["name"].lower() == exe_name.lower():
                     proc.terminate()
                     proc.wait(timeout=5)
                     found = True

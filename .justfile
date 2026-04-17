@@ -42,3 +42,7 @@ mkdocs_serve:
 
 refresh_deps:
   uv lock --upgrade
+
+lint:
+  uv run ruff check --fix
+  uv run ty check --fix

@@ -1,5 +1,4 @@
 import platform
-import sys
 
 def get_current_arch() -> str:
     return platform.machine() or platform.architecture()[0]
