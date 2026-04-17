@@ -78,10 +78,10 @@ def log_message(message: str):
     if log_information.has_configured_logging:
         color_options = LOG_INFO.get("theme_colors", {})
         default_background_color = LOG_INFO.get("background_color", (40, 42, 54))
-        default_background_color = f"rgb({default_background_color[0]},{default_background_color[1]},{default_background_color[2]})"
+        default_background_color = f"rgb({default_background_color[0]},{default_background_color[1]},{default_background_color[2]})" # ty: ignore
 
         default_text_color = LOG_INFO.get("default_color", (94, 94, 255))
-        default_text_color = f"rgb({default_text_color[0]},{default_text_color[1]},{default_text_color[2]})"
+        default_text_color = f"rgb({default_text_color[0]},{default_text_color[1]},{default_text_color[2]})" # ty: ignore
 
         terminal_width = get_terminal_size().columns
         lines = message.splitlines()
@@ -100,7 +100,7 @@ def log_message(message: str):
             for line in wrapped:
                 padded_line = line.ljust(terminal_width)
 
-                for keyword, color in color_options.items():
+                for keyword, color in color_options.items(): # ty: ignore
                     if keyword in original_line:
                         rgb_color = f"rgb({color[0]},{color[1]},{color[2]})"
                         console.print(
@@ -131,7 +131,7 @@ def log_message(message: str):
                         log_file.write("")
             except OSError as e:
                 error_color = LOG_INFO.get("error_color", (255, 0, 0))
-                error_color = f"rgb({error_color[0]},{error_color[1]},{error_color[2]})"
+                error_color = f"rgb({error_color[0]},{error_color[1]},{error_color[2]})" # ty: ignore
                 console.print(
                     f"Failed to create log file: {e}",
                     style=f"{error_color} on {default_background_color}",
@@ -145,7 +145,7 @@ def log_message(message: str):
                     log_file.write(f"{message}\n")
         except OSError as e:
             error_color = LOG_INFO.get("error_color", (255, 0, 0))
-            error_color = f"rgb({error_color[0]},{error_color[1]},{error_color[2]})"
+            error_color = f"rgb({error_color[0]},{error_color[1]},{error_color[2]})" # ty: ignore
             console.print(
                 f"Failed to write to log file: {e}",
                 style=f"{error_color} on {default_background_color}",

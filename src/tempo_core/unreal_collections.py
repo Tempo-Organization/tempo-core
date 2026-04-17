@@ -852,7 +852,7 @@ def add_content_line_to_collection(
     collection: UnrealCollection, content_line: UnrealAssetPath | str
 ):
     if content_line not in collection.content_lines:
-        collection.content_lines.append(content_line)  # pyright: ignore
+        collection.content_lines.append(content_line) # ty: ignore
         save_unreal_collection_to_file(collection)
 
 
@@ -875,7 +875,7 @@ def remove_content_line_from_collection(
     collection: UnrealCollection, line_to_remove: UnrealAssetPath | str
 ):
     if line_to_remove in collection.content_lines:
-        collection.content_lines.remove(line_to_remove)  # pyright: ignore
+        collection.content_lines.remove(line_to_remove) # ty: ignore
         save_unreal_collection_to_file(collection)
 
 

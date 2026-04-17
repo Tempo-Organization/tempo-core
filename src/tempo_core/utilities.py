@@ -2,7 +2,7 @@ import os
 import shutil
 
 from tempo_core import file_io, settings
-from tempo_core.data_structures import CompressionType, get_enum_from_val
+from tempo_core.data_structures import CompressionType
 from tempo_core.programs import unreal_engine
 
 
@@ -62,7 +62,6 @@ def get_mod_compression_type(mod_name: str) -> CompressionType:
     for mod_key in mods_info_dict.keys():
         if mod_key == mod_name:
             return mods_info_dict[mod_key]["compression_type"]
-            return CompressionType(get_enum_from_val(CompressionType, compression_str))
     missing_compression_type_error = (
         f'Could not find the compression type for the following mod name "{mod_name}"'
     )

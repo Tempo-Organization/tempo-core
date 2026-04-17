@@ -1,4 +1,3 @@
-import enum
 import json
 import os
 import pathlib
@@ -6,41 +5,11 @@ import platform
 import shutil
 import subprocess
 import sys
-import typing
-from dataclasses import dataclass
 
 from tempo_core import data_structures, file_io, logger, process_management, utilities
 from tempo_core.programs import unreal_engine
 
-
-class SettingsOrigin(enum.Enum):
-    """
-    enum for where settings came from, mostly used for relative path creation.
-    From top to bottom, is the lowest to highest priority for the recieved value.
-    So command_line values will be used over env_var, which will be used over env_file, and so on.
-    """
-
-    DEFAULT = "default"
-    CONFIG = "config"
-    ENV_FILE = "env_file"
-    ENV_VAR = "env_var"
-    COMMAND_LINE = "command_line"
-
-
-@dataclass
-class SettingSpecificInfo:
-    path: pathlib.Path | None
-    origin: SettingsOrigin | None
-
-
-@dataclass
-class SettingsInformation:
-    settings: dict[str, typing.Any]
-    init_settings_done: bool
-    settings_json_dir: SettingSpecificInfo
-    program_dir: SettingSpecificInfo
-    mod_names: list[str]
-    settings_json: SettingSpecificInfo
+from tempo_settings.tempo_settings import SettingSpecificInfo, SettingsInformation, SettingsOrigin
 
 
 settings_information = SettingsInformation(
@@ -296,31 +265,39 @@ def get_engine_building_args() -> list:
 
 
 def get_engine_packaging_args() -> list:
+    # add an option here for -legacyiterative instead of -cookincremental later
+    if unreal_engine.is_game_ue4(str(get_unreal_engine_dir())):
+        arg_to_append = '-iterate'
+    else:
+        arg_to_append = '-cookincremental'
     default_args = [
         "-stage",
         "-pak",
         "-cook",
         "-unversionedcookedcontent",
         "-SkipCookingEditorContent",
-        "-iterate",
-        "-cookincremental",
         "-noP4",
         "-compressed",
     ]
+    default_args.append(arg_to_append)
     return settings_information.settings.get("engine_info", {}).get(
         "engine_packaging_args", default_args
     )
 
 
 def get_engine_cooking_args() -> list:
+    # add an option here for -legacyiterative instead of -cookincremental later
+    if unreal_engine.is_game_ue4(str(get_unreal_engine_dir())):
+        arg_to_append = '-iterate'
+    else:
+        arg_to_append = '-cookincremental'
     default_args = [
         "-cook",
         "-unversionedcookedcontent",
         "-SkipCookingEditorContent",
-        "-iterate",
-        "-cookincremental",
         "-noP4",
     ]
+    default_args.append(arg_to_append)
     return settings_information.settings.get("engine_info", {}).get(
         "engine_cooking_args", default_args
     )

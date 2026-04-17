@@ -9,11 +9,13 @@ from tempo_core import (
     logger,
     main_logic,
     settings,
-    wrapper,
-    cache,
+    wrapper
 )
 from tempo_core.programs import unreal_engine
+from tempo_core import online_check
 # from tempo_core.threads import input_monitor
+
+from tempo_cache import cache
 
 
 ORIGINAL_CWD = os.getcwd()
@@ -64,7 +66,7 @@ To manually disable chunk ids open "{get_editor_preferences_ini_path()}" and cha
 To clean your project, close unreal editor and run the tempo_cli cleanup_full command, or you can manually delete
 the following directories within your unreal uproject directory.
 Saved, Cooked, Intermediate, DerivedDataCache, Build, and Binaries.
-If you would like to suppress this error, you can set the TEMPO_SUPPRESS_ASSIGN_CHUNK_ID_WARNING env var to True
+If you would like to suppress this warning, you can set the TEMPO_SUPPRESS_ASSIGN_CHUNK_ID_WARNING env var to True
 You can also set SUPPRESS_ASSIGN_CHUNK_ID_WARNING env var to True as well, but this will be checked secondarily.
     """
     logger.log_message(warning_message)
@@ -167,6 +169,9 @@ def initialization():
             logger.log_information.log_prefix = sys.argv[index]
 
     customization.enable_vt100()
+
+    online_check.init_is_online()
+
     main_logic.init_thread_system()
     check_generate_wrapper()
     check_settings()
@@ -198,6 +203,12 @@ def initialization():
 
     clear_temp_dir()
 
+    cache.logging_function = logger.log_message
+    cache._cache_dir = settings.settings_information.settings.get("cache", {}).get("cache_dir", None)
+    cache.SCRIPT_DIR = file_io.SCRIPT_DIR
+    cache.is_online = online_check.is_online
+    cache.has_inited = True
+    cache.settings_information = settings.settings_information
     cache.init_cache()
 
 

@@ -10,7 +10,7 @@ from pathlib import Path
 import requests
 from requests.exceptions import HTTPError, RequestException
 
-from tempo_core import logger
+from tempo_core import logger, online_check
 
 SCRIPT_DIR = (
     Path(sys.executable).parent
@@ -26,6 +26,8 @@ def unzip_zip(zip_path: str, output_location: str):
 
 
 def download_file(url: str, download_path: str):
+    if not online_check.is_online:
+        raise RuntimeError('You are not able to download files when not connected to the web.')
     try:
         response = requests.get(url, stream=True, timeout=10)
         response.raise_for_status()
@@ -64,6 +66,8 @@ def open_file_in_default(file_path: str):
 
 
 def open_website(input_url: str):
+    if not online_check.is_online:
+        raise RuntimeError('You are not able to open websites in your browser when not connected to the web.')
     webbrowser.open(input_url)
 
 

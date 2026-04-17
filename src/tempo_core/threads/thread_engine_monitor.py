@@ -60,11 +60,11 @@ def engine_monitor_thread_logic():
         engine_monitor_thread_information.init_done = True
 
     engine_window_name = unreal_engine.get_engine_window_title(
-        settings.get_uproject_file()
+        settings.get_uproject_file() # ty: ignore
     )
     if not engine_monitor_thread_information.found_process:
         engine_process_name = unreal_engine.get_engine_process_name(
-            settings.get_unreal_engine_dir()
+            settings.get_unreal_engine_dir() # ty: ignore
         )
         if process_management.is_process_running(engine_process_name):
             logger.log_message("Process: Found Engine Process")

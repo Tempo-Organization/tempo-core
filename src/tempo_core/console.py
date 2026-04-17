@@ -1,11 +1,12 @@
-from rich.console import Console
-from typing import Literal
 import sys
+import typing
+
+from rich.console import Console
 
 
-def get_color_system_type() -> (
-    Literal["auto", "standard", "256", "truecolor", "windows"] | None
-):
+ColorSystem = typing.Literal["auto", "standard", "256", "truecolor", "windows"]
+
+def get_color_system_type() -> ColorSystem | None:
     if "--rich_console_color_system" in sys.argv:
         index = sys.argv.index("--rich_console_color_system") + 1
         if index < len(sys.argv):
@@ -13,7 +14,7 @@ def get_color_system_type() -> (
             if value == "none":
                 return None
             if value in ("auto", "standard", "256", "truecolor", "windows"):
-                return value
+                return typing.cast(ColorSystem, value)
     return "auto"
 
 

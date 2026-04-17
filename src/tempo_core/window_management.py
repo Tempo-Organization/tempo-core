@@ -78,7 +78,7 @@ if IS_WINDOWS:
         process_name: str, *, use_substring_check: bool = False
     ) -> bool:
         for proc in psutil.process_iter(["name"]):
-            if proc.info["name"] and proc.info["name"].lower() == process_name.lower():  # type: ignore
+            if proc.info["name"] and proc.info["name"].lower() == process_name.lower():
                 return True
         return False
 
@@ -237,4 +237,4 @@ else:
         set_window_size
     ) = move_window = change_window_name = move_window_with_settings = (
         get_window_title
-    ) = find_hwnd_by_process_name = not_supported  # type: ignore
+    ) = find_hwnd_by_process_name = not_supported

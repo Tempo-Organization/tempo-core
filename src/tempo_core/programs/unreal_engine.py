@@ -88,11 +88,17 @@ def get_editor_cmd_path(unreal_engine_dir: str) -> str:
 
 
 def is_game_ue5(unreal_engine_dir: str | None) -> bool:
-    return settings.get_unreal_engine_version(unreal_engine_dir).major_version == 5
+    ue_version = settings.get_unreal_engine_version(unreal_engine_dir)
+    if not ue_version:
+        raise RuntimeError('No unreal version found, with is game ue5 check')
+    return ue_version.major_version == 5
 
 
 def is_game_ue4(unreal_engine_dir: str | None) -> bool:
-    return settings.get_unreal_engine_version(unreal_engine_dir).major_version == 4
+    ue_version = settings.get_unreal_engine_version(unreal_engine_dir)
+    if not ue_version:
+        raise RuntimeError('No unreal version found, with is game ue4 check')
+    return ue_version.major_version == 4
 
 
 def get_unreal_editor_exe_path(unreal_engine_dir: str) -> str:

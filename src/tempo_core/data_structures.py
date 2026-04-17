@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Type, Any
+from typing import Type, TypeVar, Any
 from dataclasses import dataclass
 
 
@@ -193,7 +193,9 @@ class SigMethodType(Enum):
     )
 
 
-def get_enum_from_val(enum_cls: Type[Enum], value: Any) -> Enum:
+E = TypeVar("E", bound=Enum)
+
+def get_enum_from_val(enum_cls: Type[E], value: object) -> E:
     for entry in enum_cls:
         if entry.value == value:
             return entry
