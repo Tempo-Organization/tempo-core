@@ -13,7 +13,7 @@ def run_app(
     exec_mode: ExecutionMode = ExecutionMode.SYNC,
     args: list[str] | None = None,
     temp_dir: str = tempo_core.settings.get_temp_directory(),
-):
+) -> None:
     os.makedirs(temp_dir, exist_ok=True)
 
     if not args:

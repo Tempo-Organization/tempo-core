@@ -33,25 +33,25 @@ game_monitor_thread_information = GameMonitorThreadInformation(
 )
 
 
-def game_monitor_thread_runner(tick_rate: float = 0.01):
+def game_monitor_thread_runner(tick_rate: float = 0.01) -> None:
     while game_monitor_thread_information.run_game_monitor_thread:
         time.sleep(tick_rate)
         game_monitor_thread_logic()
 
 
-def get_game_window():
+def get_game_window(): # noqa
     return window_management.get_window_by_title(
         window_title=utilities.get_game_window_title()
     )
 
 
 @hook_states.hook_state_decorator(HookStateType.POST_GAME_LAUNCH)
-def found_game_window():
+def found_game_window() -> None:
     logger.log_message("Window: Game Window Found")
     game_monitor_thread_information.found_window = True
 
 
-def game_monitor_thread_logic():
+def game_monitor_thread_logic() -> None:
     if (
         not game_monitor_thread_information.found_process
         and process_management.is_process_running(
@@ -77,7 +77,7 @@ def get_should_skip_game_monitoring() -> bool:
     return False
 
 
-def start_game_monitor_thread():
+def start_game_monitor_thread() -> None:
     game_monitor_thread_information.run_game_monitor_thread = True
     game_monitor_thread_information.game_monitor_thread = threading.Thread(
         target=game_monitor_thread_runner, daemon=True
@@ -86,11 +86,11 @@ def start_game_monitor_thread():
 
 
 @hook_states.hook_state_decorator(HookStateType.POST_GAME_CLOSE)
-def stop_game_monitor_thread():
+def stop_game_monitor_thread() -> None:
     game_monitor_thread_information.run_game_monitor_thread = False
 
 
-def game_monitor_thread():
+def game_monitor_thread() -> None:
     # check for a skip via env var, settings file, launch param for skipping finding game window
     if not get_should_skip_game_monitoring():
         start_game_monitor_thread()

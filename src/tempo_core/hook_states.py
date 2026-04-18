@@ -27,7 +27,7 @@ class HookStateInfo:
 hook_state_info = HookStateInfo(HookStateType.PRE_INIT)
 
 
-def exec_events_checks(hook_state_type: HookStateType):
+def exec_events_checks(hook_state_type: HookStateType) -> None:
     exec_events = settings.get_exec_events()
     for exec_event in exec_events:
         value = exec_event["hook_state"]
@@ -69,7 +69,7 @@ def is_hook_state_used(state: HookStateType) -> bool:
     return False
 
 
-def window_checks(current_state: HookStateType):
+def window_checks(current_state: HookStateType) -> None:
     window_settings_list = settings.get_window_management_events()
     for window_settings in window_settings_list:
         settings_state = get_enum_from_val(HookStateType, window_settings["hook_state"])
@@ -102,7 +102,7 @@ def window_checks(current_state: HookStateType):
                     )
 
 
-def hook_state_checks(hook_state: HookStateType):
+def hook_state_checks(hook_state: HookStateType) -> None:
     if hook_state != HookStateType.CONSTANT:
         logger.log_message(f"Hook State Check: {hook_state} is running")
     if is_hook_state_used(hook_state):
@@ -113,7 +113,7 @@ def hook_state_checks(hook_state: HookStateType):
         logger.log_message(f"Hook State Check: {hook_state} finished")
 
 
-def set_hook_state(new_state: HookStateType):
+def set_hook_state(new_state: HookStateType) -> None:
     hook_state_info.hook_state = new_state
     logger.log_message(f"Hook State: changed to {new_state}")
     # calling this on preinit causes problems so will avoid for now
@@ -126,12 +126,35 @@ def set_hook_state(new_state: HookStateType):
         )
 
 
+# def hook_state_decorator(
+#     start_hook_state_type: HookStateType,
+#     end_hook_state_type: HookStateType | None = None,
+# ):
+#     def decorator(function: Callable[..., Any]):
+#         def wrapper(*args, **kwargs):
+#             set_hook_state(start_hook_state_type)
+#             result = function(*args, **kwargs)
+#             if end_hook_state_type is not None:
+#                 set_hook_state(end_hook_state_type)
+#             return result
+
+#         return wrapper
+
+#     return decorator
+
+
+from collections.abc import Callable
+from typing import TypeVar, ParamSpec
+
+P = ParamSpec("P")
+R = TypeVar("R")
+
 def hook_state_decorator(
     start_hook_state_type: HookStateType,
     end_hook_state_type: HookStateType | None = None,
-):
-    def decorator(function: Callable[..., Any]):
-        def wrapper(*args, **kwargs):
+) -> Callable[[Callable[P, R]], Callable[P, R]]:
+    def decorator(function: Callable[P, R]) -> Callable[P, R]:
+        def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
             set_hook_state(start_hook_state_type)
             result = function(*args, **kwargs)
             if end_hook_state_type is not None:

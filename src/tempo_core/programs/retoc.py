@@ -40,7 +40,7 @@ def run_retoc_to_zen_command(
     return file_paths
 
 
-def make_retoc_mod(mod_name: str, dest_pak_file: str, *, use_symlinks: bool):
+def make_retoc_mod(mod_name: str, dest_pak_file: str, *, use_symlinks: bool) -> None:
     from tempo_core import packing
 
     old_ucas = pathlib.Path(f"{os.path.splitext(dest_pak_file)[0]}.ucas")
@@ -90,7 +90,7 @@ def make_retoc_mod(mod_name: str, dest_pak_file: str, *, use_symlinks: bool):
     packing.install_mod_sig(mod_name=mod_name, use_symlinks=use_symlinks)
 
 
-def install_retoc_mod(*, mod_name: str, use_symlinks: bool):
+def install_retoc_mod(*, mod_name: str, use_symlinks: bool) -> None:
     # installs packing tool if need be,
     # moves files from various locations over to temp packaging location,
     # makes dirs as need be,
@@ -139,7 +139,7 @@ def run_gen_script_objects_retoc_command(
     retoc_executable: pathlib.Path,
     jmap_file: pathlib.Path,
     output: pathlib.Path
-):
+) -> None:
     exe_path = os.path.normpath(str(retoc_executable))
     exec_mode = data_structures.ExecutionMode.SYNC
     args = [

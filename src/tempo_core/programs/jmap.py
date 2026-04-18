@@ -8,7 +8,7 @@ def run_dump_jmap_jmap_command(
     jmap_executable: str,
     game_pid: int,
     output_jmap_location: pathlib.Path
-):
+) -> None:
     unreal_engine_dir = settings.get_unreal_engine_dir()
     if not unreal_engine_dir:
         raise RuntimeError('no unreal engine dir')

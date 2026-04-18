@@ -19,7 +19,7 @@ class RepakCompressionType(Enum):
     ZSTD = "Zstd"
 
 
-def run_repak_pack_command(input_directory: str, output_pak_file: str):
+def run_repak_pack_command(input_directory: str, output_pak_file: str) -> None:
     repak_info = repak.RepakToolInfo()
     repak_path = repak_info.get_executable_path()
     command = f'"{repak_path}" pack "{input_directory}" "{output_pak_file}"'

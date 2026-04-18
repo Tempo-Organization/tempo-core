@@ -6,7 +6,7 @@ from tempo_core import logger
 is_online = False
 
 
-def log_online_status():
+def log_online_status() -> None:
     if is_online:
         logger.log_message('Web Connectivity Status: Online')
     else:
@@ -17,7 +17,7 @@ def _env_true(value: str | None) -> bool:
     return str(value).strip().lower() in {"1", "true", "yes", "on"}
 
 
-def init_is_online(timeout: float = 1):
+def init_is_online(timeout: float = 1) -> None:
     """
     Determine online status with the following priority:
     1. TEMPO_FORCE_ONLINE=true  -> always online

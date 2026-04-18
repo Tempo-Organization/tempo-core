@@ -23,7 +23,7 @@ def is_process_running(process_name: str) -> bool:
     return False
 
 
-def kill_process(process_name: str):
+def kill_process(process_name: str) -> None:
     taskkill_path = shutil.which("taskkill")
 
     if taskkill_path:
@@ -47,7 +47,7 @@ def get_process_kill_events() -> list:
     return value_to_return
 
 
-def kill_processes(state: HookStateType):
+def kill_processes(state: HookStateType) -> None:
     current_state = state.value if isinstance(state, HookStateType) else state
     for process_info in get_process_kill_events():
         target_state = process_info.get("hook_state")
@@ -62,11 +62,11 @@ def kill_processes(state: HookStateType):
                 kill_process(proc_name)
 
 
-def get_game_process_name():
+def get_game_process_name() -> str:
     return unreal_engine.get_game_process_name(settings.get_game_exe_path()) # ty: ignore
 
 
-def close_programs(exe_names: list[str]):
+def close_programs(exe_names: list[str]) -> None:
     results = {}
 
     for exe_name in exe_names:
@@ -83,5 +83,3 @@ def close_programs(exe_names: list[str]):
                 pass
         if not found:
             results[exe_name] = "Not Found"
-
-    return results

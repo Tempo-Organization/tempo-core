@@ -1,7 +1,7 @@
 from pathlib import Path
 
 
-def add_meta_data_tags_for_asset_registry_to_unreal_ini(ini: Path, tags: list[str]):
+def add_meta_data_tags_for_asset_registry_to_unreal_ini(ini: Path, tags: list[str]) -> None:
     with ini.open("r") as file:
         lines = file.readlines()
 
@@ -29,7 +29,7 @@ def add_meta_data_tags_for_asset_registry_to_unreal_ini(ini: Path, tags: list[st
 
 def remove_meta_data_tags_for_asset_registry_from_unreal_ini(
     ini: Path, tags: list[str]
-):
+) -> None:
     with ini.open("r") as file:
         lines = file.readlines()
 

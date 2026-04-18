@@ -52,11 +52,11 @@ def get_is_game_iostore(uproject_file_path: str, game_dir: str) -> bool:
     return is_game_iostore
 
 
-def get_game_dir(game_exe_path: str):
+def get_game_dir(game_exe_path: str) -> str:
     return os.path.dirname(os.path.dirname(os.path.dirname(game_exe_path)))
 
 
-def get_game_content_dir(game_dir: str):
+def get_game_content_dir(game_dir: str) -> str:
     return os.path.join(game_dir, "Content")
 
 

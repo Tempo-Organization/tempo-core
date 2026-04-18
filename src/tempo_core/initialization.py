@@ -56,7 +56,7 @@ def get_compare_string() -> str:
     return "bContextMenuChunkAssignments=True"
 
 
-def throw_avoid_assign_chunk_id_usage_warning():
+def throw_avoid_assign_chunk_id_usage_warning() -> None:
     warning_message = f"""
 Warning: The use of manually assigning chunk ids through the right click context menu of unreal is often bugged.
 It will result in unexpected packaging issues.
@@ -72,7 +72,7 @@ You can also set SUPPRESS_ASSIGN_CHUNK_ID_WARNING env var to True as well, but t
     logger.log_message(warning_message)
 
 
-def assign_chunk_id_usage_check():
+def assign_chunk_id_usage_check() -> None:
     ini_path = get_editor_preferences_ini_path()
     if ini_path:
         if ini_path.exists():
@@ -82,7 +82,7 @@ def assign_chunk_id_usage_check():
                     throw_avoid_assign_chunk_id_usage_warning()
 
 
-def uproject_check():
+def uproject_check() -> None:
     uproject_file = settings.get_uproject_file()
 
     if not uproject_file:
@@ -105,7 +105,7 @@ def uproject_check():
     )
 
 
-def unreal_engine_check():
+def unreal_engine_check() -> None:
     should_do_check = True
 
     if (
@@ -124,13 +124,13 @@ def unreal_engine_check():
         logger.log_message("Check: Unreal Engine exists")
 
 
-def game_launcher_exe_override_check():
+def game_launcher_exe_override_check() -> None:
     potential_game_launcher_path = settings.get_game_launcher_exe_path()
     if potential_game_launcher_path:
         file_io.verify_file_exists(str(potential_game_launcher_path))
 
 
-def git_info_check():
+def git_info_check() -> None:
     git_repo_path = settings.get_git_info_repo_path()
     if git_repo_path is None or git_repo_path == "":
         return
@@ -138,17 +138,17 @@ def git_info_check():
     file_io.verify_directory_exists(str(git_repo_path))
 
 
-def game_exe_check():
+def game_exe_check() -> None:
     file_io.verify_file_exists(str(settings.get_game_exe_path()))
 
 
-def clear_temp_dir():
+def clear_temp_dir() -> None:
     temp_dir = settings.get_temp_directory()
     if os.path.isdir(temp_dir):
         shutil.rmtree(temp_dir)
 
 
-def initialization():
+def initialization() -> None:
     # input_monitor.InputMonitor().start()
 
     if "--logs_directory" in sys.argv:
@@ -212,12 +212,12 @@ def initialization():
     cache.init_cache()
 
 
-def check_generate_wrapper():
+def check_generate_wrapper() -> None:
     if "--generate_wrapper" in sys.argv:
         wrapper.generate_wrapper()
 
 
-def check_settings():
+def check_settings() -> None:
     if "--settings_json" in sys.argv:
         index = sys.argv.index("--settings_json") + 1
         if index < len(sys.argv):
@@ -230,4 +230,3 @@ def check_settings():
             return settings.load_settings(settings_file)
         logger.log_message("Error: No file path provided after --settings_json.")
         sys.exit(1)
-    return

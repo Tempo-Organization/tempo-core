@@ -1,3 +1,4 @@
+from questionary import path
 import glob
 import hashlib
 import os
@@ -19,13 +20,13 @@ SCRIPT_DIR = (
 )
 
 
-def unzip_zip(zip_path: str, output_location: str):
+def unzip_zip(zip_path: str, output_location: str) -> None:
     if os.path.exists(zip_path):
         with zipfile.ZipFile(zip_path, "r") as zip_ref:
             zip_ref.extractall(output_location)
 
 
-def download_file(url: str, download_path: str):
+def download_file(url: str, download_path: str) -> None:
     if not online_check.is_online:
         raise RuntimeError('You are not able to download files when not connected to the web.')
     try:
@@ -51,7 +52,7 @@ def download_file(url: str, download_path: str):
         )
 
 
-def open_dir_in_file_browser(input_directory: str):
+def open_dir_in_file_browser(input_directory: str) -> None:
     formatted_directory = os.path.abspath(input_directory)
     if not os.path.isdir(formatted_directory):
         logger.log_message(
@@ -61,11 +62,11 @@ def open_dir_in_file_browser(input_directory: str):
     os.startfile(formatted_directory)
 
 
-def open_file_in_default(file_path: str):
+def open_file_in_default(file_path: str) -> None:
     os.startfile(file_path)
 
 
-def open_website(input_url: str):
+def open_website(input_url: str) -> None:
     if not online_check.is_online:
         raise RuntimeError('You are not able to open websites in your browser when not connected to the web.')
     webbrowser.open(input_url)
@@ -78,7 +79,7 @@ def verify_directory_exists(dir_path: str) -> bool:
     raise NotADirectoryError(directory_not_found_error)
 
 
-def verify_directories_exists(directory_paths: list[str]):
+def verify_directories_exists(directory_paths: list[str]) -> None:
     for directory_path in directory_paths:
         if not os.path.isdir(directory_path):
             directory_not_found_error = (
@@ -101,7 +102,7 @@ def verify_file_exists(file_path: str) -> bool:
     raise FileNotFoundError(file_not_found_error)
 
 
-def verify_files_exists(file_paths: list[str]):
+def verify_files_exists(file_paths: list[str]) -> None:
     for file_path in file_paths:
         path_to_check = os.path.normpath(file_path)
         if not os.path.isfile(path_to_check):
@@ -145,13 +146,13 @@ def get_file_extensions(directory_with_base_name: str) -> list:
     return list(extensions)
 
 
-def get_files_in_dir(directory):
+def get_files_in_dir(directory: str) -> list[str]:
     return [
         f for f in os.listdir(directory) if os.path.isfile(os.path.join(directory, f))
     ]
 
 
-def filter_by_extension(files, extension):
+def filter_by_extension(files: list[str], extension: str) -> list[str]:
     return [f for f in files if f.lower().endswith(extension)]
 
 
@@ -160,18 +161,18 @@ def get_all_lines_in_config(config_path: str) -> list[str]:
         return file.readlines()
 
 
-def set_all_lines_in_config(config_path: str, lines: list[str]):
+def set_all_lines_in_config(config_path: str, lines: list[str]) -> None:
     with open(config_path, "w", encoding="utf-8") as file:
         file.writelines(lines)
 
 
-def add_line_to_config(config_path: str, line: str):
+def add_line_to_config(config_path: str, line: str) -> None:
     if not does_config_have_line(config_path, line):
         with open(config_path, "a", encoding="utf-8") as file:
             file.write(line + "\n")
 
 
-def remove_line_from_config(config_path: str, line: str):
+def remove_line_from_config(config_path: str, line: str) -> None:
     lines = get_all_lines_in_config(config_path)
     with open(config_path, "w", encoding="utf-8") as file:
         file.writelines(
@@ -185,7 +186,7 @@ def does_config_have_line(config_path: str, line: str) -> bool:
 
 def remove_lines_from_config_that_start_with_substring(
     config_path: str, substring: str
-):
+) -> None:
     new_lines = []
     for line in get_all_lines_in_config(config_path):
         if not line.startswith(substring):
@@ -193,7 +194,7 @@ def remove_lines_from_config_that_start_with_substring(
     set_all_lines_in_config(config_path, new_lines)
 
 
-def remove_lines_from_config_that_end_with_substring(config_path: str, substring: str):
+def remove_lines_from_config_that_end_with_substring(config_path: str, substring: str) -> None:
     new_lines = []
     for line in get_all_lines_in_config(config_path):
         if not line.endswith(substring):
@@ -201,7 +202,7 @@ def remove_lines_from_config_that_end_with_substring(config_path: str, substring
     set_all_lines_in_config(config_path, new_lines)
 
 
-def remove_lines_from_config_that_contain_substring(config_path: str, substring: str):
+def remove_lines_from_config_that_contain_substring(config_path: str, substring: str) -> None:
     new_lines = []
     for line in get_all_lines_in_config(config_path):
         if line not in (substring):
@@ -217,7 +218,7 @@ def ensure_path_quoted(path: str) -> str:
     return f'"{path}"' if not path.startswith('"') and not path.endswith('"') else path
 
 
-def zip_directory_tree(input_dir, output_dir, zip_name="archive.zip"):
+def zip_directory_tree(input_dir: str, output_dir: str, zip_name: str = "archive.zip") -> None:
     os.makedirs(output_dir, exist_ok=True)
 
     zip_path = os.path.join(output_dir, zip_name)
@@ -237,7 +238,7 @@ def zip_directory_tree(input_dir, output_dir, zip_name="archive.zip"):
     logger.log_message(f"Directory tree zipped successfully: {zip_path}")
 
 
-def move(input_path, output_path, overwrite):
+def move(input_path: Path, output_path: Path, overwrite: bool) -> None:
     if input_path == output_path:
         logger.log_message("Error: Input and output paths must be different.")
         raise RuntimeError
@@ -263,7 +264,7 @@ def move(input_path, output_path, overwrite):
     logger.log_message(f"Successfully moved {input_path} to {output_path}")
 
 
-def copy(input_path: Path, output_path: Path, *, overwrite: bool):
+def copy(input_path: Path, output_path: Path, *, overwrite: bool) -> None:
     if input_path == output_path:
         logger.log_message("Error: Input and output paths must be different.")
         raise RuntimeError
@@ -293,7 +294,7 @@ def copy(input_path: Path, output_path: Path, *, overwrite: bool):
     logger.log_message(f"Successfully copied {input_path} to {output_path}")
 
 
-def symlink(input_path, output_path, overwrite):
+def symlink(input_path: Path, output_path: Path, overwrite: bool) -> None:
     if output_path.exists():
         if not overwrite:
             logger.log_message(
@@ -314,7 +315,7 @@ def symlink(input_path, output_path, overwrite):
         raise RuntimeError
 
 
-def delete(input_paths: list[Path]):
+def delete(input_paths: list[Path]) -> None:
     for path in input_paths:
         if not path.exists():
             logger.log_message(f"Error: {path} does not exist.")

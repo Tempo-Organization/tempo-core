@@ -28,26 +28,26 @@ engine_monitor_thread_information = EngineMonitorThreadInformation(
 )
 
 
-def engine_monitor_thread():
+def engine_monitor_thread() -> None:
     start_engine_monitor_thread()
     logger.log_message("Thread: Engine Monitoring Thread Started")
     engine_monitor_thread_information.engine_monitor_thread.join()
     logger.log_message("Thread: Engine Monitoring Thread Ended")
 
 
-def engine_monitor_thread_runner(tick_rate: float = 0.01):
+def engine_monitor_thread_runner(tick_rate: float = 0.01) -> None:
     while engine_monitor_thread_information.run_engine_monitor_thread:
         time.sleep(tick_rate)
         engine_monitor_thread_logic()
 
 
 @hook_states.hook_state_decorator(HookStateType.POST_ENGINE_OPEN)
-def found_engine_window():
+def found_engine_window() -> None:
     logger.log_message("Window: Engine Window Found")
     engine_monitor_thread_information.found_window = True
 
 
-def engine_monitor_thread_logic():
+def engine_monitor_thread_logic() -> None:
     if not engine_monitor_thread_information.init_done:
         engine_monitor_thread_information.found_process = False
         engine_monitor_thread_information.found_window = False
@@ -74,7 +74,7 @@ def engine_monitor_thread_logic():
             stop_engine_monitor_thread()
 
 
-def start_engine_monitor_thread():
+def start_engine_monitor_thread() -> None:
     engine_monitor_thread_information.run_engine_monitor_thread = True
     engine_monitor_thread_information.engine_monitor_thread = threading.Thread(
         target=engine_monitor_thread_runner, daemon=True
@@ -83,5 +83,5 @@ def start_engine_monitor_thread():
 
 
 @hook_states.hook_state_decorator(HookStateType.POST_ENGINE_CLOSE)
-def stop_engine_monitor_thread():
+def stop_engine_monitor_thread() -> None:
     engine_monitor_thread_information.run_engine_monitor_thread = False

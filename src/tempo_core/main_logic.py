@@ -4,6 +4,7 @@ import shutil
 import subprocess
 import sys
 import pathlib
+from typing import TypeAlias
 
 from tempo_core import (
     app_runner,
@@ -28,25 +29,25 @@ from tempo_cache_tools import spaghetti, stove, uasset_gui, umodel, fmodel, kism
 @hook_states.hook_state_decorator(
     start_hook_state_type=data_structures.HookStateType.INIT
 )
-def init_thread_system():
+def init_thread_system() -> None:
     constant.constant_thread()
 
 
-def close_thread_system():
+def close_thread_system() -> None:
     constant.stop_constant_thread()
 
 
 # all things below this should be functions that correspond to cli logic
 
 
-def generate_mods_other(*, use_symlinks: bool):
+def generate_mods_other(*, use_symlinks: bool) -> None:
     packing.cooking()
     packing.generate_mods(use_symlinks=use_symlinks)
     game_runner.run_game()
     game_monitor.game_monitor_thread()
 
 
-def test_mods(*, input_mod_names: list[str], toggle_engine: bool, use_symlinks: bool):
+def test_mods(*, input_mod_names: list[str], toggle_engine: bool, use_symlinks: bool) -> None:
     if toggle_engine:
         engine.toggle_engine_off()
     for mod_name in input_mod_names:
@@ -56,7 +57,7 @@ def test_mods(*, input_mod_names: list[str], toggle_engine: bool, use_symlinks: 
         engine.toggle_engine_on()
 
 
-def test_mods_all(*, toggle_engine: bool, use_symlinks: bool):
+def test_mods_all(*, toggle_engine: bool, use_symlinks: bool) -> None:
     if toggle_engine:
         engine.toggle_engine_off()
     mod_info_dict = settings.settings_information.settings.get("mods_info", {})
@@ -75,7 +76,7 @@ def full_run(
     base_files_directory: str,
     output_directory: str,
     use_symlinks: bool,
-):
+) -> None:
     if toggle_engine:
         engine.toggle_engine_off()
     for mod_name in input_mod_names:
@@ -97,7 +98,7 @@ def full_run_all(
     base_files_directory: str,
     output_directory: str,
     use_symlinks: bool,
-):
+) -> None:
     if toggle_engine:
         engine.toggle_engine_off()
     mods_info = settings.settings_information.settings.get("mods_info", {})
@@ -112,19 +113,19 @@ def full_run_all(
         engine.toggle_engine_on()
 
 
-def install_spaghetti(run_after_install: bool):
+def install_spaghetti(run_after_install: bool) -> None:
     tool_path = spaghetti.SpaghettiToolInfo().get_executable_path()
     if run_after_install:
         app_runner.run_app(tool_path)
 
 
-def install_stove(run_after_install: bool):
+def install_stove(run_after_install: bool) -> None:
     tool_path = stove.StoveToolInfo().get_executable_path()
     if run_after_install:
         app_runner.run_app(tool_path)
 
 
-def install_kismet_analyzer(run_after_install: bool):
+def install_kismet_analyzer(run_after_install: bool) -> None:
     tool_path = kismet_analyzer.KismetAnalyzerToolInfo().get_executable_path()
     if run_after_install:
         try:
@@ -137,18 +138,18 @@ def install_kismet_analyzer(run_after_install: bool):
             logger.log_message(f"Failed to run kismet-analyzer: {e}")
 
 
-def install_uasset_gui(run_after_install: bool):
+def install_uasset_gui(run_after_install: bool) -> None:
     tool_path = uasset_gui.UassetGuiToolInfo().get_executable_path()
     if run_after_install:
         app_runner.run_app(tool_path)
 
 
-def open_latest_log():
+def open_latest_log() -> None:
     file_to_open = f"{logger.log_information.log_base_dir}/{logger.log_information.log_prefix}_latest.log"
     file_io.open_file_in_default(file_to_open)
 
 
-def run_game(*, toggle_engine: bool):
+def run_game(*, toggle_engine: bool) -> None:
     if toggle_engine:
         engine.toggle_engine_off()
     game_runner.run_game()
@@ -157,28 +158,28 @@ def run_game(*, toggle_engine: bool):
         engine.toggle_engine_on()
 
 
-def close_game():
+def close_game() -> None:
     game_exe_path = settings.get_game_exe_path()
     if not game_exe_path:
         raise FileNotFoundError("cannot find game exe")
     process_management.kill_process(os.path.basename(game_exe_path))
 
 
-def run_engine():
+def run_engine() -> None:
     engine.open_game_engine()
 
 
-def close_engine():
+def close_engine() -> None:
     engine.close_game_engine()
 
 
-def install_umodel(run_after_install: bool):
+def install_umodel(run_after_install: bool) -> None:
     tool_path = umodel.UmodelToolInfo().get_executable_path()
     if run_after_install:
         app_runner.run_app(tool_path)
 
 
-def install_fmodel(run_after_install: bool):
+def install_fmodel(run_after_install: bool) -> None:
     tool_path = fmodel.FmodelToolInfo().get_executable_path()
     if run_after_install:
         app_runner.run_app(tool_path)
@@ -194,7 +195,7 @@ def get_solo_build_project_command() -> str:
     return command
 
 
-def run_proj_build_command(command: str):
+def run_proj_build_command(command: str) -> None:
     command_parts = command.split(" ")
     executable = command_parts[0]
     args = command_parts[1:]
@@ -203,7 +204,7 @@ def run_proj_build_command(command: str):
     )
 
 
-def build(*, toggle_engine: bool):
+def build(*, toggle_engine: bool) -> None:
     if toggle_engine:
         engine.toggle_engine_off()
     logger.log_message("Project Building Starting")
@@ -213,7 +214,7 @@ def build(*, toggle_engine: bool):
         engine.toggle_engine_on()
 
 
-def upload_changes_to_repo():
+def upload_changes_to_repo() -> None:
     if not online_check.is_online:
         raise RuntimeError('You are not able to upload changes to repos when not connected to the web.')
     repo_path = settings.settings_information.settings["git_info"]["repo_path"]
@@ -274,7 +275,7 @@ def upload_changes_to_repo():
     logger.log_message("Changes committed and pushed successfully.")
 
 
-def enable_mods(settings_json: str, mod_names: list):
+def enable_mods(settings_json: str, mod_names: list) -> None:
     try:
         with open(settings_json, encoding="utf-8") as file:
             settings = json.load(file)
@@ -311,7 +312,7 @@ def enable_mods(settings_json: str, mod_names: list):
         )
 
 
-def disable_mods(settings_json: str, mod_names: list):
+def disable_mods(settings_json: str, mod_names: list) -> None:
     try:
         with open(settings_json, encoding="utf-8") as file:
             settings = json.load(file)
@@ -362,7 +363,7 @@ def add_mod(
     is_enabled: bool,
     asset_paths: list,
     tree_paths: list,
-):
+) -> None:
     try:
         with open(settings_json) as file:
             settings = json.load(file)
@@ -384,7 +385,33 @@ def add_mod(
             },
         }
 
-        def remove_none_values(data):
+        # def remove_none_values(data):
+        #     if isinstance(data, dict):
+        #         return {
+        #             key: remove_none_values(value)
+        #             for key, value in data.items()
+        #             if value is not None
+        #         }
+        #     elif isinstance(data, list):
+        #         return [
+        #             remove_none_values(item)
+        #             for item in data
+        #             if item is not None
+        #         ]
+        #     else:
+        #         return data
+
+        JSONLike: TypeAlias = (
+            dict[str, "JSONLike"]
+            | list["JSONLike"]
+            | str
+            | int
+            | float
+            | bool
+            | None
+        )
+
+        def remove_none_values(data: JSONLike) -> JSONLike:
             if isinstance(data, dict):
                 return {
                     key: remove_none_values(value)
@@ -420,7 +447,7 @@ def add_mod(
         )
 
 
-def remove_mods(settings_json: str, mod_names: list):
+def remove_mods(settings_json: str, mod_names: list) -> None:
     try:
         with open(settings_json, encoding="utf-8") as file:
             settings = json.load(file)
@@ -480,7 +507,7 @@ def get_solo_cook_project_command() -> str:
     return command
 
 
-def cook(*, toggle_engine: bool):
+def cook(*, toggle_engine: bool) -> None:
     if toggle_engine:
         engine.toggle_engine_off()
     logger.log_message("Content Cooking Starting")
@@ -511,7 +538,7 @@ def get_solo_package_command() -> str:
     return command
 
 
-def package(*, toggle_engine: bool, use_symlinks: bool):
+def package(*, toggle_engine: bool, use_symlinks: bool) -> None:
     if toggle_engine:
         engine.toggle_engine_off()
     for entry in settings.get_mods_info_dict_from_json().keys():
@@ -524,14 +551,14 @@ def package(*, toggle_engine: bool, use_symlinks: bool):
         engine.toggle_engine_on()
 
 
-def resave_packages_and_fix_up_redirectors():
+def resave_packages_and_fix_up_redirectors() -> None:
     engine.close_game_engine()
     arg = "-run=ResavePackages -fixupredirects"
     command = f'"{unreal_engine.get_unreal_editor_exe_path(str(settings.get_unreal_engine_dir()))}" "{settings.get_uproject_file()}" {arg}'
     app_runner.run_app(command)
 
 
-def cleanup_full():
+def cleanup_full() -> None:
     repo_path = str(settings.get_cleanup_repo_path())
     logger.log_message(f'Cleaning up repo at: "{repo_path}"')
     exe = "git"
@@ -555,7 +582,7 @@ def cleanup_full():
     logger.log_message(f'Cleaned up temp dir at: "{temp_dir}"')
 
 
-def cleanup_cooked():
+def cleanup_cooked() -> None:
     repo_path = str(settings.get_cleanup_repo_path())
 
     logger.log_message(
@@ -572,7 +599,7 @@ def cleanup_cooked():
                 logger.log_message(f"Removed directory: {full_path}")
 
 
-def cleanup_build():
+def cleanup_build() -> None:
     repo_path = str(settings.get_cleanup_repo_path())
 
     logger.log_message(
@@ -594,7 +621,7 @@ def cleanup_build():
                 logger.log_message(f"Removed directory: {full_path}")
 
 
-def cleanup_game(output_json: pathlib.Path | None = None):
+def cleanup_game(output_json: pathlib.Path | None = None) -> None:
     if output_json:
         file_list_json = output_json
     else:
@@ -605,7 +632,7 @@ def cleanup_game(output_json: pathlib.Path | None = None):
     delete_unlisted_files(game_directory, file_list_json)
 
 
-def generate_game_file_list_json(output_json: pathlib.Path | None = None):
+def generate_game_file_list_json(output_json: pathlib.Path | None = None) -> None:
     if output_json:
         file_list_json = output_json
     else:
@@ -616,21 +643,21 @@ def generate_game_file_list_json(output_json: pathlib.Path | None = None):
     generate_file_paths_json(game_directory, file_list_json)
 
 
-def cleanup_from_file_list(file_list: str, directory: str):
+def cleanup_from_file_list(file_list: str, directory: str) -> None:
     delete_unlisted_files(directory, file_list)
 
 
-def generate_file_list(directory: str, file_list: str):
+def generate_file_list(directory: str, file_list: str) -> None:
     generate_file_paths_json(directory, file_list)
 
 
-def generate_mods(*, input_mod_names: list[str], use_symlinks: bool):
+def generate_mods(*, input_mod_names: list[str], use_symlinks: bool) -> None:
     for mod_name in input_mod_names:
         settings.settings_information.mod_names.append(mod_name)
     packing.generate_mods(use_symlinks=use_symlinks)
 
 
-def generate_mods_all(*, use_symlinks: bool):
+def generate_mods_all(*, use_symlinks: bool) -> None:
     for mod_name in settings.get_mods_info_dict_from_json().keys():
         settings.settings_information.mod_names.append(mod_name)
         logger.log_message(mod_name)
@@ -640,7 +667,7 @@ def generate_mods_all(*, use_symlinks: bool):
 # doesn't account for when there are ucas/utoc to copy over
 def make_unreal_pak_mod_release(
     singular_mod_info: dict, base_files_directory: str, output_directory: str, mod_name: str
-):
+) -> None:
     # currently assumes mod was installed to game and not temporarily in the working dir, maybe?
     src_pak = os.path.normpath(
         f"{utilities.custom_get_game_paks_dir()}/{utilities.get_pak_dir_structure(mod_name)}/{mod_name}.pak"
@@ -666,7 +693,7 @@ def make_unreal_pak_mod_release(
 
 def make_repak_mod_release(
     singular_mod_info: dict, base_files_directory: str, output_directory: str, mod_name: str
-):
+) -> None:
     src_pak = f"{settings.get_temp_directory()}/{utilities.get_pak_dir_structure(mod_name)}/{mod_name}.pak"
     dest_pak = f"{base_files_directory}/{mod_name}/{utilities.get_pak_dir_structure(mod_name)}/{mod_name}.pak"
     if os.path.isfile(dest_pak):
@@ -683,7 +710,7 @@ def make_repak_mod_release(
 
 def make_engine_mod_release(
     singular_mod_info: dict, base_files_directory: str, output_directory: str, mod_name: str
-):
+) -> None:
     uproject_file = settings.get_uproject_file()
     mod_files = []
     pak_chunk_num = singular_mod_info["pak_chunk_num"]
@@ -801,7 +828,7 @@ def get_mod_paths_for_loose_mods(mod_name: str, base_files_directory: str) -> di
 
 def make_loose_mod_release(
     singular_mod_info: dict, base_files_directory: str, output_directory: str, mod_name: str
-):
+) -> None:
     mod_files = get_mod_paths_for_loose_mods(mod_name, base_files_directory)
     dict_keys = mod_files.keys()
     for key in dict_keys:
@@ -826,7 +853,7 @@ def make_loose_mod_release(
 
 def make_retoc_mod_release(
     singular_mod_info: dict, base_files_directory: str, output_directory: str, mod_name: str
-):
+) -> None:
     temp_dir = settings.get_temp_directory()
     pak_dir_structure = utilities.get_pak_dir_structure(mod_name)
     input_dir = os.path.normpath(f"{base_files_directory}/{mod_name}")
@@ -857,7 +884,7 @@ def make_retoc_mod_release(
 
 def generate_mod_release(
     mod_name: str, base_files_directory: str, output_directory: str
-):
+) -> None:
     singular_mod_info = settings.get_mods_info_dict_from_json()[mod_name]
     if singular_mod_info["packing_type"] == "unreal_pak":
         make_unreal_pak_mod_release(
@@ -886,17 +913,17 @@ def generate_mod_release(
 
 def generate_mod_releases(
     mod_names: list[str], base_files_directory: str, output_directory: str
-):
+) -> None:
     for mod_name in mod_names:
         generate_mod_release(mod_name, base_files_directory, output_directory)
 
 
-def generate_mod_releases_all(base_files_directory: str, output_directory: str):
+def generate_mod_releases_all(base_files_directory: str, output_directory: str) -> None:
     for mod_key in settings.get_mods_info_dict_from_json().keys():
         generate_mod_release(mod_key, base_files_directory, output_directory)
 
 
-def resync_dir_with_repo():
+def resync_dir_with_repo() -> None:
     repo_path = settings.get_cleanup_repo_path()
     """
     Resyncs a directory tree with its repository by discarding local changes and cleaning untracked files.
@@ -989,7 +1016,7 @@ def generate_uproject(
 
 def add_module_to_descriptor(
     descriptor_file: str, module_name: str, host_type: str, loading_phase: str
-):
+) -> None:
     if not os.path.isfile(descriptor_file):
         descriptor_file_not_exist_error = (
             f"The file '{descriptor_file}' does not exist."
@@ -1031,7 +1058,7 @@ def add_module_to_descriptor(
 
 def add_plugin_to_descriptor(
     descriptor_file: str, plugin_name: str, *, is_enabled: bool
-):
+) -> None:
     if not os.path.isfile(descriptor_file):
         file_does_not_exist_error = f"The file '{descriptor_file}' does not exist."
         raise FileNotFoundError(file_does_not_exist_error)
@@ -1067,7 +1094,7 @@ def add_plugin_to_descriptor(
         raise OSError(failed_to_write_to_descriptor_error)
 
 
-def remove_modules_from_descriptor(descriptor_file: str, module_names: list):
+def remove_modules_from_descriptor(descriptor_file: str, module_names: list) -> None:
     if not os.path.isfile(descriptor_file):
         descriptor_not_found_error = f"The file '{descriptor_file}' does not exist."
         raise FileNotFoundError(descriptor_not_found_error)
@@ -1088,7 +1115,7 @@ def remove_modules_from_descriptor(descriptor_file: str, module_names: list):
         file.write(merged_data)
 
 
-def remove_plugins_from_descriptor(descriptor_file: str, plugin_names: list):
+def remove_plugins_from_descriptor(descriptor_file: str, plugin_names: list) -> None:
     if not os.path.isfile(descriptor_file):
         descriptor_not_found_error = f"The file '{descriptor_file}' does not exist."
         raise FileNotFoundError(descriptor_not_found_error)
@@ -1129,7 +1156,7 @@ def generate_uplugin(
     support_url: str,
     version: float,
     version_name: str,
-):
+) -> None:
     os.makedirs(plugins_directory, exist_ok=True)
 
     plugin_data = {
@@ -1175,14 +1202,14 @@ def generate_uplugin(
     )
 
 
-def remove_uplugins(uplugin_paths: list):
+def remove_uplugins(uplugin_paths: list) -> None:
     for uplugin_path in uplugin_paths:
         uplugin_dir = os.path.dirname(uplugin_path)
         if os.path.isdir(uplugin_dir):
             shutil.rmtree(uplugin_dir)
 
 
-def generate_file_paths_json(dir_path, output_json):
+def generate_file_paths_json(dir_path: str, output_json: pathlib.Path | str) -> None:
     all_file_paths = []
 
     for root, _, files in os.walk(dir_path):
@@ -1198,7 +1225,7 @@ def generate_file_paths_json(dir_path, output_json):
     logger.log_message(f"JSON file with all file paths created at: {output_json}")
 
 
-def delete_unlisted_files(dir_path, json_file):
+def delete_unlisted_files(dir_path: str, json_file: pathlib.Path | str) -> None:
     with open(json_file) as file:
         allowed_files = set(json.load(file))
 
@@ -1212,7 +1239,7 @@ def delete_unlisted_files(dir_path, json_file):
     logger.log_message("Cleanup complete. All unlisted files have been removed.")
 
 
-def save_json_to_file(json_string, file_path):
+def save_json_to_file(json_string: str, file_path: str) -> None:
     try:
         parsed_json = json.loads(json_string)
 

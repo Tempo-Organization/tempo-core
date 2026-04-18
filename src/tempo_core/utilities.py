@@ -6,7 +6,7 @@ from tempo_core.data_structures import CompressionType
 from tempo_core.programs import unreal_engine
 
 
-def custom_get_game_dir():
+def custom_get_game_dir() -> str | None:
     return unreal_engine.get_game_dir(str(settings.get_game_exe_path()))
 
 
@@ -20,15 +20,15 @@ def custom_get_game_paks_dir() -> str:
     )
 
 
-def get_uproject_dir():
+def get_uproject_dir() -> str | None:
     return os.path.dirname(str(settings.get_uproject_file()))
 
 
-def get_uproject_tempo_dir():
+def get_uproject_tempo_dir() -> str:
     return f"{get_uproject_dir()}/Plugins/Tempo"
 
 
-def get_uproject_tempo_resources_dir():
+def get_uproject_tempo_resources_dir() -> str:
     return f"{get_uproject_tempo_dir()}/Resources"
 
 
@@ -109,7 +109,7 @@ def get_persistent_mod_files(mod_name: str) -> list:
     return file_io.get_files_in_tree(str(settings.get_persistent_mod_dir(mod_name)))
 
 
-def clean_temp_dir():
+def clean_temp_dir() -> None:
     temp_dir = settings.get_temp_directory()
     if os.path.isdir(temp_dir):
         shutil.rmtree(temp_dir)
