@@ -24,11 +24,11 @@ def get_uproject_dir():
     return os.path.dirname(str(settings.get_uproject_file()))
 
 
-def get_uproject_tempo_dir():
+def get_uproject_tempo_dir() -> str:
     return f"{get_uproject_dir()}/Plugins/Tempo"
 
 
-def get_uproject_tempo_resources_dir():
+def get_uproject_tempo_resources_dir() -> str:
     return f"{get_uproject_tempo_dir()}/Resources"
 
 
@@ -109,7 +109,7 @@ def get_persistent_mod_files(mod_name: str) -> list:
     return file_io.get_files_in_tree(str(settings.get_persistent_mod_dir(mod_name)))
 
 
-def clean_temp_dir():
+def clean_temp_dir() -> None:
     temp_dir = settings.get_temp_directory()
     if os.path.isdir(temp_dir):
         shutil.rmtree(temp_dir)

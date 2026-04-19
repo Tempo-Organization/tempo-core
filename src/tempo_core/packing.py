@@ -36,7 +36,7 @@ command_queue = []
 has_populated_queue = False
 
 
-def populate_queue():
+def populate_queue() -> None:
     mod_info_dict = settings.get_mods_info_dict_from_json()
     for mod_key in mod_info_dict.keys():
         mod_entry = mod_info_dict[mod_key]
@@ -130,15 +130,15 @@ def get_cook_project_command() -> str:
     return command
 
 
-def cook_uproject():
+def cook_uproject() -> None:
     run_proj_command(get_cook_project_command())
 
 
-def package_uproject_non_iostore():
+def package_uproject_non_iostore() -> None:
     run_proj_command(get_engine_pak_command())
 
 
-def run_proj_command(command: str):
+def run_proj_command(command: str) -> None:
     command_parts = command.split(" ")
     executable = command_parts[0]
     args = command_parts[1:]
@@ -147,7 +147,7 @@ def run_proj_command(command: str):
     )
 
 
-def handle_uninstall_logic(packing_type: PackingType):
+def handle_uninstall_logic(packing_type: PackingType) -> None:
     mods_info_dict = settings.get_mods_info_dict_from_json()
     for mod_key in mods_info_dict.keys():
         if (
@@ -162,7 +162,7 @@ def handle_uninstall_logic(packing_type: PackingType):
     start_hook_state_type=HookStateType.PRE_PAK_DIR_SETUP,
     end_hook_state_type=HookStateType.POST_PAK_DIR_SETUP,
 )
-def handle_install_logic(packing_type: PackingType, *, use_symlinks: bool):
+def handle_install_logic(packing_type: PackingType, *, use_symlinks: bool) -> None:
     mods_info_dict = settings.get_mods_info_dict_from_json()
     for mod_key in mods_info_dict.keys():
         mod_info = mods_info_dict[mod_key]
@@ -218,7 +218,7 @@ def handle_install_logic(packing_type: PackingType, *, use_symlinks: bool):
     start_hook_state_type=HookStateType.PRE_MODS_UNINSTALL,
     end_hook_state_type=HookStateType.POST_MODS_UNINSTALL,
 )
-def mods_uninstall():
+def mods_uninstall() -> None:
     for uninstall_queue_type in queue_information.uninstall_queue_types:
         handle_uninstall_logic(uninstall_queue_type)
 
@@ -227,12 +227,12 @@ def mods_uninstall():
     start_hook_state_type=HookStateType.PRE_MODS_INSTALL,
     end_hook_state_type=HookStateType.POST_MODS_INSTALL,
 )
-def mods_install(*, use_symlinks: bool):
+def mods_install(*, use_symlinks: bool) -> None:
     for install_queue_type in queue_information.install_queue_types:
         handle_install_logic(install_queue_type, use_symlinks=use_symlinks)
 
 
-def generate_mods(*, use_symlinks: bool):
+def generate_mods(*, use_symlinks: bool) -> None:
     populate_queue()
     mods_uninstall()
     mods_install(use_symlinks=use_symlinks)
@@ -240,7 +240,7 @@ def generate_mods(*, use_symlinks: bool):
         app_runner.run_app(command)
 
 
-def uninstall_loose_mod(mod_name: str):
+def uninstall_loose_mod(mod_name: str) -> None:
     mod_files = get_mod_paths_for_loose_mods(mod_name)
     dict_keys = mod_files.keys()
     for key in dict_keys:
@@ -255,7 +255,7 @@ def uninstall_loose_mod(mod_name: str):
             os.removedirs(folder)
 
 
-def uninstall_pak_mod(mod_name: str):
+def uninstall_pak_mod(mod_name: str) -> None:
     extensions = unreal_engine.get_game_pak_folder_archives(
         str(settings.get_uproject_file()), utilities.custom_get_game_dir()
     )
@@ -278,14 +278,14 @@ def uninstall_pak_mod(mod_name: str):
             os.unlink(sig_path)
 
 
-def uninstall_mod(packing_type: PackingType, mod_name: str):
+def uninstall_mod(packing_type: PackingType, mod_name: str) -> None:
     if packing_type == PackingType.LOOSE:
         uninstall_loose_mod(mod_name)
     elif packing_type in list(PackingType):
         uninstall_pak_mod(mod_name)
 
 
-def install_mod_sig(mod_name: str, *, use_symlinks: bool):
+def install_mod_sig(mod_name: str, *, use_symlinks: bool) -> None:
     game_paks_dir = utilities.custom_get_game_paks_dir()
     pak_dir_str = utilities.get_pak_dir_structure(mod_name)
     sig_method_type = data_structures.get_enum_from_val(
@@ -337,7 +337,7 @@ def install_mod_sig(mod_name: str, *, use_symlinks: bool):
         raise RuntimeError
 
 
-def install_loose_mod(mod_name: str, *, use_symlinks: bool):
+def install_loose_mod(mod_name: str, *, use_symlinks: bool) -> None:
     mod_files = get_mod_paths_for_loose_mods(mod_name)
     dict_keys = mod_files.keys()
     for key in dict_keys:
@@ -356,7 +356,7 @@ def install_loose_mod(mod_name: str, *, use_symlinks: bool):
                 shutil.copyfile(src_file, dest_file)
 
 
-def install_engine_mod(mod_name: str, *, use_symlinks: bool):
+def install_engine_mod(mod_name: str, *, use_symlinks: bool) -> None:
     mod_files = []
     pak_chunk_num = utilities.get_mods_info_dict_from_mod_name(mod_name)[
         "pak_chunk_num"
@@ -395,7 +395,7 @@ def install_engine_mod(mod_name: str, *, use_symlinks: bool):
                 shutil.copyfile(src_file, dest_file)
 
 
-def make_pak_repak(*, mod_name: str, use_symlinks: bool):
+def make_pak_repak(*, mod_name: str, use_symlinks: bool) -> None:
     game_paks_dir = utilities.custom_get_game_paks_dir()
     pak_dir_structure = utilities.get_pak_dir_structure(mod_name)
     pak_dir = os.path.normpath(f"{game_paks_dir}/{pak_dir_structure}")
@@ -432,12 +432,12 @@ def make_pak_repak(*, mod_name: str, use_symlinks: bool):
         shutil.copyfile(intermediate_pak_file, dest_pak_location)
 
 
-def install_repak_mod(mod_name: str, *, use_symlinks: bool):
+def install_repak_mod(mod_name: str, *, use_symlinks: bool) -> None:
     should_use_progress_bars = settings.should_show_progress_bars()
     mod_files_dict = get_mod_file_paths_for_manually_made_pak_mods(mod_name)
     mod_files_dict = utilities.filter_file_paths(mod_files_dict)
 
-    def copy_files():
+    def copy_files() -> None:
         for src_file, dest_file in mod_files_dict.items():
             dest_dir = os.path.dirname(dest_file)
             if os.path.exists(dest_file):
@@ -473,7 +473,7 @@ def install_mod(
     mod_name: str,
     compression_type: CompressionType | None,
     use_symlinks: bool,
-):
+) -> None:
     if packing_type == PackingType.LOOSE:
         install_loose_mod(mod_name, use_symlinks=use_symlinks)
     elif packing_type == PackingType.ENGINE:
@@ -504,14 +504,14 @@ def install_mod(
         raise RuntimeError(invalid_packing_type_error)
 
 
-def package_project_iostore():
+def package_project_iostore() -> None:
     if unreal_engine.is_game_ue4(str(settings.get_unreal_engine_dir())):
         package_project_iostore_ue4()
     else:
         package_project_iostore_ue5()
 
 
-def package_project_iostore_ue4():
+def package_project_iostore_ue4() -> None:
     main_exec = f'"{settings.get_unreal_engine_dir()}/Engine/Build/BatchFiles/RunUAT.{file_io.get_platform_wrapper_extension()}"'
     uproject_path = settings.get_uproject_file()
     editor_cmd_exe_path = unreal_engine.get_editor_cmd_path(
@@ -550,7 +550,7 @@ def package_project_iostore_ue4():
     )
 
 
-def package_project_iostore_ue5():
+def package_project_iostore_ue5() -> None:
     # add an option here for -legacyiterative instead of -cookincremental later
     main_exec = f'"{settings.get_unreal_engine_dir()}/Engine/Build/BatchFiles/RunUAT.{file_io.get_platform_wrapper_extension()}"'
     uproject_path = settings.get_uproject_file()
@@ -622,7 +622,7 @@ def get_debug_build_project_command() -> str:
     start_hook_state_type=HookStateType.PRE_COOKING,
     end_hook_state_type=HookStateType.POST_COOKING,
 )
-def cooking():
+def cooking() -> None:
     populate_queue()
     is_game_iostore = settings.get_is_game_iostore_from_config()
     uproject_file = str(settings.get_uproject_file())

@@ -15,19 +15,19 @@ from tempo_core.threads import thread_engine_monitor
 
 
 @hook_states.hook_state_decorator(HookStateType.PRE_ENGINE_OPEN)
-def open_game_engine():
+def open_game_engine() -> None:
     command = unreal_engine.get_unreal_editor_exe_path(settings.get_unreal_engine_dir()) # ty: ignore
     app_runner.run_app(command, ExecutionMode.ASYNC, settings.get_engine_launch_args())
     thread_engine_monitor.engine_monitor_thread()
 
 
 @hook_states.hook_state_decorator(HookStateType.POST_ENGINE_CLOSE)
-def post_engine_closed_message():
+def post_engine_closed_message() -> None:
     logger.log_message("Closed Unreal Engine.")
 
 
 @hook_states.hook_state_decorator(HookStateType.PRE_ENGINE_CLOSE)
-def close_game_engine():
+def close_game_engine() -> None:
     if (
         unreal_engine.get_win_dir_type(settings.get_unreal_engine_dir()) # ty: ignore
         == PackagingDirType.WINDOWS_NO_EDITOR
@@ -44,9 +44,9 @@ def close_game_engine():
     post_engine_closed_message()
 
 
-def toggle_engine_off():
+def toggle_engine_off() -> None:
     close_game_engine()
 
 
-def toggle_engine_on():
+def toggle_engine_on() -> None:
     open_game_engine()

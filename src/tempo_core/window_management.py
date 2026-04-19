@@ -61,7 +61,7 @@ if IS_WINDOWS:
         windows = []
 
         @EnumWindowsProc
-        def foreach_window(hwnd, lParam):
+        def foreach_window(hwnd, lParam) -> bool:
             if user32.IsWindowVisible(hwnd):
                 length = user32.GetWindowTextLengthW(hwnd)
                 if length > 0:
@@ -111,19 +111,19 @@ if IS_WINDOWS:
             return None
         return windows[0]
 
-    def minimize_window(hwnd):
+    def minimize_window(hwnd) -> None:
         user32.ShowWindow(hwnd, SW_MINIMIZE)
 
-    def maximize_window(hwnd):
+    def maximize_window(hwnd) -> None:
         user32.ShowWindow(hwnd, SW_MAXIMIZE)
 
-    def restore_window(hwnd):
+    def restore_window(hwnd) -> None:
         user32.ShowWindow(hwnd, SW_RESTORE)
 
-    def close_window(hwnd):
+    def close_window(hwnd) -> None:
         user32.PostMessageW(hwnd, WM_CLOSE, 0, 0)
 
-    def move_window_to_monitor(hwnd, monitor_index=0):
+    def move_window_to_monitor(hwnd, monitor_index=0) -> None:
         monitors = screeninfo.get_monitors()
         if monitor_index >= len(monitors):
             logger.log_message("Invalid monitor index")
@@ -131,7 +131,7 @@ if IS_WINDOWS:
         monitor = monitors[monitor_index]
         move_window(hwnd, monitor.x, monitor.y, None, None)
 
-    def set_window_size(hwnd, width, height):
+    def set_window_size(hwnd, width, height) -> None:
         rect = wintypes.RECT()
         if not user32.GetWindowRect(hwnd, ctypes.byref(rect)):
             logger.log_message("Failed to get window rect")
@@ -139,7 +139,7 @@ if IS_WINDOWS:
         x, y = rect.left, rect.top
         user32.MoveWindow(hwnd, x, y, width, height, True)
 
-    def move_window(hwnd, x, y, width=None, height=None):
+    def move_window(hwnd, x, y, width=None, height=None) -> None:
         rect = wintypes.RECT()
         if not user32.GetWindowRect(hwnd, ctypes.byref(rect)):
             logger.log_message("Failed to get window rect")
@@ -152,11 +152,11 @@ if IS_WINDOWS:
         if not success:
             logger.log_message("Failed to move window")
 
-    def change_window_name(hwnd, new_title: str):
+    def change_window_name(hwnd, new_title: str) -> None:
         if not user32.SetWindowTextW(hwnd, new_title):
             logger.log_message(f"Failed to set window title to {new_title}")
 
-    def move_window_with_settings(hwnd, window_settings: dict):
+    def move_window_with_settings(hwnd, window_settings: dict) -> None:
         monitor_index = window_settings.get("monitor")
         if monitor_index is not None:
             move_window_to_monitor(hwnd, monitor_index)
@@ -227,7 +227,7 @@ if IS_WINDOWS:
 
 else:
 
-    def not_supported(*args, **kwargs):
+    def not_supported(*args, **kwargs) -> None:
         logger.log_message("Warning: Window control functions are only supported on Windows.")
 
     # Define dummy versions of functions

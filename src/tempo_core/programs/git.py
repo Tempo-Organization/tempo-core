@@ -9,7 +9,7 @@ def download_files_from_github_repo(
     repo_branch: str = "master",
     file_paths: list[str] = [],
     output_directory: str = os.getcwd(),
-):
+) -> None:
     if not online_check.is_online:
         raise RuntimeError('You are not able to download files from github repos when not connected to the web.')
     try:

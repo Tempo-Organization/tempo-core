@@ -35,13 +35,13 @@ log_information = LogInformation(
 )
 
 
-def set_log_base_dir(base_dir: str):
+def set_log_base_dir(base_dir: str) -> None:
     log_information.log_base_dir = base_dir
 
 
 def configure_logging(
     log_name_prefix: str = get_default_log_name_prefix(),
-):
+) -> None:
     log_information.log_prefix = log_name_prefix
 
     log_dir = os.path.join(log_information.log_base_dir)
@@ -52,7 +52,7 @@ def configure_logging(
     log_information.has_configured_logging = True
 
 
-def rename_latest_log(log_dir):
+def rename_latest_log(log_dir) -> None:
     latest_log_path = os.path.join(log_dir, f"{log_information.log_prefix}_latest.log")
     if os.path.isfile(latest_log_path):
         try:
@@ -74,7 +74,7 @@ def rename_latest_log(log_dir):
             return
 
 
-def log_message(message: str):
+def log_message(message: str) -> None:
     if log_information.has_configured_logging:
         color_options = LOG_INFO.get("theme_colors", {})
         default_background_color = LOG_INFO.get("background_color", (40, 42, 54))

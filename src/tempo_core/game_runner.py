@@ -10,14 +10,14 @@ def get_game_run_method() -> data_structures.ExecutionMode:
     return data_structures.ExecutionMode.ASYNC
 
 
-def run_game_for_monitoring():
+def run_game_for_monitoring() -> None:
     if get_game_run_method() == data_structures.ExecutionMode.ASYNC:
         run_game_exe_async()
     else:
         run_game_exe_sync()
 
 
-def run_game_exe_sync():
+def run_game_exe_sync() -> None:
     app_runner.run_app(
         exe_path=str(settings.get_game_exe_path()),
         exec_mode=ExecutionMode.SYNC,
@@ -25,7 +25,7 @@ def run_game_exe_sync():
     )
 
 
-def run_game_exe_async():
+def run_game_exe_async() -> None:
     app_runner.run_app(
         exe_path=str(settings.get_game_exe_path()),
         exec_mode=ExecutionMode.ASYNC,
@@ -33,7 +33,7 @@ def run_game_exe_async():
     )
 
 
-def run_game_steam():
+def run_game_steam() -> None:
     potential_game_launcher_path = settings.get_game_launcher_exe_path()
     if potential_game_launcher_path:
         steam_exe = potential_game_launcher_path
@@ -51,7 +51,7 @@ def run_game_steam():
 
 
 @hook_states.hook_state_decorator(HookStateType.PRE_GAME_LAUNCH)
-def run_game():
+def run_game() -> None:
     logger.log_message(
         f"Timer: Time since script execution: {timer.get_running_time()}"
     )

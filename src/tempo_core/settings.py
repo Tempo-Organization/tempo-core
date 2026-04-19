@@ -22,7 +22,7 @@ settings_information = SettingsInformation(
 )
 
 
-def init_settings(settings_json_path: pathlib.Path):
+def init_settings(settings_json_path: pathlib.Path) -> None:
     with open(settings_json_path, "r") as file:
         raw_settings = json.load(file)
     # raw_settings = Dynaconf(settings_files=[settings_json_path])
@@ -74,7 +74,7 @@ def init_settings(settings_json_path: pathlib.Path):
     )
 
 
-def load_settings(settings_json: str):
+def load_settings(settings_json: str) -> None:
     logger.log_message(f"settings json: {settings_json}")
     if not settings_information.init_settings_done:
         init_settings(pathlib.Path(settings_json))

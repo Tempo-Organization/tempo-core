@@ -23,7 +23,7 @@ def is_process_running(process_name: str) -> bool:
     return False
 
 
-def kill_process(process_name: str):
+def kill_process(process_name: str) -> None:
     taskkill_path = shutil.which("taskkill")
 
     if taskkill_path:
@@ -47,7 +47,7 @@ def get_process_kill_events() -> list:
     return value_to_return
 
 
-def kill_processes(state: HookStateType):
+def kill_processes(state: HookStateType) -> None:
     current_state = state.value if isinstance(state, HookStateType) else state
     for process_info in get_process_kill_events():
         target_state = process_info.get("hook_state")

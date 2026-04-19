@@ -10,7 +10,7 @@ def get_wrapper_location() -> str:
     )
 
 
-def generate_wrapper():
+def generate_wrapper() -> None:
     args = sys.argv[:]
 
     if "--wrapper_name" in args:

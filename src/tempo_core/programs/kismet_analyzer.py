@@ -9,7 +9,7 @@ def run_gen_cfg_tree_command(
     mappings_file: pathlib.Path | None,
     asset_tree: pathlib.Path,
     output_tree: pathlib.Path
-):
+) -> None:
     project_name = settings.get_uproject_name()
     if not project_name:
         # add other ways of specifying the uproject name in case of not using a personal uproject or other cases alter on

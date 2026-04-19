@@ -11,7 +11,7 @@ import sys
 #         os.system('reg add HKCU\\Console /v VirtualTerminalLevel /t REG_DWORD /d 1 /f >nul')
 
 
-def enable_vt100():
+def enable_vt100() -> None:
     if sys.platform == "win32":
         """Enable VT100 escape codes in the Windows Command Prompt and restart if needed."""
         query_command = "reg query HKCU\\Console /v VirtualTerminalLevel 2>nul"

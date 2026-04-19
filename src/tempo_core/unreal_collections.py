@@ -48,7 +48,7 @@ class UnrealGuid:
         from_uid(uid: str) -> UnrealGuid: Class method to create an UnrealGuid object from a given UID string.
     """
 
-    def __init__(self, uid: str):
+    def __init__(self, uid: str) -> None:
         """
         Initializes the UnrealGuid with a given UID string or generates a new one if not provided.
 
@@ -109,7 +109,7 @@ class UnrealCollectionColor:
     Can be initialized with either RGBA float values or a formatted string.
     """
 
-    def __init__(self, r, g=None, b=None, a=None):
+    def __init__(self, r, g=None, b=None, a=None) -> None:
         """
         Initializes the color with either RGBA float values or a formatted string.
 
@@ -183,7 +183,7 @@ class UnrealAssetPath:
         __repr__() -> str: Returns the asset reference as a string representation.
     """
 
-    def __init__(self, path: str):
+    def __init__(self, path: str) -> None:
         """
         Initializes the UnrealAssetPath with the given asset path.
 
@@ -541,19 +541,19 @@ def get_collection_color_from_unreal_collection_path(
 
 def add_content_lines_to_collection(
     collection: UnrealCollection, content_lines: list[UnrealAssetPath] | list[str]
-):
+) -> None:
     for content_line in content_lines:
         add_content_line_to_collection(collection, content_line)
 
 
 def remove_content_lines_from_collection(
     collection: UnrealCollection, content_lines: list[UnrealAssetPath] | list[str]
-):
+) -> None:
     for content_line in content_lines:
         remove_content_line_from_collection(collection, content_line)
 
 
-def rename_collection_from_collection(collection: UnrealCollection, new_name: str):
+def rename_collection_from_collection(collection: UnrealCollection, new_name: str) -> None:
     src_path = collection.file_system_path
     dst_path = os.path.normpath(f"{os.path.dirname(src_path)}/{new_name}.collection")
     if not os.path.isfile(src_path):
@@ -567,7 +567,7 @@ def rename_collection_from_collection(collection: UnrealCollection, new_name: st
     shutil.move(src_path, dst_path)
 
 
-def rename_collection_from_collection_path(collection_path: Path, new_name: str):
+def rename_collection_from_collection_path(collection_path: Path, new_name: str) -> None:
     dst_path = os.path.normpath(
         f"{os.path.dirname(collection_path)}/{new_name}.collection"
     )
@@ -580,7 +580,7 @@ def rename_collection_from_collection_path(collection_path: Path, new_name: str)
     shutil.move(collection_path, dst_path)
 
 
-def delete_collection(collection: UnrealCollection | str):
+def delete_collection(collection: UnrealCollection | str) -> None:
     collection_path = collection
     if isinstance(collection, UnrealCollection):
         collection_path = collection.file_system_path
@@ -645,7 +645,7 @@ def set_collection_parent_collection(
     parent_collection: UnrealCollection,
     collections_directory: Path,
     child_collection: UnrealCollection,
-):
+) -> None:
     set_collection_parent_guid(
         child_collection, collections_directory, parent_collection.guid
     )
@@ -655,7 +655,7 @@ def add_child_collection_to_parent_collection(
     parent_collection: UnrealCollection,
     collections_directory: Path,
     child_collection: UnrealCollection,
-):
+) -> None:
     set_collection_parent_guid(
         child_collection, collections_directory, parent_collection.guid
     )
@@ -665,7 +665,7 @@ def add_child_collections_to_parent_collection(
     child_collections: list[UnrealCollection],
     collections_directory,
     parent_collection: UnrealCollection,
-):
+) -> None:
     for collection in child_collections:
         set_collection_parent_guid(
             collection, collections_directory, parent_collection.guid
@@ -674,7 +674,7 @@ def add_child_collections_to_parent_collection(
 
 def remove_child_collection_from_parent_collection(
     child_collection: UnrealCollection, collections_directory: Path
-):
+) -> None:
     set_collection_parent_guid(
         child_collection,
         collections_directory,
@@ -684,7 +684,7 @@ def remove_child_collection_from_parent_collection(
 
 def remove_child_collections_from_parent_collection(
     child_collections: list[UnrealCollection], collections_directory: Path
-):
+) -> None:
     for collection in child_collections:
         set_collection_parent_guid(
             collection,
@@ -704,7 +704,7 @@ def create_collection(
     content_lines: list[UnrealAssetPath] | list[str],
     *,
     exist_ok: bool,
-):
+) -> None:
     new_content_lines = []
     if isinstance(content_lines, list) and all(
         isinstance(x, str) for x in content_lines
@@ -742,7 +742,7 @@ def create_collection(
 
 def enable_collection(
     collection: UnrealCollection, *, disabled_collection_exists_ok: bool = True
-):
+) -> None:
     # does not account for descendants
     enabled_collection_path = os.path.splitext(
         os.path.normpath(collection.file_system_path)
@@ -764,7 +764,7 @@ def enable_collection(
 
 def disable_collection(
     collection: UnrealCollection | str, *, disabled_collection_exists_ok: bool = True
-):
+) -> None:
     # does not account for descendants
     if isinstance(collection, UnrealCollection):
         collection = str(collection.file_system_path)
@@ -790,7 +790,7 @@ def set_collection_guid_from_collection(
     new_guid: UnrealGuid,
     *,
     fix_child_collections_parent_guids: bool = True,
-):
+) -> None:
     original_collection_guid = get_guid_from_unreal_collection_path(
         collection.file_system_path
     )
@@ -817,7 +817,7 @@ def set_collection_parent_guid(
     collection: UnrealCollection,
     collections_directory: Path,
     new_guid: UnrealGuid = UnrealGuid(UnrealGuid.generate_unreal_guid()),
-):
+) -> None:
     all_collection_paths = get_all_collection_paths(collections_directory)
     parent_exists = False
 
@@ -843,14 +843,14 @@ def set_collection_color(
     g_color: float,
     b_color: float,
     a_color: float,
-):
+) -> None:
     collection.color = UnrealCollectionColor(r=r_color, g=g_color, b=b_color, a=a_color)
     save_unreal_collection_to_file(collection)
 
 
 def add_content_line_to_collection(
     collection: UnrealCollection, content_line: UnrealAssetPath | str
-):
+) -> None:
     if content_line not in collection.content_lines:
         collection.content_lines.append(content_line) # ty: ignore
         save_unreal_collection_to_file(collection)
@@ -873,7 +873,7 @@ def get_child_collections(
 
 def remove_content_line_from_collection(
     collection: UnrealCollection, line_to_remove: UnrealAssetPath | str
-):
+) -> None:
     if line_to_remove in collection.content_lines:
         collection.content_lines.remove(line_to_remove) # ty: ignore
         save_unreal_collection_to_file(collection)
@@ -881,13 +881,13 @@ def remove_content_line_from_collection(
 
 def set_collection_type(
     collection: UnrealCollection, collection_type: UnrealContentLineType
-):
+) -> None:
     if collection.content_type != collection_type:
         collection.content_type = collection_type
         save_unreal_collection_to_file(collection)
 
 
-def set_collection_file_version(collection: UnrealCollection, file_version: int):
+def set_collection_file_version(collection: UnrealCollection, file_version: int) -> None:
     if collection.file_version != file_version:
         collection.file_version = file_version
         save_unreal_collection_to_file(collection)
@@ -895,7 +895,7 @@ def set_collection_file_version(collection: UnrealCollection, file_version: int)
 
 def set_config_key_and_value_from_collection_path(
     collection_path: Path, key: str, value: str
-):
+) -> None:
     config_lines = get_all_lines_in_config(str(collection_path))
 
     updated_lines = []
@@ -914,7 +914,7 @@ def set_config_key_and_value_from_collection_path(
     set_all_lines_in_config(str(collection_path), updated_lines)
 
 
-def set_file_version_from_collection_path(collection_path: Path, file_version: int):
+def set_file_version_from_collection_path(collection_path: Path, file_version: int) -> None:
     set_config_key_and_value_from_collection_path(
         collection_path=Path(collection_path),
         key="FileVersion:",
@@ -924,13 +924,13 @@ def set_file_version_from_collection_path(collection_path: Path, file_version: i
 
 def set_collection_type_from_collection_path(
     collection_path: Path, collection_type: UnrealContentLineType
-):
+) -> None:
     set_config_key_and_value_from_collection_path(
         collection_path=Path(collection_path), key="Type:", value=collection_type.value
     )
 
 
-def set_guid_from_collection_path(collection_path: Path, guid: UnrealGuid):
+def set_guid_from_collection_path(collection_path: Path, guid: UnrealGuid) -> None:
     set_config_key_and_value_from_collection_path(
         collection_path=Path(collection_path), key="Guid:", value=str(guid)
     )
@@ -938,7 +938,7 @@ def set_guid_from_collection_path(collection_path: Path, guid: UnrealGuid):
 
 def set_parent_guid_from_collection_path(
     collection_path: Path, parent_guid: UnrealGuid
-):
+) -> None:
     set_config_key_and_value_from_collection_path(
         collection_path=Path(collection_path), key="ParentGuid:", value=str(parent_guid)
     )
@@ -946,7 +946,7 @@ def set_parent_guid_from_collection_path(
 
 def set_color_from_collection_path(
     collection_path: Path, unreal_color: UnrealCollectionColor
-):
+) -> None:
     set_config_key_and_value_from_collection_path(
         collection_path=Path(collection_path),
         key="Color:",
@@ -956,7 +956,7 @@ def set_color_from_collection_path(
 
 def set_content_lines_from_collection_path(
     collection_path: Path, unreal_asset_paths: list[UnrealAssetPath] | list[str]
-):
+) -> None:
     all_key_lines = get_all_key_lines_from_collection_path(Path(collection_path))
 
     formatted_lines = [line + "\n" for line in all_key_lines]
@@ -970,7 +970,7 @@ def set_content_lines_from_collection_path(
 
 def save_unreal_collection_to_file(
     unreal_collection: UnrealCollection, *, exist_ok: bool = True
-):
+) -> None:
     if not exist_ok and os.path.isfile(unreal_collection.file_system_path):
         collection_already_exists_error = f'The following collection file already exists "{unreal_collection.file_system_path}".'
         raise FileExistsError(collection_already_exists_error)
@@ -1012,7 +1012,7 @@ def save_unreal_collection_to_file(
 
 def set_all_lines_in_config(
     config_path: str, lines: list[str], *, auto_add_new_line: bool = True
-):
+) -> None:
     with open(config_path, "w", encoding="utf-8") as file:
         if auto_add_new_line:
             lines = [line if line.endswith("\n") else line + "\n" for line in lines]
@@ -1052,7 +1052,7 @@ def get_unreal_collection_paths_from_mod_name(mod_name: str):
 
 def add_collection_to_mod_entry(
     collection: UnrealCollection, mod_name: str, settings_json: Path
-):
+) -> None:
     settings_json_str = str(settings_json)
     try:
         collection_path = str(collection.file_system_path)
@@ -1096,7 +1096,7 @@ def add_collection_to_mod_entry(
 
 def remove_collection_from_mod_entry(
     collection: UnrealCollection, mod_name: str, settings_json: Path
-):
+) -> None:
     settings_json_str = str(settings_json)
     collection_path = str(collection.file_system_path)
 
@@ -1134,13 +1134,13 @@ def remove_collection_from_mod_entry(
 
 def add_collections_to_mod_entry(
     collections: list[UnrealCollection], mod_name: str, settings_json: Path
-):
+) -> None:
     for collection in collections:
         add_collection_to_mod_entry(collection, mod_name, settings_json)
 
 
 def remove_collections_from_mod_entry(
     collections: list[UnrealCollection], mod_name: str, settings_json: Path
-):
+) -> None:
     for collection in collections:
         remove_collection_from_mod_entry(collection, mod_name, settings_json)

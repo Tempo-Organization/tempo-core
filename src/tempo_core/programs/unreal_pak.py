@@ -8,7 +8,7 @@ from tempo_core import file_io, packing, utilities, logger
 from tempo_core.data_structures import CompressionType
 
 
-def get_pak_dir_to_pack(mod_name: str):
+def get_pak_dir_to_pack(mod_name: str) -> str:
     return f"{tempo_core.settings.get_temp_directory()}/{mod_name}"
 
 
@@ -77,7 +77,7 @@ def make_ue4_iostore_mod(
     compression_str: str | None,
     dest_pak_file: str,
     use_symlinks: bool,
-):
+) -> None:
     logger.log_message(f'intermediate pak file path: "{intermediate_pak_file}"')
     logger.log_message(f'destination pak file: "{dest_pak_file}"')
 
@@ -239,7 +239,7 @@ def make_ue5_iostore_mods(
     compression_str: str | None,
     dest_pak_file: str,
     use_symlinks: bool,
-):
+) -> None:
     unreal_engine_dir = tempo_core.settings.get_unreal_engine_dir()
     # unreal_pak = unreal_engine.get_unreal_pak_exe_path(unreal_engine_dir)
     unreal_engine_editor_cmd_executable_path = unreal_engine.get_editor_cmd_path(
@@ -334,7 +334,7 @@ def make_iostore_unreal_pak_mod(
     compression_str: str | None,
     dest_pak_file: str,
     use_symlinks: bool,
-):
+) -> None:
     if unreal_engine.is_game_ue4(str(tempo_core.settings.get_unreal_engine_dir())):
         make_ue4_iostore_mod(
             mod_name=mod_name,
@@ -363,7 +363,7 @@ def make_non_iostore_unreal_pak_mod(
     compression_str: str | None,
     dest_pak_file: str,
     use_symlinks: bool,
-):
+) -> None:
     command = f'"{exe_path}" "{intermediate_pak_file}" -Create="{make_response_file_non_iostore(mod_name)}"'
     if compression_str != "None" and compression_str:
         # find out which version compressed instead of compressed was added and pass either based on that
@@ -382,7 +382,7 @@ def make_non_iostore_unreal_pak_mod(
 
 def install_unreal_pak_mod(
     mod_name: str, compression_type: CompressionType | None, *, use_symlinks: bool
-):
+) -> None:
     move_files_for_packing(mod_name)
     # add a check for if compression type is None here
     if compression_type:
@@ -427,14 +427,14 @@ def install_unreal_pak_mod(
         )
 
 
-def move_files_for_packing(mod_name: str):
+def move_files_for_packing(mod_name: str) -> None:
     from tempo_core import settings
 
     should_use_progress_bars = settings.should_show_progress_bars()
     mod_files_dict = packing.get_mod_file_paths_for_manually_made_pak_mods(mod_name)
     mod_files_dict = utilities.filter_file_paths(mod_files_dict)
 
-    def copy_files():
+    def copy_files() -> None:
         for src_file, dest_file in mod_files_dict.items():
             dest_dir = os.path.dirname(dest_file)
 

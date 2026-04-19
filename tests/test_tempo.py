@@ -114,7 +114,7 @@ def cache_files() -> list[str]:
     return [UPROJECT_FILES_CACHE_DIR, PACKAGED_GAMES_CACHE_DIR, UE4SS_ZIP_CACHE_DIR]
 
 
-def init_tempo_core():
+def init_tempo_core() -> None:
     logger.log_message("started tempo core init")
     sys.argv.append("--settings_json")
     sys.argv.append(SETTINGS_FILE)
@@ -133,7 +133,7 @@ def init_tempo_core():
     )
 
 
-def copy_files_from_cache(cache_info):
+def copy_files_from_cache(cache_info) -> None:
     shutil.copytree(
         os.path.normpath(f"{cache_info[0]}/Uprojects/4_11_2/ReusableMods/Content"),
         UPROJECT_CONTENT_DIR,
@@ -160,7 +160,7 @@ def init_tests() -> list[str]:
     return cache_info
 
 
-def install_ue4ss(cache_dir: str, game_exe_directory: str):
+def install_ue4ss(cache_dir: str, game_exe_directory: str) -> None:
     ue4ss_zip_path = pathlib.Path(f"{cache_dir}/ue4ss.zip")
 
     if not ue4ss_zip_path.exists():
@@ -200,7 +200,7 @@ def install_ue4ss(cache_dir: str, game_exe_directory: str):
 
 class TestShippingIostoreNoSigsUE4(unittest.TestCase):
     @classmethod
-    def setUpClass(cls):
+    def setUpClass(cls) -> None:
         shutil.rmtree(TEMP_DIR)
         cache_info = init_tests()
         install_ue4ss(cache_info[2], GAME_INNER_EXE_DIR)
@@ -263,7 +263,7 @@ class TestShippingIostoreNoSigsUE4(unittest.TestCase):
     #         use_symlinks=False,
     #     )
 
-    def test_0006_retoc(self):
+    def test_0006_retoc(self) -> None:
         tempo_core.main_logic.full_run(
             input_mod_names=["RetocMadeExampleMod"],
             toggle_engine=False,

@@ -18,17 +18,17 @@ constant_thread_information = ConstantThreadInformation(
 )
 
 
-def constant_thread_runner(tick_rate: float = 0.01):
+def constant_thread_runner(tick_rate: float = 0.01) -> None:
     while constant_thread_information.run_constant_thread:
         time.sleep(tick_rate)
         constant_thread_logic()
 
 
-def constant_thread_logic():
+def constant_thread_logic() -> None:
     hook_states.hook_state_checks(HookStateType.CONSTANT)
 
 
-def start_constant_thread():
+def start_constant_thread() -> None:
     constant_thread_information.run_constant_thread = True
     constant_thread_information.constant_thread = threading.Thread(
         target=constant_thread_runner, daemon=True
@@ -37,15 +37,15 @@ def start_constant_thread():
 
 
 @hook_states.hook_state_decorator(HookStateType.POST_INIT)
-def post_constant_thread_created_message():
+def post_constant_thread_created_message() -> None:
     logger.log_message("Thread: Constant Thread Started")
 
 
-def constant_thread():
+def constant_thread() -> None:
     start_constant_thread()
     post_constant_thread_created_message()
 
 
-def stop_constant_thread():
+def stop_constant_thread() -> None:
     constant_thread_information.run_constant_thread = False
     logger.log_message("Thread: Constant Thread Ended")

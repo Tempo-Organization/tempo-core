@@ -17,7 +17,7 @@ def resolve_special_vars(value):
 
 
 class DynamicSettings:
-    def __init__(self, settings):
+    def __init__(self, settings) -> None:
         self._settings = settings
 
     def __getattr__(self, item):
