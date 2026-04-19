@@ -5,7 +5,7 @@ if sys.platform == "win32":
     import winreg
 
 
-def get_epic_launcher_exe_location():
+def get_epic_launcher_exe_location() -> str:
     if sys.platform != "win32":
         invalid_os_error = (
             "Epic Games Launcher path retrieval is only supported on Windows."
@@ -33,4 +33,4 @@ def get_epic_launcher_exe_location():
         finally:
             winreg.CloseKey(sub_key)
     winreg.CloseKey(reg_key)
-    return "Epic Games Launcher installation not found in the registry."
+    raise RuntimeError("Epic Games Launcher installation not found in the registry.")

@@ -62,11 +62,11 @@ def kill_processes(state: HookStateType) -> None:
                 kill_process(proc_name)
 
 
-def get_game_process_name():
+def get_game_process_name() -> str:
     return unreal_engine.get_game_process_name(settings.get_game_exe_path()) # ty: ignore
 
 
-def close_programs(exe_names: list[str]):
+def close_programs(exe_names: list[str]) -> None:
     results = {}
 
     for exe_name in exe_names:
@@ -83,5 +83,3 @@ def close_programs(exe_names: list[str]):
                 pass
         if not found:
             results[exe_name] = "Not Found"
-
-    return results

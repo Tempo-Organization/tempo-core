@@ -199,7 +199,7 @@ def handle_install_logic(packing_type: PackingType, *, use_symlinks: bool) -> No
                         packing_type=packing_type,
                         mod_name=mod_key,
                         compression_type=CompressionType(
-                            get_enum_from_val_loose(
+                            get_enum_from_val(
                                 CompressionType, mod_info.get("compression_type", None)
                             )
                         ),

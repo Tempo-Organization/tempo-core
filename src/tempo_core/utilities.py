@@ -6,7 +6,7 @@ from tempo_core.data_structures import CompressionType
 from tempo_core.programs import unreal_engine
 
 
-def custom_get_game_dir():
+def custom_get_game_dir() -> str | None:
     return unreal_engine.get_game_dir(str(settings.get_game_exe_path()))
 
 
@@ -20,7 +20,7 @@ def custom_get_game_paks_dir() -> str:
     )
 
 
-def get_uproject_dir():
+def get_uproject_dir() -> str | None:
     return os.path.dirname(str(settings.get_uproject_file()))
 
 

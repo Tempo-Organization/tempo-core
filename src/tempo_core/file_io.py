@@ -1,3 +1,4 @@
+from questionary import path
 import glob
 import hashlib
 import os
@@ -145,13 +146,13 @@ def get_file_extensions(directory_with_base_name: str) -> list:
     return list(extensions)
 
 
-def get_files_in_dir(directory):
+def get_files_in_dir(directory: str) -> list[str]:
     return [
         f for f in os.listdir(directory) if os.path.isfile(os.path.join(directory, f))
     ]
 
 
-def filter_by_extension(files, extension):
+def filter_by_extension(files: list[str], extension: str) -> list[str]:
     return [f for f in files if f.lower().endswith(extension)]
 
 
@@ -217,7 +218,7 @@ def ensure_path_quoted(path: str) -> str:
     return f'"{path}"' if not path.startswith('"') and not path.endswith('"') else path
 
 
-def zip_directory_tree(input_dir, output_dir, zip_name="archive.zip") -> None:
+def zip_directory_tree(input_dir: str, output_dir: str, zip_name: str = "archive.zip") -> None:
     os.makedirs(output_dir, exist_ok=True)
 
     zip_path = os.path.join(output_dir, zip_name)
@@ -237,7 +238,7 @@ def zip_directory_tree(input_dir, output_dir, zip_name="archive.zip") -> None:
     logger.log_message(f"Directory tree zipped successfully: {zip_path}")
 
 
-def move(input_path, output_path, overwrite) -> None:
+def move(input_path: Path, output_path: Path, overwrite: bool) -> None:
     if input_path == output_path:
         logger.log_message("Error: Input and output paths must be different.")
         raise RuntimeError
@@ -293,7 +294,7 @@ def copy(input_path: Path, output_path: Path, *, overwrite: bool) -> None:
     logger.log_message(f"Successfully copied {input_path} to {output_path}")
 
 
-def symlink(input_path, output_path, overwrite) -> None:
+def symlink(input_path: Path, output_path: Path, overwrite: bool) -> None:
     if output_path.exists():
         if not overwrite:
             logger.log_message(

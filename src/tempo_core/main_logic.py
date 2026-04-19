@@ -4,6 +4,7 @@ import shutil
 import subprocess
 import sys
 import pathlib
+from typing import TypeAlias
 
 from tempo_core import (
     app_runner,
@@ -384,7 +385,33 @@ def add_mod(
             },
         }
 
-        def remove_none_values(data):
+        # def remove_none_values(data):
+        #     if isinstance(data, dict):
+        #         return {
+        #             key: remove_none_values(value)
+        #             for key, value in data.items()
+        #             if value is not None
+        #         }
+        #     elif isinstance(data, list):
+        #         return [
+        #             remove_none_values(item)
+        #             for item in data
+        #             if item is not None
+        #         ]
+        #     else:
+        #         return data
+
+        JSONLike: TypeAlias = (
+            dict[str, "JSONLike"]
+            | list["JSONLike"]
+            | str
+            | int
+            | float
+            | bool
+            | None
+        )
+
+        def remove_none_values(data: JSONLike) -> JSONLike:
             if isinstance(data, dict):
                 return {
                     key: remove_none_values(value)
@@ -1182,7 +1209,7 @@ def remove_uplugins(uplugin_paths: list) -> None:
             shutil.rmtree(uplugin_dir)
 
 
-def generate_file_paths_json(dir_path, output_json) -> None:
+def generate_file_paths_json(dir_path: str, output_json: pathlib.Path | str) -> None:
     all_file_paths = []
 
     for root, _, files in os.walk(dir_path):
@@ -1198,7 +1225,7 @@ def generate_file_paths_json(dir_path, output_json) -> None:
     logger.log_message(f"JSON file with all file paths created at: {output_json}")
 
 
-def delete_unlisted_files(dir_path, json_file) -> None:
+def delete_unlisted_files(dir_path: str, json_file: pathlib.Path | str) -> None:
     with open(json_file) as file:
         allowed_files = set(json.load(file))
 
@@ -1212,7 +1239,7 @@ def delete_unlisted_files(dir_path, json_file) -> None:
     logger.log_message("Cleanup complete. All unlisted files have been removed.")
 
 
-def save_json_to_file(json_string, file_path) -> None:
+def save_json_to_file(json_string: str, file_path: str) -> None:
     try:
         parsed_json = json.loads(json_string)
 

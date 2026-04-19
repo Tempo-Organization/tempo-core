@@ -52,7 +52,7 @@ def configure_logging(
     log_information.has_configured_logging = True
 
 
-def rename_latest_log(log_dir) -> None:
+def rename_latest_log(log_dir: str) -> None:
     latest_log_path = os.path.join(log_dir, f"{log_information.log_prefix}_latest.log")
     if os.path.isfile(latest_log_path):
         try:

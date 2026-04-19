@@ -480,11 +480,11 @@ def should_show_progress_bars() -> bool:
     return "--disable_progress_bars" not in sys.argv
 
 
-def is_windows():
+def is_windows() -> bool:
     return platform.system() == "Windows"
 
 
-def is_linux():
+def is_linux() -> bool:
     return platform.system() == "Linux"
 
 

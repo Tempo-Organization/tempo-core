@@ -1,13 +1,19 @@
 import os
+from typing import Protocol, TypeAlias
 
 
-def resolve_special_vars(value):
-    special_vars = {
+JSONValue: TypeAlias = (
+    str | int | float | bool | None | list["JSONValue"] | dict[str, "JSONValue"]
+)
+
+
+def resolve_special_vars(value: JSONValue) -> JSONValue:
+    special_vars: dict[str, str] = {
         "${workspaceFolder}": os.path.abspath(
             os.path.dirname(__file__)
-        ),  # Resolves dynamically
-        "${home}": os.path.expanduser("~"),  # Expands to home directory
-        "${cwd}": os.getcwd(),  # Expands to current working directory
+        ),
+        "${home}": os.path.expanduser("~"),
+        "${cwd}": os.getcwd(),
     }
 
     if isinstance(value, str):
@@ -16,14 +22,21 @@ def resolve_special_vars(value):
     return value
 
 
+class SupportsGetAndAttr(Protocol):
+    def get(
+        self, key: str, default: JSONValue | None = None
+    ) -> JSONValue | None: ...
+    def __getattr__(self, name: str) -> JSONValue: ...
+
+
 class DynamicSettings:
-    def __init__(self, settings) -> None:
+    def __init__(self, settings: SupportsGetAndAttr) -> None:
         self._settings = settings
 
-    def __getattr__(self, item):
+    def __getattr__(self, item: str) -> JSONValue:
         value = getattr(self._settings, item, None)
         return resolve_special_vars(value)
 
-    def __getitem__(self, item):
+    def __getitem__(self, item: str) -> JSONValue | None:
         value = self._settings.get(item)
         return resolve_special_vars(value)

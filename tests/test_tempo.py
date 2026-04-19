@@ -133,7 +133,7 @@ def init_tempo_core() -> None:
     )
 
 
-def copy_files_from_cache(cache_info) -> None:
+def copy_files_from_cache(cache_info: list[str]) -> None:
     shutil.copytree(
         os.path.normpath(f"{cache_info[0]}/Uprojects/4_11_2/ReusableMods/Content"),
         UPROJECT_CONTENT_DIR,

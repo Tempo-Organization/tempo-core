@@ -39,7 +39,7 @@ def game_monitor_thread_runner(tick_rate: float = 0.01) -> None:
         game_monitor_thread_logic()
 
 
-def get_game_window():
+def get_game_window(): # noqa
     return window_management.get_window_by_title(
         window_title=utilities.get_game_window_title()
     )
