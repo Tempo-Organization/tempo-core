@@ -20,7 +20,7 @@ def get_steam_exe_location() -> Path:
         )
         install_path, _ = winreg.QueryValueEx(reg_key, "InstallPath")
         winreg.CloseKey(reg_key)
-        return Path(install_path / "steam.exe")
+        return Path(install_path) / "steam.exe"
     except Exception as err:
         raise RuntimeError(
             "Steam: installation not found in the registry.",
