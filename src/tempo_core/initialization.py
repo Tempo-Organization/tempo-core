@@ -98,7 +98,7 @@ def uproject_check() -> None:
         return
 
     # Try relative to current working directory
-    relative_path = Path(Path.cwd() / uproject_file)
+    relative_path = Path.cwd() / uproject_file
     if relative_path.is_file():
         logger.log_message("Check: Uproject file exists at relative path.")
         return
