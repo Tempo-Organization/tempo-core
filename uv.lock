@@ -1,6 +1,10 @@
 version = 1
 revision = 3
 requires-python = ">=3.12"
+resolution-markers = [
+    "python_full_version >= '3.15'",
+    "python_full_version < '3.15'",
+]
 
 [[package]]
 name = "argcomplete"
@@ -763,7 +767,7 @@ wheels = [
 [[package]]
 name = "tempo-cache"
 version = "0.1.0"
-source = { git = "https://www.github.com/Tempo-Organization/tempo-cache#ea2455ef94917ad003eea5bec1e062d45b729b8e" }
+source = { git = "https://www.github.com/Tempo-Organization/tempo-cache#a6d30214078798a481ea95556970f0bf5e4a73be" }
 dependencies = [
     { name = "platformdirs" },
     { name = "requests" },
