@@ -1,6 +1,6 @@
 import os
 import shutil
-import pathlib
+from pathlib import Path
 import subprocess
 
 from tempo_core.programs import unreal_pak
@@ -10,11 +10,11 @@ from tempo_cache_tools import retoc
 
 
 def run_retoc_to_zen_command(
-    input_directory: pathlib.Path,
-    output_utoc: pathlib.Path,
+    input_directory: Path,
+    output_utoc: Path,
     unreal_version: data_structures.UnrealEngineVersion,
-) -> list[pathlib.Path]:
-    if not pathlib.Path.is_dir(input_directory):
+) -> list[Path]:
+    if not input_directory.is_dir():
         raise NotADirectoryError(f'Input directory "{input_directory}" does not exist.')
 
     logger.log_message(unreal_version.get_retoc_unreal_version_str())
@@ -29,9 +29,9 @@ def run_retoc_to_zen_command(
     ]
     subprocess.run(command)
 
-    output_pak = pathlib.Path(f"{os.path.splitext(output_utoc)[0]}.pak")
-    output_ucas = pathlib.Path(f"{os.path.splitext(output_utoc)[0]}.ucas")
-    file_paths = [output_pak, output_ucas, pathlib.Path(output_utoc)]
+    output_pak = output_utoc.with_suffix(".pak")
+    output_ucas = output_utoc.with_suffix(".ucas")
+    file_paths = [output_pak, output_ucas, Path(output_utoc)]
 
     missing_files = [f for f in file_paths if not f.exists()]
     if missing_files:
@@ -40,22 +40,21 @@ def run_retoc_to_zen_command(
     return file_paths
 
 
-def make_retoc_mod(mod_name: str, dest_pak_file: str, *, use_symlinks: bool) -> None:
+def make_retoc_mod(mod_name: str, dest_pak_file: Path, *, use_symlinks: bool) -> None:
     from tempo_core import packing
-
-    old_ucas = pathlib.Path(f"{os.path.splitext(dest_pak_file)[0]}.ucas")
-    old_utoc = pathlib.Path(f"{os.path.splitext(dest_pak_file)[0]}.utoc")
-    old_file_paths = [old_utoc, old_ucas, pathlib.Path(dest_pak_file)]
+    old_ucas = dest_pak_file.with_suffix(".ucas")
+    old_utoc = dest_pak_file.with_suffix(".utoc")
+    old_file_paths = [old_utoc, old_ucas, dest_pak_file]
 
     for file in old_file_paths:
-        if pathlib.Path.is_file(file):
-            pathlib.Path.unlink(file)
+        if file.is_file():
+            file.unlink()
 
     original_mod_dir = unreal_pak.get_pak_dir_to_pack(mod_name)
-    original_mod_base_dir = os.path.dirname(original_mod_dir)
-    ucas_mod_dir = os.path.normpath(f"{original_mod_base_dir}/{mod_name}_ucas")
+    original_mod_base_dir = original_mod_dir.parent
+    ucas_mod_dir = original_mod_base_dir / f"{mod_name}_ucas"
 
-    os.makedirs(ucas_mod_dir, exist_ok=True)
+    ucas_mod_dir.mkdir(parents=True, exist_ok=True)
 
     ucas_extensions = {
         ".umap",
@@ -66,25 +65,25 @@ def make_retoc_mod(mod_name: str, dest_pak_file: str, *, use_symlinks: bool) -> 
         ".ushaderbytecode",
     }
 
-    for root, _, files in os.walk(original_mod_dir):
+    for root, _, files in original_mod_dir.walk():
         for file in files:
-            source_path = os.path.join(root, file)
+            source_path = Path(root / file)
             rel_path = os.path.relpath(source_path, original_mod_dir)
-            ext = os.path.splitext(file)[1].lower()
+            ext = Path(file).suffix
 
             if ext in ucas_extensions:
-                target_path = os.path.join(ucas_mod_dir, rel_path)
-                os.makedirs(os.path.dirname(target_path), exist_ok=True)
+                target_path = Path(ucas_mod_dir / rel_path)
+                target_path.parent.mkdir(parents=True, exist_ok=True)
                 shutil.move(source_path, target_path)
 
-    if any(files for _, _, files in os.walk(ucas_mod_dir)):
+    if any(files for _, _, files in ucas_mod_dir.walk()):
         run_retoc_to_zen_command(
-            input_directory=pathlib.Path(ucas_mod_dir),
-            output_utoc=pathlib.Path(f"{os.path.splitext(dest_pak_file)[0]}.utoc"),
-            unreal_version=settings.get_unreal_engine_version(str(settings.get_unreal_engine_dir())), # ty: ignore
+            input_directory=ucas_mod_dir,
+            output_utoc=old_utoc,
+            unreal_version=settings.get_unreal_engine_version(settings.get_unreal_engine_dir()), # ty: ignore
         )
 
-    if any(files for _, _, files in os.walk(original_mod_dir)):
+    if any(files for _, _, files in original_mod_dir.walk()):
         packing.make_pak_repak(mod_name=mod_name, use_symlinks=use_symlinks)
 
     packing.install_mod_sig(mod_name=mod_name, use_symlinks=use_symlinks)
@@ -98,60 +97,49 @@ def install_retoc_mod(*, mod_name: str, use_symlinks: bool) -> None:
     # copies or symlinks files over to final location
 
     unreal_pak.move_files_for_packing(mod_name)
-    intermediate_dest_dir = (
-        f"{settings.get_temp_directory()}/{utilities.get_pak_dir_structure(mod_name)}"
-    )
-    final_dest_dir = os.path.normpath(
-        f"{utilities.custom_get_game_paks_dir()}/{utilities.get_pak_dir_structure(mod_name)}"
-    )
+    intermediate_dest_dir = Path(settings.get_temp_directory()) / utilities.get_pak_dir_structure(mod_name)
+    final_dest_dir = Path(utilities.custom_get_game_paks_dir() / utilities.get_pak_dir_structure(mod_name))
     extensions = data_structures.unreal_iostore_no_sigs_archive_extensions
 
     dest_prefix = f"{final_dest_dir}/{mod_name}."
     output_mod_prefix = f"{intermediate_dest_dir}/{mod_name}."
-    os.makedirs(intermediate_dest_dir, exist_ok=True)
-    os.makedirs(
-        f"{utilities.custom_get_game_paks_dir()}/{utilities.get_pak_dir_structure(mod_name)}",
-        exist_ok=True,
-    )
+    intermediate_dest_dir.mkdir(parents=True, exist_ok=True)
+    Path(utilities.custom_get_game_paks_dir() / utilities.get_pak_dir_structure(mod_name)).mkdir(parents=True, exist_ok=True)
 
     for extension in extensions:
-        output_file = os.path.normpath(f"{output_mod_prefix}{extension}")
-        if os.path.isfile(output_file):
-            os.remove(output_file)
-        if os.path.islink(output_file):
-            os.unlink(output_file)
+        output_file = Path(f"{output_mod_prefix}{extension}")
+        if output_file.is_file() or output_file.is_symlink():
+            output_file.unlink()
 
     make_retoc_mod(
-        mod_name, os.path.normpath(f"{output_mod_prefix}pak"), use_symlinks=use_symlinks
+        mod_name, Path(f"{output_mod_prefix}pak"), use_symlinks=use_symlinks,
     )
 
     for extension in extensions:
-        dest_file = os.path.normpath(f"{dest_prefix}{extension}")
-        output_file = os.path.normpath(f"{output_mod_prefix}{extension}")
+        dest_file = Path(f"{dest_prefix}{extension}")
+        output_file = Path(f"{output_mod_prefix}{extension}")
 
         if use_symlinks:
-            os.symlink(output_file, dest_file)
+            dest_file.symlink_to(output_file)
         else:
             shutil.copy(output_file, dest_file)
 
 
 def run_gen_script_objects_retoc_command(
-    retoc_executable: pathlib.Path,
-    jmap_file: pathlib.Path,
-    output: pathlib.Path
+    retoc_executable: Path,
+    jmap_file: Path,
+    output: Path,
 ) -> None:
-    exe_path = os.path.normpath(str(retoc_executable))
-    exec_mode = data_structures.ExecutionMode.SYNC
     args = [
         "gen-script-objects",
         "--version",
         settings.get_unreal_engine_version(settings.get_unreal_engine_dir()).get_retoc_unreal_version_str(), # ty: ignore
-        os.path.normpath(jmap_file),
-        os.path.normpath(output)
+        jmap_file,
+        output,
     ]
 
     app_runner.run_app(
-        exe_path=exe_path,
-        exec_mode=exec_mode,
-        args=args
+        exe_path=retoc_executable,
+        exec_mode=data_structures.ExecutionMode.SYNC,
+        args=args,
     )
