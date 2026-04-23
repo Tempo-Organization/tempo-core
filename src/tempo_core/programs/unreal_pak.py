@@ -359,7 +359,7 @@ def make_non_iostore_unreal_pak_mod(
         # find out which version compressed instead of compressed was added and pass either based on that
         args.extend(['-compress', f'-compressionformat={compression_str}'])
     tempo_core.app_runner.run_app(exe_path=exe_path, args=args)
-    if Path.is_symlink(dest_pak_file):
+    if dest_pak_file.is_symlink():
         dest_pak_file.unlink()
     if dest_pak_file.is_file():
         dest_pak_file.unlink()
