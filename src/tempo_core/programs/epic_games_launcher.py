@@ -26,7 +26,7 @@ def get_epic_launcher_exe_location() -> Path:
             display_name = winreg.QueryValueEx(sub_key, "DisplayName")[0]
             if "Epic Games Launcher" in display_name:
                 install_path, _ = winreg.QueryValueEx(sub_key, "InstallLocation")
-                return Path(install_path / "Portal" / "Binaries" / "Win32" / "EpicGamesLauncher.exe")
+                return Path(install_path) / "Portal" / "Binaries" / "Win32" / "EpicGamesLauncher.exe"
         except FileNotFoundError:
             pass
         finally:
