@@ -761,11 +761,11 @@ def enable_collection(
 
 
 def disable_collection(
-    collection: UnrealCollection | str, *, disabled_collection_exists_ok: bool = True,
+    collection: UnrealCollection | Path, *, disabled_collection_exists_ok: bool = True,
 ) -> None:
     # does not account for descendants
     if isinstance(collection, UnrealCollection):
-        collection = str(collection.file_system_path)
+        collection = collection.file_system_path
     disabled_collection_path = Path(f"{collection}.disabled")
     enabled_collection_path = Path(collection)
     if not enabled_collection_path.is_file():
