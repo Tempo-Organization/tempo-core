@@ -64,8 +64,8 @@ update_changelog_on_bump = true
 [tool.uv.sources]
 ue4ss-installer-core = { git = "https://www.github.com/Tempo-Organization/ue4ss-installer-core" }
 tempo-settings = { git = "https://www.github.com/Tempo-Organization/tempo-settings" }
-tempo-cache = { git = "https://www.github.com/Tempo-Organization/tempo-cache" }
 tempo-cache-tools = { git = "https://www.github.com/Tempo-Organization/tempo-cache-tools" }
+tempo-cache = { git = "https://www.github.com/Tempo-Organization/tempo-cache" }
 
 [tool.ruff]
 exclude = [
@@ -74,4 +74,29 @@ exclude = [
 ]
 
 [tool.ruff.lint]
-select = ["ANN"]
+select = [
+    "ANN",
+    "PTH",
+    "N",
+    "BLE",
+    "YTT",
+    "ASYNC",
+    "B",
+    "A",
+    "COM",
+    "C4",
+    "EXE",
+    "FA",
+    "INT",
+    "PIE",
+    "T20",
+    "PYI",
+    "UP047"
+]
+
+[tool.ty.src]
+include = ["src", "tests"]
+exclude = [
+    "src/tempo_core/window_management.py",
+    "src/tempo_core/unreal_collections.py",
+]
