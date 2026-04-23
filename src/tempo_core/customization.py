@@ -19,7 +19,7 @@ def enable_vt100() -> None:
 
         if "0x1" not in result:
             os.system(
-                "reg add HKCU\\Console /v VirtualTerminalLevel /t REG_DWORD /d 1 /f >nul"
+                "reg add HKCU\\Console /v VirtualTerminalLevel /t REG_DWORD /d 1 /f >nul",
             )
 
             cmd = [sys.executable] + sys.argv
