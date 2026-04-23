@@ -1,6 +1,7 @@
 import os
 import sys
 from enum import Enum
+from pathlib import Path
 
 from tempo_core import settings, app_runner, data_structures
 
@@ -19,17 +20,21 @@ class RepakCompressionType(Enum):
     ZSTD = "Zstd"
 
 
-def run_repak_pack_command(input_directory: str, output_pak_file: str) -> None:
+def run_repak_pack_command(input_directory: Path, output_pak_file: Path) -> None:
     repak_info = repak.RepakToolInfo()
     repak_path = repak_info.get_executable_path()
-    command = f'"{repak_path}" pack "{input_directory}" "{output_pak_file}"'
+    args = [
+        'pack',
+        f'"{input_directory}"',
+        f'"{output_pak_file}"',
+    ]
     compression_type_str = settings.settings_information.settings.get('repak_info', {}).get('repak_compression_type', None)
     if compression_type_str:
-        command = f"{command} --compression {compression_type_str}"
+        args.extend(['--compression', compression_type_str])
     # when not manually overriding, check the toml for unreal version, before getting it from the engine directory
     default = settings.get_unreal_engine_version(str(settings.get_unreal_engine_dir())).get_repak_unreal_version_str() # ty: ignore
-    command = f"{command} --version {settings.settings_information.settings.get("repak_info", {}).get("repak_version", default)}"
-    app_runner.run_app(command)
+    args.extend(['--version', settings.settings_information.settings.get("repak_info", {}).get("repak_version", default)])
+    app_runner.run_app(exe_path=repak_path, args=args)
 
 
 def get_repak_compression_type() -> RepakCompressionType:
@@ -70,7 +75,7 @@ def get_repak_compression_type() -> RepakCompressionType:
 def get_repak_pack_version() -> str:
     # finish this to do
     # have it first try and get it all three non default ways, and if not possible then get version directly from the toml, then check engine, then throw error otherwise
-    unreal_version = settings.get_unreal_engine_version(str(settings.get_unreal_engine_dir()))
+    unreal_version = settings.get_unreal_engine_version(settings.get_unreal_engine_dir())
 
     default_value = unreal_version.get_repak_unreal_version_str() # ty: ignore
 
