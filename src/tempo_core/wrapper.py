@@ -1,13 +1,12 @@
 import os
 import sys
+from pathlib import Path
 
 from tempo_core import file_io
 
 
-def get_wrapper_location() -> str:
-    return os.path.normpath(
-        f"{file_io.SCRIPT_DIR}/dist/command.{file_io.get_platform_wrapper_extension()}"
-    )
+def get_wrapper_location() -> Path:
+    return Path(f"{file_io.SCRIPT_DIR}/dist/command.{file_io.get_platform_wrapper_extension()}")
 
 
 def generate_wrapper() -> None:
@@ -18,14 +17,14 @@ def generate_wrapper() -> None:
         args.pop(index)
         args.pop(index)
 
-    if not os.path.isabs(args[0]):
-        args[0] = f'"{os.path.join(file_io.SCRIPT_DIR, args[0])}"'
+    if not Path(args[0]).is_absolute():
+        args[0] = f'"{Path(file_io.SCRIPT_DIR / args[0])}"'
 
     content = " ".join(args)
 
     wrapper_path = get_wrapper_location()
 
-    os.makedirs(os.path.dirname(wrapper_path), exist_ok=True)
+    wrapper_path.parent.mkdir(parents=True, exist_ok=True)
 
-    with open(wrapper_path, "w") as f:
+    with wrapper_path.open("w") as f:
         f.write(content)

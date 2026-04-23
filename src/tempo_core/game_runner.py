@@ -18,16 +18,22 @@ def run_game_for_monitoring() -> None:
 
 
 def run_game_exe_sync() -> None:
+    game_exe_path = settings.get_game_exe_path()
+    if not game_exe_path:
+        raise FileNotFoundError('was unable to find the game executable path')
     app_runner.run_app(
-        exe_path=str(settings.get_game_exe_path()),
+        exe_path=game_exe_path,
         exec_mode=ExecutionMode.SYNC,
         args=settings.get_game_launch_params(),
     )
 
 
 def run_game_exe_async() -> None:
+    game_exe_path = settings.get_game_exe_path()
+    if not game_exe_path:
+        raise FileNotFoundError('was unable to find the game executable path')
     app_runner.run_app(
-        exe_path=str(settings.get_game_exe_path()),
+        exe_path=game_exe_path,
         exec_mode=ExecutionMode.ASYNC,
         args=settings.get_game_launch_params(),
     )
@@ -46,14 +52,14 @@ def run_game_steam() -> None:
     for param in new_params:
         launch_params.append(param)
     app_runner.run_app(
-        exe_path=steam_exe, exec_mode=ExecutionMode.ASYNC, args=launch_params # ty: ignore
+        exe_path=steam_exe, exec_mode=ExecutionMode.ASYNC, args=launch_params,
     )
 
 
 @hook_states.hook_state_decorator(HookStateType.PRE_GAME_LAUNCH)
 def run_game() -> None:
     logger.log_message(
-        f"Timer: Time since script execution: {timer.get_running_time()}"
+        f"Timer: Time since script execution: {timer.get_running_time()}",
     )
     launch_type = GameLaunchType(settings.get_game_info_launch_type_enum_str_value())
     if launch_type == GameLaunchType.EXE:

@@ -31,7 +31,7 @@ def constant_thread_logic() -> None:
 def start_constant_thread() -> None:
     constant_thread_information.run_constant_thread = True
     constant_thread_information.constant_thread = threading.Thread(
-        target=constant_thread_runner, daemon=True
+        target=constant_thread_runner, daemon=True,
     )
     constant_thread_information.constant_thread.start()
 

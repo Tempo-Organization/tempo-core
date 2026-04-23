@@ -36,7 +36,7 @@ def exec_events_checks(hook_state_type: HookStateType) -> None:
             exe_path = exec_event["alt_exe_path"]
             exe_args = exec_event["variable_args"]
             exe_exec_mode = get_enum_from_val(
-                ExecutionMode, exec_event["execution_mode"]
+                ExecutionMode, exec_event["execution_mode"],
             )
             if not exe_exec_mode:
                 app_runner.run_app(exe_path, exe_exec_mode, exe_args)
@@ -49,7 +49,7 @@ def is_hook_state_used(state: HookStateType) -> bool:
     if isinstance(settings.settings_information.settings, dict):
         if "process_kill_events" in settings.settings_information.settings:
             process_kill_events = settings.settings_information.settings.get(
-                "process_kill_events", {}
+                "process_kill_events", {},
             )
             if "processes" in process_kill_events:
                 for process in process_kill_events["processes"]:
@@ -76,11 +76,11 @@ def window_checks(current_state: HookStateType) -> None:
         if settings_state == current_state:
             title = window_settings["window_name"]
             windows_to_change = window_management.get_windows_by_title(
-                title, use_substring_check=window_settings["use_substring_check"]
+                title, use_substring_check=window_settings["use_substring_check"],
             )
-            for window_to_change in windows_to_change:
+            for window_to_change in windows_to_change: # ty: ignore
                 way_to_change_window = get_enum_from_val(
-                    WindowAction, window_settings["window_behaviour"]
+                    WindowAction, window_settings["window_behaviour"],
                 )
                 if way_to_change_window == WindowAction.MAX:
                     window_management.maximize_window(window_to_change)
@@ -98,7 +98,7 @@ def window_checks(current_state: HookStateType) -> None:
                     )
                 else:
                     logger.log_message(
-                        "Monitor: invalid window behavior specified in settings"
+                        "Monitor: invalid window behavior specified in settings",
                     )
 
 
@@ -122,7 +122,7 @@ def set_hook_state(new_state: HookStateType) -> None:
         hook_state_checks(new_state)
         hook_state_checks(HookStateType.POST_ALL)
         logger.log_message(
-            f"Timer: Time since script execution: {timer.get_running_time()}"
+            f"Timer: Time since script execution: {timer.get_running_time()}",
         )
 
 

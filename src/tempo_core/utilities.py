@@ -1,40 +1,60 @@
 import os
 import shutil
+from pathlib import Path
 
 from tempo_core import file_io, settings
 from tempo_core.data_structures import CompressionType
 from tempo_core.programs import unreal_engine
 
 
-def custom_get_game_dir() -> str | None:
-    return unreal_engine.get_game_dir(str(settings.get_game_exe_path()))
+def custom_get_game_dir() -> Path | None:
+    game_exe_path = settings.get_game_exe_path()
+    if not game_exe_path:
+        return None
+    game_dir = unreal_engine.get_game_dir(game_exe_path)
+    if not game_dir:
+        return None
+    return game_dir
 
 
-def custom_get_game_paks_dir() -> str:
-    alt_game_dir = os.path.dirname(custom_get_game_dir())
+def custom_get_game_paks_dir() -> Path:
+    game_dir = custom_get_game_dir()
+    if not game_dir:
+        raise NotADirectoryError('Could not get a valid game dir from custom_game_get_dir')
+    alt_game_dir = game_dir.parent
     potential_alt_dir_name = settings.get_alt_packing_dir_name()
     if potential_alt_dir_name:
-        return os.path.join(alt_game_dir, alt_game_dir, "Content", "Paks")
-    return unreal_engine.get_game_paks_dir(
-        str(settings.get_uproject_file()), custom_get_game_dir()
-    )
+        return Path(alt_game_dir / alt_game_dir / "Content" / "Paks")
+    uproject_file = settings.get_uproject_file()
+    if not uproject_file:
+        raise FileNotFoundError('Was unable to find a valid uproject file, in custom_get_game_paks_dir')
+    return unreal_engine.get_game_paks_dir(uproject_file, game_dir)
 
 
-def get_uproject_dir() -> str | None:
-    return os.path.dirname(str(settings.get_uproject_file()))
+def get_uproject_dir() -> Path | None:
+    uproject_file = settings.get_uproject_file()
+    if uproject_file:
+        return uproject_file.parent
+    return None
 
 
-def get_uproject_tempo_dir() -> str:
-    return f"{get_uproject_dir()}/Plugins/Tempo"
+def get_uproject_tempo_dir() -> Path | None:
+    uproject_dir = get_uproject_dir()
+    if uproject_dir:
+        return Path(uproject_dir / "Plugins" / "Tempo")
+    return None
 
 
-def get_uproject_tempo_resources_dir() -> str:
-    return f"{get_uproject_tempo_dir()}/Resources"
+def get_uproject_tempo_resources_dir() -> Path | None:
+    uproject_tempo_dir = get_uproject_tempo_dir()
+    if uproject_tempo_dir:
+        return Path(uproject_tempo_dir / 'resources')
+    return None
 
 
 def get_use_mod_name_dir_name_override(mod_name: str) -> bool:
     return get_mods_info_dict_from_mod_name(mod_name).get(
-        "use_mod_name_dir_name_override", False
+        "use_mod_name_dir_name_override", False,
     )
 
 
@@ -94,32 +114,35 @@ def is_mod_name_in_list(mod_name: str) -> bool:
     )
 
 
-def get_mod_name_dir(mod_name: str) -> str:
-    if is_mod_name_in_list(mod_name):
-        return f"{unreal_engine.get_uproject_dir(str(settings.get_uproject_file()))}/Saved/Cooked/{get_unreal_mod_tree_type_str(mod_name)}/{mod_name}"
-    get_mod_name_dir_name_error = "Was unable to find the mod name dir name"
+def get_mod_name_dir(mod_name: str) -> Path:
+    uproject_file = settings.get_uproject_file()
+    if is_mod_name_in_list(mod_name) and uproject_file:
+        uproject_dir = unreal_engine.get_uproject_dir(uproject_file)
+        unreal_mod_tree_type = get_unreal_mod_tree_type_str(mod_name)
+        return Path(uproject_dir / "Saved" / "Cooked" / unreal_mod_tree_type / mod_name)
+    get_mod_name_dir_name_error = "Was unable to find the mod name dir name, or the uproject file (not both)"
     raise RuntimeError(get_mod_name_dir_name_error)
 
 
-def get_mod_name_dir_files(mod_name: str) -> list:
+def get_mod_name_dir_files(mod_name: str) -> list[Path]:
     return file_io.get_files_in_tree(get_mod_name_dir(mod_name))
 
 
-def get_persistent_mod_files(mod_name: str) -> list:
-    return file_io.get_files_in_tree(str(settings.get_persistent_mod_dir(mod_name)))
+def get_persistent_mod_files(mod_name: str) -> list[Path]:
+    return file_io.get_files_in_tree(settings.get_persistent_mod_dir(mod_name))
 
 
 def clean_temp_dir() -> None:
     temp_dir = settings.get_temp_directory()
-    if os.path.isdir(temp_dir):
+    if temp_dir.is_dir():
         shutil.rmtree(temp_dir)
 
 
-def filter_file_paths(paths_dict: dict) -> dict:
+def filter_file_paths(paths_dict: dict[Path, Path]) -> dict[Path, Path]:
     filtered_dict = {}
     path_dict_keys = paths_dict.keys()
     for path_dict_key in path_dict_keys:
-        if os.path.isfile(path_dict_key):
+        if path_dict_key.is_file():
             filtered_dict[path_dict_key] = paths_dict[path_dict_key]
     return filtered_dict
 
@@ -129,4 +152,7 @@ def get_game_window_title() -> str:
     if potential_window_title_override:
         return potential_window_title_override
     else:
-        return unreal_engine.get_game_process_name(str(settings.get_game_exe_path()))
+        game_exe_path = settings.get_game_exe_path()
+        if game_exe_path:
+            return unreal_engine.get_game_process_name(game_exe_path)
+        return 'Unknown'

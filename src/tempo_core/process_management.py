@@ -1,5 +1,6 @@
 import os
 import shutil
+from pathlib import Path
 import subprocess
 
 import psutil
@@ -9,8 +10,8 @@ from tempo_core.data_structures import HookStateType
 from tempo_core.programs import unreal_engine
 
 
-def get_process_name(exe_path: str) -> str:
-    return os.path.basename(exe_path)
+def get_process_name(exe_path: Path) -> str:
+    return exe_path.name
 
 
 def is_process_running(process_name: str) -> bool:

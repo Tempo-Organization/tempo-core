@@ -54,13 +54,15 @@ def engine_monitor_thread_logic() -> None:
         engine_monitor_thread_information.window_closed = False
         engine_monitor_thread_information.init_done = True
 
-    engine_window_name = unreal_engine.get_engine_window_title(
-        str(tempo_core.settings.get_uproject_file())
-    )
+    uproject_file = tempo_core.settings.get_uproject_file()
+    if not uproject_file:
+        raise FileNotFoundError('Could not find the uproject file for get engine window title')
+    engine_window_name = unreal_engine.get_engine_window_title(uproject_file)
+    unreal_engine_dir = tempo_core.settings.get_unreal_engine_dir()
+    if not unreal_engine_dir:
+        raise FileNotFoundError('Could not find the unreal engine dir.')
     if not engine_monitor_thread_information.found_process:
-        engine_process_name = unreal_engine.get_engine_process_name(
-            str(tempo_core.settings.get_unreal_engine_dir())
-        )
+        engine_process_name = unreal_engine.get_engine_process_name(unreal_engine_dir)
         if process_management.is_process_running(engine_process_name):
             logger.log_message("Process: Found Engine Process")
             engine_monitor_thread_information.found_process = True
@@ -77,7 +79,7 @@ def engine_monitor_thread_logic() -> None:
 def start_engine_monitor_thread() -> None:
     engine_monitor_thread_information.run_engine_monitor_thread = True
     engine_monitor_thread_information.engine_monitor_thread = threading.Thread(
-        target=engine_monitor_thread_runner, daemon=True
+        target=engine_monitor_thread_runner, daemon=True,
     )
     engine_monitor_thread_information.engine_monitor_thread.start()
 

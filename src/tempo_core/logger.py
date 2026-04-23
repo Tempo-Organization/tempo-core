@@ -1,6 +1,7 @@
 import os
 import sys
 import textwrap
+from pathlib import Path
 from dataclasses import dataclass
 from datetime import datetime
 from shutil import get_terminal_size
@@ -23,19 +24,19 @@ def get_default_log_name_prefix() -> str:
 
 @dataclass
 class LogInformation:
-    log_base_dir: str
+    log_base_dir: Path
     log_prefix: str
     has_configured_logging: bool
 
 
 log_information = LogInformation(
-    log_base_dir=f"{os.getcwd()}/src",
+    log_base_dir=Path(Path.cwd() / 'src'),
     log_prefix=get_default_log_name_prefix(),
     has_configured_logging=False,
 )
 
 
-def set_log_base_dir(base_dir: str) -> None:
+def set_log_base_dir(base_dir: Path) -> None:
     log_information.log_base_dir = base_dir
 
 
@@ -44,37 +45,39 @@ def configure_logging(
 ) -> None:
     log_information.log_prefix = log_name_prefix
 
-    log_dir = os.path.join(log_information.log_base_dir)
-    if not os.path.isdir(log_dir):
-        os.makedirs(log_dir)
+    log_dir = Path(log_information.log_base_dir)
+    if not log_dir.is_dir():
+        log_dir.mkdir(parents=True, exist_ok=True)
 
     rename_latest_log(log_dir)
     log_information.has_configured_logging = True
 
 
-def rename_latest_log(log_dir: str) -> None:
-    latest_log_path = os.path.join(log_dir, f"{log_information.log_prefix}_latest.log")
-    if os.path.isfile(latest_log_path):
+def rename_latest_log(log_dir: Path) -> None:
+    latest_log_path = Path(log_dir / f"{log_information.log_prefix}_latest.log")
+    if latest_log_path.is_file():
         try:
             timestamp = datetime.now().strftime("%m_%d_%Y_%H%M_%S")
             new_name = f"{log_information.log_prefix}_{timestamp}.log"
-            new_log_path = os.path.join(log_dir, new_name)
+            new_log_path = Path(log_dir / new_name)
 
             # Ensure the new log file name is unique
             counter = 1
-            while os.path.isfile(new_log_path):
+            while new_log_path.is_file():
                 new_name = f"{log_information.log_prefix}_{timestamp}_({counter}).log"
-                new_log_path = os.path.join(log_dir, new_name)
+                new_log_path = Path(log_dir / new_name)
                 counter += 1
 
-            os.rename(latest_log_path, new_log_path)
+            latest_log_path.rename(new_log_path)
 
         except PermissionError as e:
             log_message(f"Error renaming log file: {e}")
             return
 
 
-def log_message(message: str) -> None:
+def log_message(message: str | Path) -> None:
+    if isinstance(message, Path):
+        message = str(message)
     if log_information.has_configured_logging:
         color_options = LOG_INFO.get("theme_colors", {})
         default_background_color = LOG_INFO.get("background_color", (40, 42, 54))
@@ -91,7 +94,7 @@ def log_message(message: str) -> None:
                 console.print(
                     "".ljust(terminal_width),
                     style=f"{default_text_color} on {default_background_color}",
-                    markup=False
+                    markup=False,
                 )
                 continue
 
@@ -106,28 +109,28 @@ def log_message(message: str) -> None:
                         console.print(
                             padded_line,
                             style=f"{rgb_color} on {default_background_color}",
-                            markup=False
+                            markup=False,
                         )
                         break
                 else:
                     console.print(
                         padded_line,
                         style=f"{default_text_color} on {default_background_color}",
-                        markup=False
+                        markup=False,
                     )
 
 
-        log_dir = os.path.join(log_information.log_base_dir)
-        log_path = os.path.join(log_dir, f"{log_information.log_prefix}_latest.log")
+        log_dir = Path(log_information.log_base_dir)
+        log_path = Path(log_dir / f"{log_information.log_prefix}_latest.log")
 
-        if not os.path.isdir(log_dir):
+        if not log_dir.is_dir():
             if not get_is_log_file_use_disabled():
-                os.makedirs(log_dir)
+                log_dir.mkdir(parents=True, exist_ok=True)
 
-        if not os.path.isfile(log_path):
+        if not log_path.is_file():
             try:
                 if not get_is_log_file_use_disabled():
-                    with open(log_path, "w") as log_file:
+                    with log_path.open("w") as log_file:
                         log_file.write("")
             except OSError as e:
                 error_color = LOG_INFO.get("error_color", (255, 0, 0))
@@ -135,13 +138,13 @@ def log_message(message: str) -> None:
                 console.print(
                     f"Failed to create log file: {e}",
                     style=f"{error_color} on {default_background_color}",
-                    markup=False
+                    markup=False,
                 )
                 return
 
         try:
             if not get_is_log_file_use_disabled():
-                with open(log_path, "a") as log_file:
+                with log_path.open("a") as log_file:
                     log_file.write(f"{message}\n")
         except OSError as e:
             error_color = LOG_INFO.get("error_color", (255, 0, 0))
@@ -149,5 +152,5 @@ def log_message(message: str) -> None:
             console.print(
                 f"Failed to write to log file: {e}",
                 style=f"{error_color} on {default_background_color}",
-                markup=False
+                markup=False,
             )

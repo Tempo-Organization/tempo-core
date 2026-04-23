@@ -1,7 +1,7 @@
 import os
-import pathlib
 import sys
 import shutil
+from pathlib import Path
 
 from tempo_core import (
     customization,
@@ -9,7 +9,7 @@ from tempo_core import (
     logger,
     main_logic,
     settings,
-    wrapper
+    wrapper,
 )
 from tempo_core.programs import unreal_engine
 from tempo_core import online_check
@@ -18,21 +18,24 @@ from tempo_core import online_check
 from tempo_cache import cache
 
 
-ORIGINAL_CWD = os.getcwd()
+ORIGINAL_CWD = Path.cwd()
 
 
-def get_editor_preferences_ini_path() -> pathlib.Path | None:
+def get_editor_preferences_ini_path() -> Path | None:
     unreal_engine_dir = settings.get_unreal_engine_dir()
     if unreal_engine_dir:
-        unreal_version = settings.get_unreal_engine_version(str(unreal_engine_dir))
+        unreal_version = settings.get_unreal_engine_version(unreal_engine_dir)
     else:
-        unreal_version = settings.get_unreal_engine_version(str(None))
+        unreal_version = settings.get_unreal_engine_version(None)
     win_dir_str = 'Windows'
     if unreal_version:
         if unreal_version.major_version == 5:
             win_dir_str = f'{win_dir_str}Editor'
-        uproject_dir = os.path.dirname(str(settings.get_uproject_file()))
-        return pathlib.Path(f'{uproject_dir}/Saved/Config/{win_dir_str}/EditorPerProjectUserSettings.ini')
+        uproject_file = settings.get_uproject_file()
+        if not uproject_file:
+            raise FileNotFoundError('was unable to locate your uproject file')
+        uproject_dir = uproject_file.parent
+        return Path(f'{uproject_dir}/Saved/Config/{win_dir_str}/EditorPerProjectUserSettings.ini')
     return None
 
 
@@ -76,7 +79,7 @@ def assign_chunk_id_usage_check() -> None:
     ini_path = get_editor_preferences_ini_path()
     if ini_path:
         if ini_path.exists():
-            lines = file_io.get_all_lines_in_config(str(ini_path))
+            lines = file_io.get_all_lines_in_config(ini_path)
             for line in lines:
                 if get_compare_string() == line.strip():
                     throw_avoid_assign_chunk_id_usage_warning()
@@ -90,18 +93,18 @@ def uproject_check() -> None:
         return
 
     # Try full path first
-    if os.path.isfile(uproject_file):
+    if uproject_file.is_file():
         logger.log_message("Check: Uproject file exists at provided path.")
         return
 
     # Try relative to current working directory
-    relative_path = os.path.join(os.getcwd(), uproject_file)
-    if os.path.isfile(relative_path):
+    relative_path = Path.cwd() / uproject_file
+    if relative_path.is_file():
         logger.log_message("Check: Uproject file exists at relative path.")
         return
 
     logger.log_message(
-        f"Error: Uproject file not found at '{uproject_file}' or '{relative_path}'."
+        f"Error: Uproject file not found at '{uproject_file}' or '{relative_path}'.",
     )
 
 
@@ -116,18 +119,16 @@ def unreal_engine_check() -> None:
 
     if should_do_check:
         engine_str = "UE4Editor"
-        if unreal_engine.is_game_ue5(str(settings.get_unreal_engine_dir())):
+        if unreal_engine.is_game_ue5(settings.get_unreal_engine_dir()):
             engine_str = "UnrealEditor"
-        file_io.verify_file_exists(
-            f"{settings.get_unreal_engine_dir()}/Engine/Binaries/Win64/{engine_str}.exe"
-        )
+        file_io.verify_file_exists(Path(f"{settings.get_unreal_engine_dir()}/Engine/Binaries/Win64/{engine_str}.exe"))
         logger.log_message("Check: Unreal Engine exists")
 
 
 def game_launcher_exe_override_check() -> None:
     potential_game_launcher_path = settings.get_game_launcher_exe_path()
     if potential_game_launcher_path:
-        file_io.verify_file_exists(str(potential_game_launcher_path))
+        file_io.verify_file_exists(potential_game_launcher_path)
 
 
 def git_info_check() -> None:
@@ -135,16 +136,16 @@ def git_info_check() -> None:
     if git_repo_path is None or git_repo_path == "":
         return
 
-    file_io.verify_directory_exists(str(git_repo_path))
+    file_io.verify_directory_exists(git_repo_path)
 
 
 def game_exe_check() -> None:
-    file_io.verify_file_exists(str(settings.get_game_exe_path()))
+    file_io.verify_file_exists(settings.get_game_exe_path())
 
 
 def clear_temp_dir() -> None:
     temp_dir = settings.get_temp_directory()
-    if os.path.isdir(temp_dir):
+    if temp_dir.is_dir():
         shutil.rmtree(temp_dir)
 
 
@@ -154,14 +155,14 @@ def initialization() -> None:
     if "--logs_directory" in sys.argv:
         index = sys.argv.index("--logs_directory") + 1
         if index < len(sys.argv):
-            log_dir = f"{os.path.normpath(sys.argv[index].strip("'").strip('"'))}"
+            log_dir = Path(f"{Path(sys.argv[index].strip("'").strip('"'))}")
             logger.set_log_base_dir(log_dir)
             logger.configure_logging()
         else:
-            logger.set_log_base_dir(os.path.normpath(f"{file_io.SCRIPT_DIR}/logs"))
+            logger.set_log_base_dir(Path(f"{file_io.SCRIPT_DIR}/logs"))
             logger.configure_logging()
     else:
-        logger.set_log_base_dir(os.path.normpath(f"{file_io.SCRIPT_DIR}/logs"))
+        logger.set_log_base_dir(Path(f"{file_io.SCRIPT_DIR}/logs"))
         logger.configure_logging()
     if "--log_name_prefix" in sys.argv:
         index = sys.argv.index("--log_name_prefix") + 1
@@ -222,11 +223,11 @@ def check_settings() -> None:
         index = sys.argv.index("--settings_json") + 1
         if index < len(sys.argv):
             p = sys.argv[index].strip("'").strip('"')
-            p = os.path.normpath(p)
-            if os.path.isabs(p):
+            p = Path(p)
+            if p.is_absolute():
                 settings_file = p
             else:
-                settings_file = os.path.abspath(p)
+                settings_file = p.absolute()
             return settings.load_settings(settings_file)
         logger.log_message("Error: No file path provided after --settings_json.")
         sys.exit(1)

@@ -33,11 +33,11 @@ def close_game_engine() -> None:
         == PackagingDirType.WINDOWS_NO_EDITOR
     ):
         game_engine_processes = process_management.get_processes_by_substring(
-            "UE4Editor"
+            "UE4Editor",
         )
     else:
         game_engine_processes = process_management.get_processes_by_substring(
-            "UnrealEditor"
+            "UnrealEditor",
         )
     for process_info in game_engine_processes:
         process_management.kill_process(process_info["name"])

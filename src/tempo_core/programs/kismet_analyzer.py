@@ -1,42 +1,49 @@
-import os
-import pathlib
+from pathlib import Path
 
 from tempo_core import settings, data_structures, app_runner
 
 
 def run_gen_cfg_tree_command(
-    kismet_analyzer_executable: pathlib.Path,
-    mappings_file: pathlib.Path | None,
-    asset_tree: pathlib.Path,
-    output_tree: pathlib.Path
+    kismet_analyzer_executable: Path,
+    mappings_file: Path | None,
+    asset_tree: Path,
+    output_tree: Path,
 ) -> None:
     project_name = settings.get_uproject_name()
     if not project_name:
         # add other ways of specifying the uproject name in case of not using a personal uproject or other cases alter on
         raise RuntimeError('There was not a valid uproject specified within the config file or other ways')
-    exe_path = os.path.normpath(str(kismet_analyzer_executable))
     exec_mode = data_structures.ExecutionMode.SYNC
-    args = [
-        'gen-cfg-tree',
-        '--version',
-        settings.get_unreal_engine_version(settings.get_unreal_engine_dir()).get_kismet_analyzer_unreal_version_str() # ty: ignore
-    ]
+    unreal_engine_dir = settings.get_unreal_engine_dir()
+    unreal_engine_version_str = settings.get_unreal_engine_version(unreal_engine_dir)
+    if not unreal_engine_version_str:
+        raise RuntimeError('was unable to obtain the unreal engine version string for run gen cfg tree command from kismet analyzer.')
+    kismet_version_str = unreal_engine_version_str.get_kismet_analyzer_unreal_version_str()
 
     if mappings_file:
-        args.extend([
+        args = [
+            'gen-cfg-tree',
+            '--version',
+            kismet_version_str,
             '--mappings',
-            os.path.normpath(str(mappings_file)),
-        ])
-
-    args.extend([
-        os.path.normpath(str(asset_tree)),
-        os.path.normpath(str(output_tree)),
-        project_name,
-    ])
+            mappings_file,
+            asset_tree,
+            output_tree,
+            project_name,
+        ]
+    else:
+        args = [
+            'gen-cfg-tree',
+            '--version',
+            kismet_version_str,
+            asset_tree,
+            output_tree,
+            project_name,
+        ]
 
 
     app_runner.run_app(
-        exe_path=exe_path,
+        exe_path=kismet_analyzer_executable,
         exec_mode=exec_mode,
-        args=args
+        args=args,
     )
