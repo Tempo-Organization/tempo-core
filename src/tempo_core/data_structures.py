@@ -195,7 +195,7 @@ class SigMethodType(Enum):
 
 E = TypeVar("E", bound=Enum)
 
-def get_enum_from_val(enum_cls: Type[E], value: object) -> E:
+def get_enum_from_val[E: Enum](enum_cls: Type[E], value: object) -> E:
     for entry in enum_cls:
         if entry.value == value:
             return entry
@@ -223,7 +223,7 @@ class UnrealEngineVersion:
     def get_repak_unreal_version_str(self) -> str:
         version_key = f"{self.major_version}.{self.minor_version}"
         return UnrealEngineVersion.engine_version_to_repak_version.get(
-            version_key, "Unknown"
+            version_key, "Unknown",
         )
 
     def get_jmap_unreal_version_str(self) -> str:
@@ -294,5 +294,5 @@ unreal_engine_build_targets = [
     "DebugGame",
     "Development",
     "Shipping",
-    "Test"
+    "Test",
 ]
