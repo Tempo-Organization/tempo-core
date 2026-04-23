@@ -1,8 +1,8 @@
 import os
 import sys
 import shutil
-import pathlib
 import unittest
+from pathlib import Path
 
 from tempo_core import logger
 
@@ -18,7 +18,7 @@ import tempo_core.online_check
 
 from tempo_cache import cache
 
-CWD = os.getcwd()
+CWD = Path.cwd()
 TEMP_DIR = tempo_core.settings.get_temp_directory()
 
 ZIP_STRS_TO_GAME_STRS = {
@@ -38,53 +38,50 @@ ZIP_STR = "4_27_2_Shipping_Iostore_NoSigs.zip"
 GAME_STR = "shipping_iostore_no_sigs_4_27_2"
 
 
-TESTS_DIR = os.path.normpath(f"{TEMP_DIR}/tests")
-GAME_SPECIFIC_TEST_DIR = os.path.normpath(f"{TESTS_DIR}/{GAME_STR}")
-GAME_DIR = os.path.normpath(f"{GAME_SPECIFIC_TEST_DIR}/packaged_game")
-GAME_INNER_EXE_DIR = os.path.normpath(
-    f"{GAME_SPECIFIC_TEST_DIR}/packaged_game/TempoTesting/Binaries/Win64"
-)
-GAME_INNER_EXE = os.path.normpath(
-    f"{GAME_INNER_EXE_DIR}/TempoTesting-Win64-Shipping.exe"
-)
-BASE_FILES_DIR = os.path.normpath(f"{GAME_SPECIFIC_TEST_DIR}/base_files")
-OUTPUT_DIR = os.path.normpath(f"{GAME_SPECIFIC_TEST_DIR}/output")
-UPROJECT_DIR = os.path.normpath(f"{GAME_SPECIFIC_TEST_DIR}/unreal_project")
-UPROJECT_CONTENT_DIR = os.path.normpath(f"{UPROJECT_DIR}/Content")
-UPROJECT_CONFIG_DIR = os.path.normpath(f"{UPROJECT_DIR}/Config")
-UPROJECT_FILE = os.path.normpath(f"{UPROJECT_DIR}/TempoTesting.uproject")
+TESTS_DIR = Path(f"{TEMP_DIR}/tests")
+GAME_SPECIFIC_TEST_DIR = Path(f"{TESTS_DIR}/{GAME_STR}")
+GAME_DIR = Path(f"{GAME_SPECIFIC_TEST_DIR}/packaged_game")
+GAME_INNER_EXE_DIR = Path(f"{GAME_SPECIFIC_TEST_DIR}/packaged_game/TempoTesting/Binaries/Win64")
+GAME_INNER_EXE = Path(f"{GAME_INNER_EXE_DIR}/TempoTesting-Win64-Shipping.exe")
+BASE_FILES_DIR = Path(f"{GAME_SPECIFIC_TEST_DIR}/base_files")
+OUTPUT_DIR = Path(f"{GAME_SPECIFIC_TEST_DIR}/output")
+UPROJECT_DIR = Path(f"{GAME_SPECIFIC_TEST_DIR}/unreal_project")
+UPROJECT_CONTENT_DIR = Path(f"{UPROJECT_DIR}/Content")
+UPROJECT_CONFIG_DIR = Path(f"{UPROJECT_DIR}/Config")
+UPROJECT_FILE = Path(f"{UPROJECT_DIR}/TempoTesting.uproject")
+
 logger.log_message(f'uproject_file: {UPROJECT_FILE}')
 
 
-os.makedirs(OUTPUT_DIR, exist_ok=True)
-os.makedirs(GAME_DIR, exist_ok=True)
-os.makedirs(BASE_FILES_DIR, exist_ok=True)
-os.makedirs(UPROJECT_CONTENT_DIR, exist_ok=True)
-os.makedirs(UPROJECT_CONFIG_DIR, exist_ok=True)
-os.makedirs(GAME_SPECIFIC_TEST_DIR, exist_ok=True)
+OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+GAME_DIR.mkdir(parents=True, exist_ok=True)
+BASE_FILES_DIR.mkdir(parents=True, exist_ok=True)
+UPROJECT_CONTENT_DIR.mkdir(parents=True, exist_ok=True)
+UPROJECT_CONFIG_DIR.mkdir(parents=True, exist_ok=True)
+GAME_SPECIFIC_TEST_DIR.mkdir(parents=True, exist_ok=True)
 
-SETTINGS_FILE = os.path.normpath(f"{CWD}/tests/{GAME_STR}_tempo.json")
+SETTINGS_FILE = Path(f"{CWD}/tests/{GAME_STR}_tempo.json")
 
 
-def cache_files() -> list[str]:
+def cache_files() -> list[Path]:
     cache.logging_function = logger.log_message
     cache._cache_dir = tempo_core.settings.settings_information.settings.get("cache", {}).get("cache_dir", None)
-    TEMPO_CACHE_DIR = cache.get_cache_dir()
-    TESTS_CACHE_DIR = os.path.normpath(f"{TEMPO_CACHE_DIR}/testing")
-    UE4SS_ZIP_CACHE_DIR = os.path.normpath(f"{TESTS_CACHE_DIR}/ue4ss_zip")
-    PACKAGED_GAMES_CACHE_DIR = os.path.normpath(f"{TESTS_CACHE_DIR}/packaged_games")
-    UPROJECT_FILES_CACHE_DIR = os.path.normpath(f"{TESTS_CACHE_DIR}/uproject_files")
+    tempo_cache_dir = cache.get_cache_dir()
+    tests_cache_dir = Path(f"{tempo_cache_dir}/testing")
+    ue4ss_zip_cache_dir = Path(f"{tests_cache_dir}/ue4ss_zip")
+    packaged_games_cache_dir = Path(f"{tests_cache_dir}/packaged_games")
+    uproject_files_cache_dir = Path(f"{tests_cache_dir}/uproject_files")
 
-    os.makedirs(TESTS_CACHE_DIR, exist_ok=True)
-    os.makedirs(PACKAGED_GAMES_CACHE_DIR, exist_ok=True)
-    os.makedirs(UPROJECT_FILES_CACHE_DIR, exist_ok=True)
-    os.makedirs(UE4SS_ZIP_CACHE_DIR, exist_ok=True)
+    tests_cache_dir.mkdir(parents=True, exist_ok=True)
+    packaged_games_cache_dir.mkdir(parents=True, exist_ok=True)
+    uproject_files_cache_dir.mkdir(parents=True, exist_ok=True)
+    ue4ss_zip_cache_dir.mkdir(parents=True, exist_ok=True)
 
     for game_zip in ZIP_STRS_TO_GAME_STRS.keys():
         game_url = f"https://github.com/Tempo-Organization/tempo-games/releases/download/1.0.0/{game_zip}"
-        zip_path = os.path.normpath(f"{PACKAGED_GAMES_CACHE_DIR}/{game_zip}")
+        zip_path = Path(f"{packaged_games_cache_dir}/{game_zip}")
         # add some verification to make sure the zip was valid here
-        if not os.path.isfile(zip_path):
+        if not zip_path.is_file():
             logger.log_message("the following game zip is being downloaded/cached. Please wait...")
             tempo_core.file_io.download_file(game_url, zip_path)
 
@@ -102,57 +99,55 @@ def cache_files() -> list[str]:
     ]
 
     for template_file in template_files:
-        if not os.path.isfile(
-            os.path.normpath(f"{UPROJECT_FILES_CACHE_DIR}/{template_file}")
-        ):
+        if not Path(f"{uproject_files_cache_dir}/{template_file}").is_file():
             tempo_core.programs.git.download_files_from_github_repo(
                 repo_url="https://github.com/Tempo-Organization/tempo-tests",
                 repo_branch="main",
                 file_paths=[template_file],
-                output_directory=UPROJECT_FILES_CACHE_DIR,
+                output_directory=uproject_files_cache_dir,
             )
-    return [UPROJECT_FILES_CACHE_DIR, PACKAGED_GAMES_CACHE_DIR, UE4SS_ZIP_CACHE_DIR]
+    return [uproject_files_cache_dir, packaged_games_cache_dir, ue4ss_zip_cache_dir]
 
 
 def init_tempo_core() -> None:
     logger.log_message("started tempo core init")
     sys.argv.append("--settings_json")
-    sys.argv.append(SETTINGS_FILE)
+    sys.argv.append(str(SETTINGS_FILE))
 
     sys.argv.append("--logs_directory")
-    sys.argv.append(os.path.normpath(f"{TEMP_DIR}/logs"))
+    sys.argv.append((f"{TEMP_DIR}/logs"))
 
     tempo_core.main_logic.generate_uproject(
-        project_file=UPROJECT_FILE, ignore_safety_checks=True
+        project_file=UPROJECT_FILE, ignore_safety_checks=True,
     )
 
     tempo_core.initialization.initialization()
 
     tempo_core.main_logic.generate_uproject(
-        project_file=UPROJECT_FILE, ignore_safety_checks=True
+        project_file=UPROJECT_FILE, ignore_safety_checks=True,
     )
 
 
-def copy_files_from_cache(cache_info: list[str]) -> None:
+def copy_files_from_cache(cache_info: list[Path]) -> None:
     shutil.copytree(
-        os.path.normpath(f"{cache_info[0]}/Uprojects/4_11_2/ReusableMods/Content"),
+        Path(f"{cache_info[0]}/Uprojects/4_11_2/ReusableMods/Content"),
         UPROJECT_CONTENT_DIR,
         dirs_exist_ok=True,
     )
 
     shutil.copytree(
-        os.path.normpath(f"{cache_info[0]}/Uprojects/4_27_2/ReusableMods/Content"),
+        Path(f"{cache_info[0]}/Uprojects/4_27_2/ReusableMods/Content"),
         UPROJECT_CONTENT_DIR,
         dirs_exist_ok=True,
     )
 
     tempo_core.file_io.unzip_zip(
-        zip_path=os.path.normpath(f"{cache_info[1]}/{ZIP_STR}"),
+        zip_path=Path(f"{cache_info[1]}/{ZIP_STR}"),
         output_location=GAME_DIR,
     )
 
 
-def init_tests() -> list[str]:
+def init_tests() -> list[Path]:
     init_tempo_core()
 
     cache_info = cache_files()
@@ -160,8 +155,8 @@ def init_tests() -> list[str]:
     return cache_info
 
 
-def install_ue4ss(cache_dir: str, game_exe_directory: str) -> None:
-    ue4ss_zip_path = pathlib.Path(f"{cache_dir}/ue4ss.zip")
+def install_ue4ss(cache_dir: Path, game_exe_directory: Path) -> None:
+    ue4ss_zip_path = Path(f"{cache_dir}/ue4ss.zip")
 
     if not ue4ss_zip_path.exists():
         if not tempo_core.online_check.is_online:
@@ -185,16 +180,16 @@ def install_ue4ss(cache_dir: str, game_exe_directory: str) -> None:
         )
         if not final_download_link:
             raise RuntimeError(
-                f'Unable to find a compatible UE4SS release for tag "{tag}"'
+                f'Unable to find a compatible UE4SS release for tag "{tag}"',
             )
 
         ue4ss_installer_core.file_io.download_file(
             final_download_link,
-            os.path.normpath(f"{cache_dir}/ue4ss.zip"),
+            Path(f"{cache_dir}/ue4ss.zip"),
         )
 
     ue4ss_installer_core.file_io.unzip_zip(
-        ue4ss_zip_path, pathlib.Path(game_exe_directory)
+        ue4ss_zip_path, Path(game_exe_directory),
     )
 
 
@@ -204,7 +199,7 @@ class TestShippingIostoreNoSigsUE4(unittest.TestCase):
         shutil.rmtree(TEMP_DIR)
         cache_info = init_tests()
         install_ue4ss(cache_info[2], GAME_INNER_EXE_DIR)
-        os.makedirs(UPROJECT_CONFIG_DIR, exist_ok=True)
+        UPROJECT_CONFIG_DIR.mkdir(parents=True, exist_ok=True)
 
     # def tearDown(self):
     #     return super().tearDown()
@@ -263,22 +258,22 @@ class TestShippingIostoreNoSigsUE4(unittest.TestCase):
     #         use_symlinks=False,
     #     )
 
-    def test_0006_retoc(self) -> None:
-        tempo_core.main_logic.full_run(
-            input_mod_names=["RetocMadeExampleMod"],
+    # def test_0006_retoc(self) -> None:
+    #     tempo_core.main_logic.full_run(
+    #         input_mod_names=["RetocMadeExampleMod"],
+    #         toggle_engine=False,
+    #         base_files_directory=BASE_FILES_DIR,
+    #         output_directory=OUTPUT_DIR,
+    #         use_symlinks=False,
+    #     )
+
+    def test_0007_all(self) -> None:
+        tempo_core.main_logic.full_run_all(
             toggle_engine=False,
             base_files_directory=BASE_FILES_DIR,
             output_directory=OUTPUT_DIR,
             use_symlinks=False,
         )
-
-    # def test_0007_all(self):
-    #     tempo_core.main_logic.full_run_all(
-    #         toggle_engine=False,
-    #         base_files_directory=BASE_FILES_DIR,
-    #         output_directory=OUTPUT_DIR,
-    #         use_symlinks=False
-    #     )
 
     # def test_0007_all(self):
     #     tempo_core.main_logic.test_mods_all(
