@@ -1,5 +1,5 @@
 import re
-import pathlib
+from pathlib import Path
 import subprocess
 
 from tempo_core import settings, logger
@@ -10,8 +10,8 @@ from tempo_cache_tools import patternsleuth
 AES_KEY_REGEX = re.compile(r'\b0x[0-9a-fA-F]{64}\b')
 
 def run_patternsleuth_aes_key_scan_command(
-    game_exe_path: pathlib.Path | None = None,
-    patternsleuth_exe: pathlib.Path | None = None,
+    game_exe_path: Path | None = None,
+    patternsleuth_exe: Path | None = None,
 ) -> list[str]:
 
     if game_exe_path is None:
@@ -19,13 +19,13 @@ def run_patternsleuth_aes_key_scan_command(
 
     if not game_exe_path:
         raise RuntimeError(
-            'There was no game exe path provided, so we cannot run the AES key scan.'
+            'There was no game exe path provided, so we cannot run the AES key scan.',
         )
 
-    game_exe_path = pathlib.Path(game_exe_path)
+    game_exe_path = Path(game_exe_path)
 
     if patternsleuth_exe is None:
-        patternsleuth_exe = pathlib.Path(patternsleuth.PatternsleuthToolInfo().get_executable_path())
+        patternsleuth_exe = Path(patternsleuth.PatternsleuthToolInfo().get_executable_path())
 
     if not game_exe_path.exists():
         raise FileNotFoundError(f'Game exe not found: {game_exe_path}')
@@ -62,7 +62,7 @@ def run_patternsleuth_aes_key_scan_command(
     return keys
 
 
-def parse_engine_version(output: str) -> dict | None:
+def parse_engine_version(output: str) -> dict[str, int] | None:
     """
     Extract EngineVersion major/minor from PatternSleuth output.
     Returns:
@@ -80,8 +80,8 @@ def parse_engine_version(output: str) -> dict | None:
 
 
 def run_patternsleuth_engine_version_scan_command(
-    game_exe_path: pathlib.Path | None = None,
-    patternsleuth_exe: pathlib.Path | None = None,
+    game_exe_path: Path | None = None,
+    patternsleuth_exe: Path | None = None,
 ) -> dict | None:
 
     if game_exe_path is None:
@@ -89,13 +89,13 @@ def run_patternsleuth_engine_version_scan_command(
 
     if not game_exe_path:
         raise RuntimeError(
-            'There was no game exe path provided, so we cannot run the AES key scan.'
+            'There was no game exe path provided, so we cannot run the AES key scan.',
         )
 
-    game_exe_path = pathlib.Path(game_exe_path)
+    game_exe_path = Path(game_exe_path)
 
     if patternsleuth_exe is None:
-        patternsleuth_exe = pathlib.Path(patternsleuth.PatternsleuthToolInfo().get_executable_path())
+        patternsleuth_exe = Path(patternsleuth.PatternsleuthToolInfo().get_executable_path())
 
     if not game_exe_path.exists():
         raise FileNotFoundError(f'Game exe not found: {game_exe_path}')
@@ -144,8 +144,8 @@ def parse_build_configuration(output: str) -> str | None:
 
 
 def run_patternsleuth_build_configuration_scan_command(
-    game_exe_path: pathlib.Path | None = None,
-    patternsleuth_exe: pathlib.Path | None = None,
+    game_exe_path: Path | None = None,
+    patternsleuth_exe: Path | None = None,
 ) -> str:
 
     if game_exe_path is None:
@@ -153,13 +153,13 @@ def run_patternsleuth_build_configuration_scan_command(
 
     if not game_exe_path:
         raise RuntimeError(
-            'There was no game exe path provided, so we cannot run the build configuration scan.'
+            'There was no game exe path provided, so we cannot run the build configuration scan.',
         )
 
-    game_exe_path = pathlib.Path(game_exe_path)
+    game_exe_path = Path(game_exe_path)
 
     if patternsleuth_exe is None:
-        patternsleuth_exe = pathlib.Path(patternsleuth.PatternsleuthToolInfo().get_executable_path())
+        patternsleuth_exe = Path(patternsleuth.PatternsleuthToolInfo().get_executable_path())
 
     if not game_exe_path.exists():
         raise FileNotFoundError(f'Game exe not found: {game_exe_path}')
@@ -189,7 +189,7 @@ def run_patternsleuth_build_configuration_scan_command(
 
     if not build_configuration:
         raise RuntimeError(
-            f'Parsing build configuration with PatternSleuth failed.\n\nOutput:\n{output}'
+            f'Parsing build configuration with PatternSleuth failed.\n\nOutput:\n{output}',
         )
 
     logger.log_message(f'Build Configuration: {build_configuration}')
