@@ -241,7 +241,7 @@ def zip_directory_tree(input_dir: Path, output_dir: Path, zip_name: str = "archi
             if file_path == zip_path:
                 continue
 
-            arcname = file_path.relative_to(input_dir)
+            arcname = os.path.relpath(file_path, input_dir)
             zipf.write(file_path, arcname)
 
     logger.log_message(f"Directory tree zipped successfully: {zip_path}")
