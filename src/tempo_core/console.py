@@ -23,5 +23,5 @@ def get_use_auto_console_highlight() -> bool:
 
 
 console = Console(
-    color_system=get_color_system_type(), highlight=get_use_auto_console_highlight()
+    color_system=get_color_system_type(), highlight=get_use_auto_console_highlight(),
 )
