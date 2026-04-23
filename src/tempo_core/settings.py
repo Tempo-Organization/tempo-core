@@ -336,9 +336,7 @@ def get_persistent_mod_dir(mod_name: str) -> Path:
     mod_info = utilities.get_mods_info_dict_from_mod_name(mod_name)
     dir_override = mod_info.get("persistent_files_directory", None)
     if dir_override and not dir_override.absolute():
-        dir_override = Path(
-            f"{settings_information.settings_json_dir.path}/{dir_override}",
-        )
+        dir_override = Path(settings_information.settings_json_dir.path / dir_override)
     final_dir = dir_override or default_dir
     if isinstance(final_dir, Path):
         final_dir.mkdir(parents=True, exist_ok=True)
