@@ -130,13 +130,13 @@ def init_tempo_core() -> None:
 
 def copy_files_from_cache(cache_info: list[Path]) -> None:
     shutil.copytree(
-        Path(f"{cache_info[0]}/Uprojects/4_11_2/ReusableMods/Content"),
+        Path(cache_info[0] / 'Uprojects/4_11_2/ReusableMods/Content'),
         UPROJECT_CONTENT_DIR,
         dirs_exist_ok=True,
     )
 
     shutil.copytree(
-        Path(f"{cache_info[0]}/Uprojects/4_27_2/ReusableMods/Content"),
+        Path(cache_info[0] / 'Uprojects/4_27_2/ReusableMods/Content'),
         UPROJECT_CONTENT_DIR,
         dirs_exist_ok=True,
     )
@@ -158,7 +158,7 @@ def init_tests() -> list[Path]:
 def install_ue4ss(cache_dir: Path, game_exe_directory: Path) -> None:
     ue4ss_zip_path = Path(f"{cache_dir}/ue4ss.zip")
 
-    if not ue4ss_zip_path.exists():
+    if not ue4ss_zip_path.is_file():
         if not tempo_core.online_check.is_online:
             raise RuntimeError('You do not have ue4ss downloaded to cache, and cannot download because you are not connected to the web.')
 
