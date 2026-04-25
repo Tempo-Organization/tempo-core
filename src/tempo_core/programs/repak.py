@@ -3,9 +3,9 @@ import sys
 from enum import Enum
 from pathlib import Path
 
-from tempo_core import settings, app_runner, data_structures
+from tempo_core import settings, app_runner, data_structures, manager
 
-from tempo_cache_tools import repak
+from tempo_binary_tools import repak
 
 
 class RepakCompressionType(Enum):
@@ -21,8 +21,9 @@ class RepakCompressionType(Enum):
 
 
 def run_repak_pack_command(input_directory: Path, output_pak_file: Path) -> None:
-    repak_info = repak.RepakToolInfo()
-    repak_path = repak_info.get_executable_path()
+    tool_info = repak.RepakToolInfo(cache=manager.tools_cache)
+    tool_info.ensure_tool_installed()
+    repak_path = tool_info.get_executable_path()
     args = [
         'pack',
         f'"{input_directory}"',

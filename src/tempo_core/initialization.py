@@ -15,7 +15,7 @@ from tempo_core.programs import unreal_engine
 from tempo_core import online_check
 # from tempo_core.threads import input_monitor
 
-from tempo_cache import cache
+from tempo_binary_tool_manager import manager
 
 
 ORIGINAL_CWD = Path.cwd()
@@ -203,14 +203,6 @@ def initialization() -> None:
         logger.log_message("Check: Passed all init checks")
 
     clear_temp_dir()
-
-    cache.logging_function = logger.log_message
-    cache._cache_dir = settings.settings_information.settings.get("cache", {}).get("cache_dir", None)
-    cache.SCRIPT_DIR = file_io.SCRIPT_DIR
-    cache.is_online = online_check.is_online
-    cache.has_inited = True
-    cache.settings_information = settings.settings_information
-    cache.init_cache()
 
 
 def check_generate_wrapper() -> None:
