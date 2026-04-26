@@ -19,11 +19,12 @@ from tempo_core import (
     settings,
     utilities,
     online_check,
+    manager,
 )
 from tempo_core.programs import unreal_engine
 from tempo_core.threads import constant, game_monitor
 
-from tempo_cache_tools import spaghetti, stove, uasset_gui, umodel, fmodel, kismet_analyzer
+from tempo_binary_tools import spaghetti, stove, uasset_gui, umodel, fmodel, kismet_analyzer
 
 
 @hook_states.hook_state_decorator(
@@ -114,19 +115,25 @@ def full_run_all(
 
 
 def install_spaghetti(run_after_install: bool) -> None:
-    tool_path = spaghetti.SpaghettiToolInfo().get_executable_path()
+    tool_info = spaghetti.SpaghettiToolInfo(cache=manager.tools_cache)
+    tool_info.ensure_tool_installed()
+    tool_path = tool_info.get_executable_path()
     if run_after_install:
         app_runner.run_app(tool_path)
 
 
 def install_stove(run_after_install: bool) -> None:
-    tool_path = stove.StoveToolInfo().get_executable_path()
+    tool_info = stove.StoveToolInfo(cache=manager.tools_cache)
+    tool_info.ensure_tool_installed()
+    tool_path = tool_info.get_executable_path()
     if run_after_install:
         app_runner.run_app(tool_path)
 
 
 def install_kismet_analyzer(run_after_install: bool) -> None:
-    tool_path = kismet_analyzer.KismetAnalyzerToolInfo().get_executable_path()
+    tool_info = kismet_analyzer.KismetAnalyzerToolInfo(cache=manager.tools_cache)
+    tool_info.ensure_tool_installed()
+    tool_path = tool_info.get_executable_path()
     if run_after_install:
         subprocess.Popen(
             f'start cmd /k "{tool_path}"" -h',
@@ -136,7 +143,9 @@ def install_kismet_analyzer(run_after_install: bool) -> None:
 
 
 def install_uasset_gui(run_after_install: bool) -> None:
-    tool_path = uasset_gui.UassetGuiToolInfo().get_executable_path()
+    tool_info = uasset_gui.UassetGuiToolInfo(cache=manager.tools_cache)
+    tool_info.ensure_tool_installed()
+    tool_path = tool_info.get_executable_path()
     if run_after_install:
         app_runner.run_app(tool_path)
 
@@ -171,13 +180,17 @@ def close_engine() -> None:
 
 
 def install_umodel(run_after_install: bool) -> None:
-    tool_path = umodel.UmodelToolInfo().get_executable_path()
+    tool_info = umodel.UmodelToolInfo(cache=manager.tools_cache)
+    tool_info.ensure_tool_installed()
+    tool_path = tool_info.get_executable_path()
     if run_after_install:
         app_runner.run_app(tool_path)
 
 
 def install_fmodel(run_after_install: bool) -> None:
-    tool_path = fmodel.FmodelToolInfo().get_executable_path()
+    tool_info = fmodel.FmodelToolInfo(cache=manager.tools_cache)
+    tool_info.ensure_tool_installed()
+    tool_path = tool_info.get_executable_path()
     if run_after_install:
         app_runner.run_app(tool_path)
 

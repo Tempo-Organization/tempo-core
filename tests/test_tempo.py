@@ -15,8 +15,9 @@ import tempo_core.main_logic
 import tempo_core.programs.git
 import tempo_core.initialization
 import tempo_core.online_check
+import tempo_core.manager
 
-from tempo_cache import cache
+from tempo_binary_tool_manager import manager
 
 CWD = Path.cwd()
 TEMP_DIR = tempo_core.settings.get_temp_directory()
@@ -64,10 +65,7 @@ SETTINGS_FILE = Path(f"{CWD}/tests/{GAME_STR}_tempo.json")
 
 
 def cache_files() -> list[Path]:
-    cache.logging_function = logger.log_message
-    cache._cache_dir = tempo_core.settings.settings_information.settings.get("cache", {}).get("cache_dir", None)
-    tempo_cache_dir = cache.get_cache_dir()
-    tests_cache_dir = Path(f"{tempo_cache_dir}/testing")
+    tests_cache_dir = Path(f"{tempo_core.manager.tools_cache.get_cache_dir()}/testing")
     ue4ss_zip_cache_dir = Path(f"{tests_cache_dir}/ue4ss_zip")
     packaged_games_cache_dir = Path(f"{tests_cache_dir}/packaged_games")
     uproject_files_cache_dir = Path(f"{tests_cache_dir}/uproject_files")

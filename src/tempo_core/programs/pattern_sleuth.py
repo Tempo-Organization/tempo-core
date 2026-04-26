@@ -2,9 +2,9 @@ import re
 from pathlib import Path
 import subprocess
 
-from tempo_core import settings, logger
+from tempo_core import settings, logger, manager
 
-from tempo_cache_tools import patternsleuth
+from tempo_binary_tools import patternsleuth
 
 
 AES_KEY_REGEX = re.compile(r'\b0x[0-9a-fA-F]{64}\b')
@@ -25,7 +25,9 @@ def run_patternsleuth_aes_key_scan_command(
     game_exe_path = Path(game_exe_path)
 
     if patternsleuth_exe is None:
-        patternsleuth_exe = Path(patternsleuth.PatternsleuthToolInfo().get_executable_path())
+        tool_info = patternsleuth.PatternsleuthToolInfo(cache=manager.tools_cache)
+        tool_info.ensure_tool_installed()
+        patternsleuth_exe = Path(tool_info.get_executable_path())
 
     if not game_exe_path.exists():
         raise FileNotFoundError(f'Game exe not found: {game_exe_path}')
@@ -95,7 +97,9 @@ def run_patternsleuth_engine_version_scan_command(
     game_exe_path = Path(game_exe_path)
 
     if patternsleuth_exe is None:
-        patternsleuth_exe = Path(patternsleuth.PatternsleuthToolInfo().get_executable_path())
+        tool_info = patternsleuth.PatternsleuthToolInfo(cache=manager.tools_cache)
+        tool_info.ensure_tool_installed()
+        patternsleuth_exe = Path(tool_info.get_executable_path())
 
     if not game_exe_path.exists():
         raise FileNotFoundError(f'Game exe not found: {game_exe_path}')
@@ -159,7 +163,9 @@ def run_patternsleuth_build_configuration_scan_command(
     game_exe_path = Path(game_exe_path)
 
     if patternsleuth_exe is None:
-        patternsleuth_exe = Path(patternsleuth.PatternsleuthToolInfo().get_executable_path())
+        tool_info = patternsleuth.PatternsleuthToolInfo(cache=manager.tools_cache)
+        tool_info.ensure_tool_installed()
+        patternsleuth_exe = Path(tool_info.get_executable_path())
 
     if not game_exe_path.exists():
         raise FileNotFoundError(f'Game exe not found: {game_exe_path}')

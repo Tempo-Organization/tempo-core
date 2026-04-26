@@ -22,8 +22,8 @@ dependencies = [
     "requests>=2.32.4",
     "rich>=14.0.0",
     "screeninfo>=0.8.1",
-    "tempo-cache",
-    "tempo-cache-tools",
+    "tempo-binary-tool-manager",
+    "tempo-binary-tools",
     "tempo-settings",
     "ue4ss-installer-core",
 ]
@@ -64,8 +64,8 @@ update_changelog_on_bump = true
 [tool.uv.sources]
 ue4ss-installer-core = { git = "https://www.github.com/Tempo-Organization/ue4ss-installer-core" }
 tempo-settings = { git = "https://www.github.com/Tempo-Organization/tempo-settings" }
-tempo-cache-tools = { git = "https://www.github.com/Tempo-Organization/tempo-cache-tools" }
-tempo-cache = { git = "https://www.github.com/Tempo-Organization/tempo-cache" }
+tempo-binary-tool-manager = { git = "https://www.github.com/Tempo-Organization/tempo-binary-tool-manager" }
+tempo-binary-tools = { git = "https://www.github.com/Tempo-Organization/tempo-binary-tools" }
 
 [tool.ruff]
 exclude = [

@@ -4,9 +4,9 @@ from pathlib import Path
 import subprocess
 
 from tempo_core.programs import unreal_pak
-from tempo_core import settings, data_structures, utilities, logger, app_runner
+from tempo_core import settings, data_structures, utilities, logger, app_runner, manager
 
-from tempo_cache_tools import retoc
+from tempo_binary_tools import retoc
 
 
 def run_retoc_to_zen_command(
@@ -19,8 +19,12 @@ def run_retoc_to_zen_command(
 
     logger.log_message(unreal_version.get_retoc_unreal_version_str())
 
+    tool_info = retoc.RetocToolInfo(cache=manager.tools_cache)
+    tool_info.ensure_tool_installed()
+    tool_path = tool_info.get_executable_path()
+
     command = [
-        retoc.RetocToolInfo().get_executable_path(),
+        tool_path,
         "to-zen",
         input_directory,
         output_utoc,
