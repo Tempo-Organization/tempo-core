@@ -774,7 +774,7 @@ dependencies = [
 [[package]]
 name = "tempo-binary-tools"
 version = "0.1.0"
-source = { git = "https://www.github.com/Tempo-Organization/tempo-binary-tools#815f680933e3a5505bfe1eda8d726ccd387944a3" }
+source = { git = "https://www.github.com/Tempo-Organization/tempo-binary-tools#2460793f32261db3b540e8f585057fe7e01c3c1e" }
 dependencies = [
     { name = "packaging" },
     { name = "tempo-binary-tool-manager" },
