@@ -1,5 +1,6 @@
 import itertools
 import winreg
+import pathlib
 
 
 def get_unreal_installs_from_registry() -> dict[str, str]:
@@ -37,7 +38,7 @@ def get_unreal_installs_from_registry() -> dict[str, str]:
     try:
         with winreg.OpenKey(
             winreg.HKEY_CURRENT_USER,
-            r"SOFTWARE\Epic Games\Unreal Engine\Builds"
+            r"SOFTWARE\Epic Games\Unreal Engine\Builds",
         ) as root:
             i = 0
             while True:
@@ -58,10 +59,10 @@ import winreg
 
 
 def remove_invalid_unreal_engine_registry_entries() -> None:
-    def is_valid_install(path: str) -> bool:
-        if not os.path.isdir(path):
+    def is_valid_install(path: pathlib.Path) -> bool:
+        if not path.is_dir():
             return False
-        for _, _, files in os.walk(path):
+        for _, _, files in path.walk():
             if any(f.lower().endswith(".exe") for f in files):
                 return True
         return False

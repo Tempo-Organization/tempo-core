@@ -38,7 +38,7 @@ def exec_events_checks(hook_state_type: HookStateType) -> None:
             exe_exec_mode = get_enum_from_val(
                 ExecutionMode, exec_event["execution_mode"],
             )
-            if not exe_exec_mode:
+            if exe_exec_mode:
                 app_runner.run_app(exe_path, exe_exec_mode, exe_args)
             else:
                 exe_exec_error = "exe_exec_mode returned none"

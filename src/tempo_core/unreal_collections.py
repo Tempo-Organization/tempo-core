@@ -1050,12 +1050,12 @@ def get_unreal_collection_paths_from_mod_name(mod_name: str) -> list[Path]:
 
 
 def add_collection_to_mod_entry(
-    collection: UnrealCollection, mod_name: str, settings_json: Path,
+    collection: UnrealCollection, mod_name: str, config_file: Path,
 ) -> None:
     try:
         collection_path = str(collection.file_system_path)
 
-        with Path.open(settings_json, encoding="utf-8") as file:
+        with Path.open(config_file, encoding="utf-8") as file:
             settings = json.load(file)
 
         mod_entry = utilities.get_mods_info_dict_from_mod_name(mod_name)
@@ -1071,7 +1071,7 @@ def add_collection_to_mod_entry(
                         settings["mods_info"][i] = mod_entry
                         break
 
-                with Path.open(settings_json, "w", encoding="utf-8") as file:
+                with Path.open(config_file, "w", encoding="utf-8") as file:
                     updated_json_str = json.dumps(
                         settings, indent=4, ensure_ascii=False, separators=(",", ": "),
                     )
@@ -1088,16 +1088,16 @@ def add_collection_to_mod_entry(
 
     except json.JSONDecodeError:
         logger.log_message(
-            f"Error decoding JSON from file '{settings_json}'. Please check the file format.",
+            f"Error decoding JSON from file '{config_file}'. Please check the file format.",
         )
 
 
 def remove_collection_from_mod_entry(
-    collection: UnrealCollection, mod_name: str, settings_json: Path,
+    collection: UnrealCollection, mod_name: str, config_file: Path,
 ) -> None:
     collection_path = str(collection.file_system_path)
 
-    with Path.open(settings_json, encoding="utf-8") as file:
+    with Path.open(config_file, encoding="utf-8") as file:
         settings = json.load(file)
 
     mod_entry = utilities.get_mods_info_dict_from_mod_name(mod_name)
@@ -1117,7 +1117,7 @@ def remove_collection_from_mod_entry(
                 settings["mods_info"][i] = mod_entry
                 break
 
-        with Path.open(settings_json, "w", encoding="utf-8") as file:
+        with Path.open(config_file, "w", encoding="utf-8") as file:
             updated_json_str = json.dumps(
                 settings, indent=4, ensure_ascii=False, separators=(",", ": "),
             )
@@ -1130,14 +1130,14 @@ def remove_collection_from_mod_entry(
 
 
 def add_collections_to_mod_entry(
-    collections: list[UnrealCollection], mod_name: str, settings_json: Path,
+    collections: list[UnrealCollection], mod_name: str, config_file: Path,
 ) -> None:
     for collection in collections:
-        add_collection_to_mod_entry(collection, mod_name, settings_json)
+        add_collection_to_mod_entry(collection, mod_name, config_file)
 
 
 def remove_collections_from_mod_entry(
-    collections: list[UnrealCollection], mod_name: str, settings_json: Path,
+    collections: list[UnrealCollection], mod_name: str, config_file: Path,
 ) -> None:
     for collection in collections:
-        remove_collection_from_mod_entry(collection, mod_name, settings_json)
+        remove_collection_from_mod_entry(collection, mod_name, config_file)

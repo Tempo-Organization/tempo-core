@@ -16,17 +16,17 @@ from tempo_settings.tempo_settings import SettingSpecificInfo, SettingsInformati
 settings_information = SettingsInformation(
     settings={},
     init_settings_done=False,
-    settings_json_dir=SettingSpecificInfo(None, None),
+    config_file_dir=SettingSpecificInfo(None, None),
     program_dir=SettingSpecificInfo(None, None),
     mod_names=[],
-    settings_json=SettingSpecificInfo(None, None),
+    config_file=SettingSpecificInfo(None, None),
 )
 
 
-def init_settings(settings_json_path: Path) -> None:
-    with settings_json_path.open("r") as file:
+def init_settings(config_file_path: Path) -> None:
+    with config_file_path.open("r") as file:
         raw_settings = json.load(file)
-    # raw_settings = Dynaconf(settings_files=[settings_json_path])
+    # raw_settings = Dynaconf(settings_files=[config_file_path])
     # settings_information.settings = configs.DynamicSettings(raw_settings)
     settings_information.settings = raw_settings
     settings = settings_information.settings
@@ -65,18 +65,18 @@ def init_settings(settings_json_path: Path) -> None:
         else:
             raise NotImplementedError(f"Unsupported OS: {current_os}")
     settings_information.init_settings_done = True
-    settings_information.settings_json = SettingSpecificInfo(
-        path=Path(settings_json_path), origin=SettingsOrigin.COMMAND_LINE,
+    settings_information.config_file = SettingSpecificInfo(
+        path=Path(config_file_path), origin=SettingsOrigin.COMMAND_LINE,
     )
-    settings_information.settings_json_dir = SettingSpecificInfo(
-        path=Path(settings_json_path).parent, origin=SettingsOrigin.COMMAND_LINE,
+    settings_information.config_file_dir = SettingSpecificInfo(
+        path=Path(config_file_path).parent, origin=SettingsOrigin.COMMAND_LINE,
     )
 
 
-def load_settings(settings_json: Path) -> None:
-    logger.log_message(f"settings json: {settings_json}")
+def load_settings(config_file: Path) -> None:
+    logger.log_message(f"settings json: {config_file}")
     if not settings_information.init_settings_done:
-        init_settings(Path(settings_json))
+        init_settings(Path(config_file))
 
 
 def get_unreal_engine_dir() -> Path | None:
@@ -85,7 +85,7 @@ def get_unreal_engine_dir() -> Path | None:
     )
     if unreal_engine_directory and not unreal_engine_directory.is_absolute():
         unreal_engine_directory = Path(
-            str(settings_information.settings_json_dir.path), unreal_engine_directory,
+            str(settings_information.config_file_dir.path), unreal_engine_directory,
         )
     else:
         unreal_version = get_unreal_engine_version(engine_path=None)
@@ -160,7 +160,7 @@ def get_game_exe_path() -> Path | None:
 ))
     if game_exe_path and not game_exe_path.is_absolute():
         game_exe_path = Path(
-            str(settings_information.settings_json_dir.path), game_exe_path,
+            str(settings_information.config_file_dir.path), game_exe_path,
         )
     if game_exe_path:
         return game_exe_path
@@ -174,7 +174,7 @@ def get_git_info_repo_path() -> Path | None:
 
     if not raw_path.is_absolute():
         return Path(
-            str(settings_information.settings_json_dir.path), raw_path,
+            str(settings_information.config_file_dir.path), raw_path,
         ).resolve()
     else:
         return raw_path.resolve()
@@ -186,7 +186,7 @@ def get_game_launcher_exe_path() -> Path | None:
     )
     if game_launcher_exe_path and not game_launcher_exe_path.is_absolute():
         game_launcher_exe_path = Path(
-            str(settings_information.settings_json_dir.path), game_launcher_exe_path,
+            str(settings_information.config_file_dir.path), game_launcher_exe_path,
         )
     if game_launcher_exe_path:
         return game_launcher_exe_path
@@ -195,7 +195,7 @@ def get_game_launcher_exe_path() -> Path | None:
 
 def get_uproject_file() -> Path | None:
     raw_path = Path(settings_information.settings.get("engine_info", {}).get("unreal_project_file", None))
-    settings_dir = settings_information.settings_json_dir.path
+    settings_dir = settings_information.config_file_dir.path
 
     if not settings_dir:
         raise RuntimeError('Settings dir error, from get uproject file')
@@ -240,7 +240,7 @@ def get_cleanup_repo_path() -> Path | None:
 
     if not raw_path.is_absolute():
         return Path(
-            str(settings_information.settings_json_dir.path), raw_path,
+            str(settings_information.config_file_dir.path), raw_path,
         ).resolve()
     else:
         return raw_path.resolve()
@@ -319,10 +319,10 @@ def get_persistent_mods_dir() -> Path:
     ).get("persistent_files_directory", None)
     if persistent_dir_from_settings_file and not persistent_dir_from_settings_file.is_absolute():
         persistent_dir_from_settings_file = Path(
-            f"{settings_information.settings_json_dir.path}/{persistent_dir_from_settings_file}",
+            f"{settings_information.config_file_dir.path}/{persistent_dir_from_settings_file}",
         )
     default_dir = Path(
-        f"{settings_information.settings_json_dir.path}/Modding/mod_packaging/persistent_files",
+        f"{settings_information.config_file_dir.path}/Modding/mod_packaging/persistent_files",
     )
     final_dir = Path(
         env_dir or persistent_dir_from_settings_file or default_dir,
@@ -336,7 +336,7 @@ def get_persistent_mod_dir(mod_name: str) -> Path:
     mod_info = utilities.get_mods_info_dict_from_mod_name(mod_name)
     dir_override = mod_info.get("persistent_files_directory", None)
     if dir_override and not dir_override.absolute():
-        dir_override = Path(settings_information.settings_json_dir.path / dir_override)
+        dir_override = Path(settings_information.config_file_dir.path / dir_override)
     final_dir = dir_override or default_dir
     if isinstance(final_dir, Path):
         final_dir.mkdir(parents=True, exist_ok=True)
@@ -364,7 +364,7 @@ def get_ide_path() -> Path | None:
 
     if not raw_path.is_absolute():
         return Path(
-            str(settings_information.settings_json_dir.path), raw_path,
+            str(settings_information.config_file_dir.path), raw_path,
         ).resolve()
     else:
         return raw_path.resolve()
@@ -379,7 +379,7 @@ def get_blender_path() -> Path | None:
 
     if not raw_path.is_absolute():
         return Path(
-            str(settings_information.settings_json_dir.path), raw_path,
+            str(settings_information.config_file_dir.path), raw_path,
         ).resolve()
     else:
         return Path(raw_path).resolve()
@@ -450,14 +450,17 @@ def get_unreal_engine_version(
 ) -> data_structures.UnrealEngineVersion | None:
 
     env_var_unreal_engine_version = get_unreal_engine_version_from_env_vars()
+    print(env_var_unreal_engine_version)
     if env_var_unreal_engine_version:
         return env_var_unreal_engine_version
 
     config_unreal_engine_version = get_unreal_engine_version_from_config()
+    print(config_unreal_engine_version)
     if config_unreal_engine_version:
         return config_unreal_engine_version
 
     auto_detected_version = unreal_engine.get_unreal_engine_version_from_build_version_file(engine_path)
+    print(auto_detected_version)
     if auto_detected_version:
         return auto_detected_version
 
