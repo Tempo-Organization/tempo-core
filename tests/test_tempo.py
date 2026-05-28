@@ -109,7 +109,7 @@ def cache_files() -> list[Path]:
 
 def init_tempo_core() -> None:
     logger.log_message("started tempo core init")
-    sys.argv.append("--settings_json")
+    sys.argv.append("--config-file")
     sys.argv.append(str(SETTINGS_FILE))
 
     sys.argv.append("--logs_directory")

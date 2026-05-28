@@ -288,9 +288,9 @@ def upload_changes_to_repo() -> None:
     logger.log_message("Changes committed and pushed successfully.")
 
 
-def enable_mods(settings_json: Path, mod_names: list) -> None:
+def enable_mods(config_file: Path, mod_names: list) -> None:
     try:
-        with settings_json.open(encoding="utf-8") as file:
+        with config_file.open(encoding="utf-8") as file:
             settings = json.load(file)
 
         mods_enabled = False
@@ -310,10 +310,10 @@ def enable_mods(settings_json: Path, mod_names: list) -> None:
                 settings, indent=4, ensure_ascii=False, separators=(",", ": "),
             )
 
-            with settings_json.open("w", encoding="utf-8") as file:
+            with config_file.open("w", encoding="utf-8") as file:
                 file.write(updated_json_str)
 
-            logger.log_message(f"Mods successfully enabled in '{settings_json}'.")
+            logger.log_message(f"Mods successfully enabled in '{config_file}'.")
         else:
             logger.log_message(
                 "No mods were enabled because all specified mods were already enabled.",
@@ -321,13 +321,13 @@ def enable_mods(settings_json: Path, mod_names: list) -> None:
 
     except json.JSONDecodeError:
         logger.log_message(
-            f"Error decoding JSON from file '{settings_json}'. Please check the file format.",
+            f"Error decoding JSON from file '{config_file}'. Please check the file format.",
         )
 
 
-def disable_mods(settings_json: Path, mod_names: list) -> None:
+def disable_mods(config_file: Path, mod_names: list) -> None:
     try:
-        with settings_json.open(encoding="utf-8") as file:
+        with config_file.open(encoding="utf-8") as file:
             settings = json.load(file)
 
         mods_disabled = False
@@ -348,10 +348,10 @@ def disable_mods(settings_json: Path, mod_names: list) -> None:
                 settings, indent=4, ensure_ascii=False, separators=(",", ": "),
             )
 
-            with settings_json.open("w", encoding="utf-8") as file:
+            with config_file.open("w", encoding="utf-8") as file:
                 file.write(updated_json_str)
 
-            logger.log_message(f"Mods successfully disabled in '{settings_json}'.")
+            logger.log_message(f"Mods successfully disabled in '{config_file}'.")
         else:
             logger.log_message(
                 "No mods were disabled because all specified mods were already disabled.",
@@ -359,13 +359,13 @@ def disable_mods(settings_json: Path, mod_names: list) -> None:
 
     except json.JSONDecodeError:
         logger.log_message(
-            f"Error decoding JSON from file '{settings_json}'. Please check the file format.",
+            f"Error decoding JSON from file '{config_file}'. Please check the file format.",
         )
 
 
 def add_mod(
     *,
-    settings_json: Path,
+    config_file: Path,
     mod_name: str,
     packing_type: str,
     pak_dir_structure: str,
@@ -378,7 +378,7 @@ def add_mod(
     tree_paths: list,
 ) -> None:
     try:
-        with settings_json.open() as file:
+        with config_file.open() as file:
             settings = json.load(file)
 
         if "mods_info" not in settings or not isinstance(settings["mods_info"], dict):
@@ -447,22 +447,22 @@ def add_mod(
 
         settings["mods_info"][mod_name] = mod_data
 
-        with settings_json.open("w") as file:
+        with config_file.open("w") as file:
             json.dump(settings, file, indent=4)
 
         logger.log_message(
-            f"Mod '{mod_name}' successfully added/updated in '{settings_json}'.",
+            f"Mod '{mod_name}' successfully added/updated in '{config_file}'.",
         )
 
     except json.JSONDecodeError:
         logger.log_message(
-            f"Error decoding JSON from file '{settings_json}'. Please check the file format.",
+            f"Error decoding JSON from file '{config_file}'. Please check the file format.",
         )
 
 
-def remove_mods(settings_json: Path, mod_names: list) -> None:
+def remove_mods(config_file: Path, mod_names: list) -> None:
     try:
-        with settings_json.open(encoding="utf-8") as file:
+        with config_file.open(encoding="utf-8") as file:
             settings = json.load(file)
 
         mods_info = settings.get("mods_info", {})
@@ -483,7 +483,7 @@ def remove_mods(settings_json: Path, mod_names: list) -> None:
         if removed_mods:
             settings["mods_info"] = mods_info
 
-            with settings_json.open("w", encoding="utf-8") as file:
+            with config_file.open("w", encoding="utf-8") as file:
                 json.dump(
                     settings,
                     file,
@@ -495,7 +495,7 @@ def remove_mods(settings_json: Path, mod_names: list) -> None:
             logger.log_message(
                 f"Mods successfully removed: {', '.join(removed_mods)}.",
             )
-            logger.log_message(f"Settings updated in '{settings_json}'.")
+            logger.log_message(f"Settings updated in '{config_file}'.")
         else:
             logger.log_message(
                 "No mods were removed because none of the specified mods were found.",
@@ -503,7 +503,7 @@ def remove_mods(settings_json: Path, mod_names: list) -> None:
 
     except json.JSONDecodeError:
         logger.log_message(
-            f"Error decoding JSON from file '{settings_json}'. Please check the file format.",
+            f"Error decoding JSON from file '{config_file}'. Please check the file format.",
         )
 
 
@@ -671,10 +671,10 @@ def cleanup_game(output_json: Path | None = None) -> None:
     if output_json:
         file_list_json = output_json
     else:
-        settings_json_dir = settings.settings_information.settings_json_dir.path
-        if not settings_json_dir:
+        config_file_dir = settings.settings_information.config_file_dir.path
+        if not config_file_dir:
             raise NotADirectoryError('could not obtain your settings json directory')
-        file_list_json = Path(settings_json_dir / "game_file_list.json")
+        file_list_json = Path(config_file_dir / "game_file_list.json")
     custom_game_dir = utilities.custom_get_game_dir()
     if not custom_game_dir:
         raise NotADirectoryError('could not obtain the custom game directory')
@@ -686,10 +686,10 @@ def generate_game_file_list_json(output_json: Path | None = None) -> None:
     if output_json:
         file_list_json = output_json
     else:
-        settings_json_dir = settings.settings_information.settings_json_dir.path
-        if not settings_json_dir:
+        config_file_dir = settings.settings_information.config_file_dir.path
+        if not config_file_dir:
             raise NotADirectoryError('was unable to obtain the settings json directory')
-        file_list_json = Path(settings_json_dir / "game_file_list.json")
+        file_list_json = Path(config_file_dir / "game_file_list.json")
     custom_game_dir = utilities.custom_get_game_dir()
     if not custom_game_dir:
         raise NotADirectoryError('was unable to locate the game directory')
