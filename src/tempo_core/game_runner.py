@@ -47,7 +47,7 @@ def run_game_steam() -> None:
         steam_exe = get_steam_exe_location()
     launch_params = []
     launch_params.append("-applaunch")
-    launch_params.append(settings.get_game_id())
+    launch_params.append(str(settings.get_game_id()))
     new_params = settings.get_game_launch_params()
     for param in new_params:
         launch_params.append(param)

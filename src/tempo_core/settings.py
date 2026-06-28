@@ -393,7 +393,7 @@ def get_game_id() -> int:
     return settings_information.settings["game_info"]["game_id"]
 
 
-def get_game_launch_params() -> list:
+def get_game_launch_params() -> list[str]:
     return settings_information.settings.get("game_info", {}).get("launch_params", [])
 
 
@@ -450,17 +450,14 @@ def get_unreal_engine_version(
 ) -> data_structures.UnrealEngineVersion | None:
 
     env_var_unreal_engine_version = get_unreal_engine_version_from_env_vars()
-    print(env_var_unreal_engine_version)
     if env_var_unreal_engine_version:
         return env_var_unreal_engine_version
 
     config_unreal_engine_version = get_unreal_engine_version_from_config()
-    print(config_unreal_engine_version)
     if config_unreal_engine_version:
         return config_unreal_engine_version
 
     auto_detected_version = unreal_engine.get_unreal_engine_version_from_build_version_file(engine_path)
-    print(auto_detected_version)
     if auto_detected_version:
         return auto_detected_version
 

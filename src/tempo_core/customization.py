@@ -15,10 +15,10 @@ def enable_vt100() -> None:
     if sys.platform == "win32":
         """Enable VT100 escape codes in the Windows Command Prompt and restart if needed."""
         query_command = "reg query HKCU\\Console /v VirtualTerminalLevel 2>nul"
-        result = os.popen(query_command).read()
+        result = os.popen(query_command).read()  # type: ignore
 
         if "0x1" not in result:
-            os.system(
+            os.system(  # type: ignore
                 "reg add HKCU\\Console /v VirtualTerminalLevel /t REG_DWORD /d 1 /f >nul",
             )
 
