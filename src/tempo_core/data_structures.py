@@ -268,6 +268,7 @@ class UnrealEngineVersion:
         "5.5": "V11",
         "5.6": "V11",
         "5.7": "V11",
+        "5.8": "V11",
     }
 
 
