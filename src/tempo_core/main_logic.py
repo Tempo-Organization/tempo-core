@@ -586,7 +586,7 @@ def resave_packages_and_fix_up_redirectors() -> None:
     engine.close_game_engine()
     exe = unreal_engine.get_unreal_editor_exe_path(unreal_engine_dir)
     args = [
-        '"{settings.get_uproject_file()}"',
+        f'"{settings.get_uproject_file()}"',
         '-run=ResavePackages',
         '-fixupredirects',
     ]
@@ -1030,7 +1030,8 @@ def resync_dir_with_repo() -> None:
         )
         raise ValueError(not_valid_git_repo_path)
 
-    result = os.environ.get("git")
+    # result = os.environ.get("git")
+    result = shutil.which("git")
 
     if result:
         exe = Path(result)
@@ -1080,7 +1081,7 @@ def generate_uproject(
         # Ensure the directory is empty
         project_dir = project_file.resolve().parent
 
-        if project_dir.exists and project_dir.iterdir():
+        if project_dir.exists and sum(1 for p in project_dir.rglob("*") if p.is_file()) > 0:
             cannot_generate_in_non_empty_dir_error = f'The directory "{project_dir}" is not empty. Cannot generate project here.'
             raise FileExistsError(cannot_generate_in_non_empty_dir_error)
 

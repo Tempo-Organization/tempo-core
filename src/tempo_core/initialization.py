@@ -146,10 +146,17 @@ def game_exe_check() -> None:
 def clear_temp_dir() -> None:
     temp_dir = settings.get_temp_directory()
     if temp_dir.is_dir():
-        shutil.rmtree(temp_dir)
+        try:
+            shutil.rmtree(temp_dir)
+        except OSError as e:
+            logger.log_message(f'Warning: Failed to remove temp directory {temp_dir}: {e}')
 
-
-def initialization() -> None:
+has_inited_already = False
+def initialization(reinit_if_applicable: bool = False) -> None:
+    global has_inited_already
+    if not reinit_if_applicable:
+        if has_inited_already:
+            return
     # input_monitor.InputMonitor().start()
 
     if "--logs_directory" in sys.argv:
@@ -171,7 +178,8 @@ def initialization() -> None:
 
     customization.enable_vt100()
 
-    online_check.init_is_online()
+    if not online_check.has_checked_online_status:
+        online_check.init_is_online()
 
     main_logic.init_thread_system()
     check_generate_wrapper()
@@ -203,6 +211,8 @@ def initialization() -> None:
         logger.log_message("Check: Passed all init checks")
 
     clear_temp_dir()
+
+    has_inited_already = True
 
 
 def check_generate_wrapper() -> None:

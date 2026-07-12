@@ -60,6 +60,7 @@ import winreg
 
 def remove_invalid_unreal_engine_registry_entries() -> None:
     def is_valid_install(path: pathlib.Path) -> bool:
+        path = pathlib.Path(path)
         if not path.is_dir():
             return False
         for _, _, files in path.walk():

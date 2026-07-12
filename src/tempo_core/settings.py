@@ -238,6 +238,8 @@ def get_cleanup_repo_path() -> Path | None:
     if not raw_path:
         return None
 
+    raw_path = Path(raw_path)
+
     if not raw_path.is_absolute():
         return Path(
             str(settings_information.config_file_dir.path), raw_path,
