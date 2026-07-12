@@ -4,13 +4,16 @@ import socket
 from tempo_core import logger
 
 is_online = False
+has_checked_online_status = False
 
 
 def log_online_status() -> None:
+    global has_checked_online_status
     if is_online:
         logger.log_message('Web Connectivity Status: Online')
     else:
         logger.log_message('Web Connectivity Status: Offline')
+    has_checked_online_status = True
 
 
 def _env_true(value: str | None) -> bool:

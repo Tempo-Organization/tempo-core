@@ -125,6 +125,7 @@ def run_patternsleuth_engine_version_scan_command(
     )
 
     output = f"{result.stdout}\n{result.stderr}"
+    logger.log_message(f'output: {output}')
     engine_version = parse_engine_version(output)
     if not engine_version:
         raise RuntimeError('parsing unreal engine version with patternsleuth failed.')
