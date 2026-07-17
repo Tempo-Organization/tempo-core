@@ -260,7 +260,7 @@ def get_engine_building_args() -> list:
         "-skipstage",
         "-nodebuginfo",
         "-noP4",
-        f"-targetplatform={get_target_platform()}",
+        f"-targetplatform={get_build_target_platform()}",
         f'-clientconfig="{get_build_configuration_state()}"',
     ]
     return settings_information.settings.get("engine_info", {}).get(
@@ -353,6 +353,11 @@ def get_alt_packing_dir_name() -> str | None:
 
 def get_mods_info_dict_from_json() -> dict:
     return settings_information.settings.get("mods_info", {})
+
+
+def get_should_mod_auto_include_mod_name_dir_name(mod_name: str) -> bool:
+    # make this be respected by cooking moving packaging etc later, probably only is respected in cooking
+    return get_mods_info_dict_from_json()[mod_name].get("auto_include_mod_name_dir_name", True)
 
 
 def get_exec_events() -> list:
@@ -478,7 +483,7 @@ def get_temp_directory() -> Path:
 
 
 def should_show_progress_bars() -> bool:
-    return "--disable_progress_bars" not in sys.argv
+    return "--disable-progress-bars" not in sys.argv
 
 
 def is_windows() -> bool:
@@ -494,12 +499,20 @@ def get_is_game_iostore_from_config() -> bool | None:
     return settings_information.settings.get("game_info", {}).get("is_iostore", None)
 
 
-def get_target_platform() -> str:
+def get_build_target_platform() -> str:
     if is_windows():
         default_target_platform = 'Win64'
     else:
         default_target_platform = 'Linux'
-    return settings_information.settings.get('engine_info', {}).get('target_platform', default_target_platform)
+    return settings_information.settings.get('engine_info', {}).get('build_target_platform', default_target_platform)
+
+
+def get_unreal_engine_target_platform() -> str:
+    if is_windows():
+        default_target_platform = 'WindowsNoEditor'
+    else:
+        default_target_platform = 'LinuxNoEditor'
+    return settings_information.settings.get('engine_info', {}).get('unreal_engine_target_platform', default_target_platform)
 
 
 def get_default_release_dir() -> Path:

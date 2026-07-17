@@ -159,8 +159,8 @@ def initialization(reinit_if_applicable: bool = False) -> None:
             return
     # input_monitor.InputMonitor().start()
 
-    if "--logs_directory" in sys.argv:
-        index = sys.argv.index("--logs_directory") + 1
+    if "--logs-directory" in sys.argv:
+        index = sys.argv.index("--logs-directory") + 1
         if index < len(sys.argv):
             log_dir = Path(f"{Path(sys.argv[index].strip("'").strip('"'))}")
             logger.set_log_base_dir(log_dir)
@@ -171,8 +171,8 @@ def initialization(reinit_if_applicable: bool = False) -> None:
     else:
         logger.set_log_base_dir(Path(f"{file_io.SCRIPT_DIR}/logs"))
         logger.configure_logging()
-    if "--log_name_prefix" in sys.argv:
-        index = sys.argv.index("--log_name_prefix") + 1
+    if "--log-name-prefix" in sys.argv:
+        index = sys.argv.index("--log-name-prefix") + 1
         if index < len(sys.argv):
             logger.log_information.log_prefix = sys.argv[index]
 
@@ -196,7 +196,7 @@ def initialization(reinit_if_applicable: bool = False) -> None:
         # git_info_check()
         # repak.ensure_repak_installed()
         # retoc.ensure_retoc_installed()
-        # game_exe_check()
+        game_exe_check()
 
         # if repak.get_is_using_repak_path_override():
         #     file_io.check_file_exists(repak.get_repak_path_override())
@@ -216,7 +216,7 @@ def initialization(reinit_if_applicable: bool = False) -> None:
 
 
 def check_generate_wrapper() -> None:
-    if "--generate_wrapper" in sys.argv:
+    if "--generate-wrapper" in sys.argv:
         wrapper.generate_wrapper()
 
 

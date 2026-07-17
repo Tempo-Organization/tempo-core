@@ -16,6 +16,7 @@ def run_app(
     exec_mode: ExecutionMode = ExecutionMode.SYNC,
     args: Sequence[str | Path] | None = None,
     working_dir: Path = default_working_dir,
+    use_shell: bool = True,
 ) -> None:
     working_dir.mkdir(parents=True, exist_ok=True)
 
@@ -43,7 +44,7 @@ def run_app(
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             text=True,
-            shell=True,
+            shell=use_shell,
         )
 
         if process.stdout:

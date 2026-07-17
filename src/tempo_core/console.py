@@ -7,8 +7,8 @@ from rich.console import Console
 ColorSystem = typing.Literal["auto", "standard", "256", "truecolor", "windows"]
 
 def get_color_system_type() -> ColorSystem | None:
-    if "--rich_console_color_system" in sys.argv:
-        index = sys.argv.index("--rich_console_color_system") + 1
+    if "--rich-console-color-system" in sys.argv:
+        index = sys.argv.index("--rich-console-color-system") + 1
         if index < len(sys.argv):
             value = sys.argv[index]
             if value == "none":

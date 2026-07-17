@@ -998,13 +998,17 @@ def generate_mod_release(
 def generate_mod_releases(
     mod_names: list[str], base_files_directory: Path, output_directory: Path,
 ) -> None:
+    mods_info_dict = settings.get_mods_info_dict_from_json()
     for mod_name in mod_names:
-        generate_mod_release(mod_name, base_files_directory, output_directory)
+        if mods_info_dict[mod_name]['is_enabled']:
+            generate_mod_release(mod_name, base_files_directory, output_directory)
 
 
 def generate_mod_releases_all(base_files_directory: Path, output_directory: Path) -> None:
-    for mod_key in settings.get_mods_info_dict_from_json().keys():
-        generate_mod_release(mod_key, base_files_directory, output_directory)
+    mods_info_dict = settings.get_mods_info_dict_from_json()
+    for mod_name in mods_info_dict.keys():
+        if mods_info_dict[mod_name]['is_enabled']:
+            generate_mod_release(mod_name, base_files_directory, output_directory)
 
 
 def resync_dir_with_repo() -> None:

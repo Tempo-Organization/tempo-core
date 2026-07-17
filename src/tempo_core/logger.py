@@ -11,12 +11,12 @@ from tempo_core.log_info import LOG_INFO
 
 
 def get_is_log_file_use_disabled() -> bool:
-    return "--disable_log_file_output" in sys.argv
+    return "--disable-log-file-output" in sys.argv
 
 
 def get_default_log_name_prefix() -> str:
-    if "--log_name_prefix" in sys.argv:
-        index = sys.argv.index("--log_name_prefix") + 1
+    if "--log-name-prefix" in sys.argv:
+        index = sys.argv.index("--log-name-prefix") + 1
         if index < len(sys.argv):
             return sys.argv[index]
     return f"{__name__.split('.')[0]}"

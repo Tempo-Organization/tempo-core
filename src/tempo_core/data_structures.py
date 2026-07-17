@@ -290,10 +290,48 @@ unreal_iostore_sigs_archive_extensions = ["pak", "ucas", "utoc", "sigs"]
 unreal_non_iostore_sigs_archive_extensions = ["pak", "sigs"]
 
 # allow this to be customized later probably
+# make enum later probably
 unreal_engine_build_targets = [
     "Debug",
     "DebugGame",
     "Development",
     "Shipping",
     "Test",
+]
+
+# allow this to be customized later probably
+# make enum later probably
+unreal_engine_target_platforms = [
+    'AllDesktop',
+    'Android',
+    'Android_ASTC',
+    'Android_DXT',
+    'Android_ETC2',
+    'AndroidClient',
+    'Android_ASTCClient',
+    'Android_DXTClient',
+    'Android_ETC2Client',
+    'Android_Multi',
+    'Android_MultiClient',
+    'IOSClient',
+    'IOS',
+    'Linux',
+    'LinuxNoEditor',
+    'LinuxClient',
+    'LinuxServer',
+    'LinuxAArch64NoEditor',
+    'LinuxAArch64Client',
+    'LinuxAArch64Server',
+    'Lumin',
+    'LuminClient',
+    'MacNoEditor',
+    'Mac',
+    'MacClient',
+    'MacServer',
+    'TVOSClient',
+    'TVOS',
+    'WindowsNoEditor',
+    'Windows',
+    'WindowsClient',
+    'WindowsServer',
 ]

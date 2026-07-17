@@ -60,22 +60,13 @@ def make_retoc_mod(mod_name: str, dest_pak_file: Path, *, use_symlinks: bool) ->
 
     ucas_mod_dir.mkdir(parents=True, exist_ok=True)
 
-    ucas_extensions = {
-        ".umap",
-        ".uexp",
-        ".uptnl",
-        ".ubulk",
-        ".uasset",
-        ".ushaderbytecode",
-    }
-
     for root, _, files in original_mod_dir.walk():
         for file in files:
             source_path = Path(root / file)
             rel_path = os.path.relpath(source_path, original_mod_dir)
-            ext = Path(file).suffix
+            ext = str(Path(file).suffix).replace('.', '', 1)
 
-            if ext in ucas_extensions:
+            if ext in data_structures.unreal_iostore_file_extensions:
                 target_path = Path(ucas_mod_dir / rel_path)
                 target_path.parent.mkdir(parents=True, exist_ok=True)
                 shutil.move(source_path, target_path)

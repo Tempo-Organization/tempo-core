@@ -114,6 +114,22 @@ def get_unreal_editor_exe_path(unreal_engine_dir: Path) -> Path:
         return Path(unreal_engine_dir / "Engine" / "Binaries" / 'Linux' / engine_path_suffix)
 
 
+def get_unreal_editor_cmd_exe_path(unreal_engine_dir: Path) -> Path:
+    if settings.is_windows():
+        if get_win_dir_type(unreal_engine_dir) == PackagingDirType.WINDOWS_NO_EDITOR:
+            engine_path_suffix = "UE4Editor-Cmd.exe"
+        else:
+            engine_path_suffix = "UnrealEditor-Cmd.exe"
+        return Path(unreal_engine_dir / "Engine" / "Binaries" / "Win64" / engine_path_suffix)
+    else:
+        # need to verify the linux path latter
+        if get_win_dir_type(unreal_engine_dir) == PackagingDirType.WINDOWS_NO_EDITOR:
+            engine_path_suffix = "UE4Editor-Cmd"
+        else:
+            engine_path_suffix = "UnrealEditor-Cmd"
+        return Path(unreal_engine_dir / "Engine" / "Binaries" / 'Linux' / engine_path_suffix)
+
+
 def get_win_dir_str(unreal_engine_dir: Path | None) -> str:
     if settings.is_windows():
         win_dir_type = "Windows"
@@ -163,7 +179,7 @@ def get_build_target_file_path(uproject_file_path: Path) -> Path:
         raise RuntimeError(unsupported_build_configuration_error_message)
     uproject_dir = get_uproject_dir(uproject_file_path)
     uproject_name = get_uproject_name(uproject_file_path)
-    target_platform = settings.get_target_platform()
+    target_platform = settings.get_build_target_platform()
     if build_target == "Development":
         return Path(f'{uproject_dir}/Binaries/{target_platform}/{uproject_name}.target')
     else:
