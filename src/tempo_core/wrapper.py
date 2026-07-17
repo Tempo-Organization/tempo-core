@@ -12,8 +12,8 @@ def get_wrapper_location() -> Path:
 def generate_wrapper() -> None:
     args = sys.argv[:]
 
-    if "--wrapper_name" in args:
-        index = args.index("--wrapper_name")
+    if "--wrapper-name" in args:
+        index = args.index("--wrapper-name")
         args.pop(index)
         args.pop(index)
 

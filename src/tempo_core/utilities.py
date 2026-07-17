@@ -1,3 +1,4 @@
+from tempo_binary_tool_manager.manager import is_windows, is_linux
 import os
 import shutil
 from pathlib import Path
@@ -156,3 +157,35 @@ def get_game_window_title() -> str:
         if game_exe_path:
             return unreal_engine.get_game_process_name(game_exe_path)
         return 'Unknown'
+
+
+def get_maximum_command_length() -> int:
+    if is_windows():
+        return 32767
+    elif is_linux():
+        return os.sysconf('SC_ARG_MAX') # ty: ignore
+    else:
+        raise RuntimeError('unsupported os')
+
+
+def chunk_strings(strings: list[str], max_length: int) -> list[list[str]]:
+    result = []
+    current_chunk = []
+    current_length = 0
+
+    for s in strings:
+        if len(s) > max_length:
+            raise ValueError(f"String '{s}' exceeds max_length ({max_length})")
+
+        if current_length + len(s) <= max_length:
+            current_chunk.append(s)
+            current_length += len(s)
+        else:
+            result.append(current_chunk)
+            current_chunk = [s]
+            current_length = len(s)
+
+    if current_chunk:
+        result.append(current_chunk)
+
+    return result
