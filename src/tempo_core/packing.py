@@ -94,11 +94,8 @@ def get_is_mod_installed(mod_name: str) -> bool:
 
 
 def get_engine_pak_command() -> str:
-    test_path = Path(
-        f"{settings.get_unreal_engine_dir()}/Engine/Build/BatchFiles/RunUAT.{file_io.get_platform_wrapper_extension()}",
-    )
     command = (
-        f'"{test_path}" {settings.get_unreal_engine_packaging_main_command()} '
+        f'"{unreal_engine.get_run_uat_script_path()}" {settings.get_unreal_engine_packaging_main_command()} '
         f'-project="{settings.get_uproject_file()}"'
     )
     uproject_file = settings.get_uproject_file()
@@ -633,7 +630,6 @@ def package_project_iostore_ue4() -> None:
     unreal_engine_dir = settings.get_unreal_engine_dir()
     if not unreal_engine_dir:
         raise RuntimeError('Unreal engine install was not valid.')
-    main_exec = Path(f'"{unreal_engine_dir}/Engine/Build/BatchFiles/RunUAT.{file_io.get_platform_wrapper_extension()}"')
     uproject_path = settings.get_uproject_file()
     if not uproject_path:
         raise FileNotFoundError('was unable to obtain the uproject path')
@@ -669,7 +665,7 @@ def package_project_iostore_ue4() -> None:
     if not unreal_engine.get_build_target_file_path(uproject_path).is_file():
         args.append('-build')
     app_runner.run_app(
-        exe_path=main_exec,
+        exe_path=unreal_engine.get_run_uat_script_path(),
         args=args,
         working_dir=unreal_engine_dir,
     )
@@ -680,7 +676,6 @@ def package_project_iostore_ue5() -> None:
     unreal_engine_dir = settings.get_unreal_engine_dir()
     if not unreal_engine_dir:
         raise RuntimeError('Unreal engine install was not valid.')
-    main_exec = Path(f'"{unreal_engine_dir}/Engine/Build/BatchFiles/RunUAT.{file_io.get_platform_wrapper_extension()}"')
     uproject_path = settings.get_uproject_file()
     if not uproject_path:
         raise FileNotFoundError('was unable to obtain the uproject path')
@@ -711,7 +706,7 @@ def package_project_iostore_ue5() -> None:
     if not unreal_engine.get_build_target_file_path(uproject_path).is_file():
         args.append('-build')
     app_runner.run_app(
-        exe_path=main_exec,
+        exe_path=unreal_engine.get_run_uat_script_path(),
         args=args,
         working_dir=unreal_engine_dir,
     )

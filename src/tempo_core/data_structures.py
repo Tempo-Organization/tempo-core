@@ -1,4 +1,4 @@
-from enum import Enum
+from enum import Enum, IntEnum
 from typing import Type, TypeVar, Any
 from dataclasses import dataclass
 
@@ -97,6 +97,38 @@ class CompressionType(Enum):
     LZMA = "Lzma"
 
 
+class OodleCompressionType(Enum):
+    """
+    enum for the types of Oodle compression
+    """
+
+    KRAKEN = "Kraken"
+    MERMAID = "Mermaid"
+    SELKIE = "Selkie"
+    LEVIATHAN = "Leviathan"
+
+
+class OodleCompressionLevel(IntEnum):
+    """
+    enum for the types of Oodle compression levels
+    """
+
+    HYPER_FAST_4 = -4
+    HYPER_FAST_3 = -3
+    HYPER_FAST_2 = -2
+    HYPER_FAST_1 = -1
+    NONE = 0  # Copies the raw bytes.
+    SUPER_FAST = 1
+    VERY_FAST = 2
+    FAST = 3  # Good for daily use.
+    NORMAL = 4
+    OPTIMAL_1 = 5
+    OPTIMAL_2 = 6  # Recommended baseline optimal encoder.
+    OPTIMAL_3 = 7
+    OPTIMAL_4 = 8
+    OPTIMAL_5 = 9
+
+
 class UnrealModTreeType(Enum):
     """
     enum for the mod dir type in the unreal file system
@@ -117,6 +149,9 @@ class FileFilterType(Enum):
     )
     TREE_PATHS = (
         "tree_paths"  # Takes supplied dirs, and traverses it all, including every file
+    )
+    COLLECTION_PATHS = (
+        "collection_paths"  # Takes supplied collection paths, and grabs all files specified within them
     )
 
 
@@ -291,12 +326,14 @@ unreal_non_iostore_sigs_archive_extensions = ["pak", "sigs"]
 
 # allow this to be customized later probably
 # make enum later probably
+# Unknown can be valid here at times apparantly?
 unreal_engine_build_targets = [
     "Debug",
     "DebugGame",
     "Development",
     "Shipping",
     "Test",
+    "Unknown",
 ]
 
 # allow this to be customized later probably
