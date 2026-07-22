@@ -214,3 +214,10 @@ def get_new_uproject_json_contents(
   "Category": "{category}",
   "Description": "{description}"
 }}'''
+
+
+def get_run_uat_script_path() -> Path:
+    unreal_engine_dir = settings.get_unreal_engine_dir()
+    if not unreal_engine_dir:
+        raise NotADirectoryError('was unable to locate the unreal engine directory')
+    return Path(f"{unreal_engine_dir}/Engine/Build/BatchFiles/RunUAT.{file_io.get_platform_wrapper_extension()}")

@@ -1280,6 +1280,10 @@ def generate_uplugin(
 
     plugin_file_path.parent.mkdir(parents=True, exist_ok=True)
 
+    if can_contain_content:
+        content_path = Path(plugins_directory / plugin_name / 'Content')
+        content_path.mkdir(exist_ok=True)
+
     with plugin_file_path.open("w") as plugin_file:
         plugin_file.write(plugin_data_string)
 
