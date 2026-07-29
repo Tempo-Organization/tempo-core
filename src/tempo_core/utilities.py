@@ -8,28 +8,31 @@ from tempo_core.data_structures import CompressionType
 from tempo_core.programs import unreal_engine
 
 
-def custom_get_game_dir() -> Path | None:
+def get_game_dir() -> Path | None:
     game_exe_path = settings.get_game_exe_path()
     if not game_exe_path:
         return None
-    game_dir = unreal_engine.get_game_dir(game_exe_path)
+    game_dir = game_exe_path.parent.parent.parent
     if not game_dir:
         return None
     return game_dir
 
 
-def custom_get_game_paks_dir() -> Path:
-    game_dir = custom_get_game_dir()
-    if not game_dir:
-        raise NotADirectoryError('Could not get a valid game dir from custom_game_get_dir')
+def get_game_dir_or_raise() -> Path:
+    game_dir = get_game_dir()
+    if game_dir:
+        return game_dir
+    raise NotADirectoryError('Was unable to obtain a game directory.')
+
+
+def get_game_paks_dir() -> Path:
+    game_dir = get_game_dir_or_raise()
     alt_game_dir = game_dir.parent
     potential_alt_dir_name = settings.get_alt_packing_dir_name()
     if potential_alt_dir_name:
         return Path(alt_game_dir / alt_game_dir / "Content" / "Paks")
-    uproject_file = settings.get_uproject_file()
-    if not uproject_file:
-        raise FileNotFoundError('Was unable to find a valid uproject file, in custom_get_game_paks_dir')
-    return unreal_engine.get_game_paks_dir(uproject_file, game_dir)
+    uproject_file = settings.get_uproject_file_or_raise()
+    return Path(game_dir.parent / unreal_engine.get_uproject_name(uproject_file) / 'Content' / 'Paks')
 
 
 def get_uproject_dir() -> Path | None:
@@ -37,6 +40,13 @@ def get_uproject_dir() -> Path | None:
     if uproject_file:
         return uproject_file.parent
     return None
+
+
+def get_uproject_dir_or_raise() -> Path:
+    uproject_dir = get_uproject_dir()
+    if not uproject_dir:
+        raise NotADirectoryError('Was unable to obtain a valid uproject directory.')
+    return uproject_dir
 
 
 def get_uproject_tempo_dir() -> Path | None:
@@ -54,13 +64,13 @@ def get_uproject_tempo_resources_dir() -> Path | None:
 
 
 def get_use_mod_name_dir_name_override(mod_name: str) -> bool:
-    return get_mods_info_dict_from_mod_name(mod_name).get(
+    return get_mod_info_from_mod_name(mod_name).get(
         "mod_name_dir_name_override", False,
     )
 
 
 def get_mod_name_dir_name_override(mod_name: str) -> str:
-    return get_mods_info_dict_from_mod_name(mod_name)["mod_name_dir_name_override"]
+    return get_mod_info_from_mod_name(mod_name)["mod_name_dir_name_override"]
 
 
 def get_mod_name_dir_name(mod_name: str) -> str:
@@ -71,18 +81,18 @@ def get_mod_name_dir_name(mod_name: str) -> str:
 
 def get_pak_dir_structure(mod_name: str) -> str:
     mods_info_dict = settings.get_mods_info_dict_from_json()
-    for mod_key in mods_info_dict.keys():
-        if mod_key == mod_name:
-            return mods_info_dict[mod_key]["pak_dir_structure"]
+    dir_to_return = mods_info_dict[mod_name].get("pak_dir_structure", None)
+    if dir_to_return:
+        return dir_to_return
     pak_dir_structure_missing_error = "Could not find the proper pak dir structure within the mod entry in the provided settings file"
     raise RuntimeError(pak_dir_structure_missing_error)
 
 
 def get_mod_compression_type(mod_name: str) -> CompressionType:
     mods_info_dict = settings.get_mods_info_dict_from_json()
-    for mod_key in mods_info_dict.keys():
-        if mod_key == mod_name:
-            return mods_info_dict[mod_key]["compression_type"]
+    compression_type_to_return = mods_info_dict[mod_name].get("compression_type", None)
+    if compression_type_to_return:
+        return compression_type_to_return
     missing_compression_type_error = (
         f'Could not find the compression type for the following mod name "{mod_name}"'
     )
@@ -91,33 +101,27 @@ def get_mod_compression_type(mod_name: str) -> CompressionType:
 
 def get_unreal_mod_tree_type_str(mod_name: str) -> str:
     mods_info_dict = settings.get_mods_info_dict_from_json()
-    for mod_key in mods_info_dict.keys():
-        if mod_key == mod_name:
-            return mods_info_dict[mod_key]["mod_name_dir_type"]
+    unreal_mod_tree_type_to_return = mods_info_dict[mod_name].get("mod_name_dir_type", None)
+    if unreal_mod_tree_type_to_return:
+        return unreal_mod_tree_type_to_return
     missing_mod_tree_type_error = f'Was unable to find the unreal mod tree type for the following mod name "{mod_name}"'
     raise RuntimeError(missing_mod_tree_type_error)
 
 
-def get_mods_info_dict_from_mod_name(mod_name: str) -> dict:
+def get_mod_info_from_mod_name(mod_name: str) -> dict:
     mods_info_dict = settings.get_mods_info_dict_from_json()
-    for mod_key in mods_info_dict.keys():
-        if mod_key == mod_name:
-            return dict(mods_info_dict[mod_key])
+    mod_info_dict = mods_info_dict.get(mod_name, None)
+    if mod_info_dict:
+        return mod_info_dict
     missing_mods_info_dict_error = (
         f'Was unable to find the mods info dict for the following mod name "{mod_name}"'
     )
     raise RuntimeError(missing_mods_info_dict_error)
 
 
-def is_mod_name_in_list(mod_name: str) -> bool:
-    return any(
-        mod_key == mod_name for mod_key in settings.get_mods_info_dict_from_json().keys()
-    )
-
-
 def get_mod_name_dir(mod_name: str) -> Path:
     uproject_file = settings.get_uproject_file()
-    if is_mod_name_in_list(mod_name) and uproject_file:
+    if mod_name in settings.settings_information.mod_names and uproject_file:
         uproject_dir = unreal_engine.get_uproject_dir(uproject_file)
         unreal_mod_tree_type = get_unreal_mod_tree_type_str(mod_name)
         return Path(uproject_dir / "Saved" / "Cooked" / unreal_mod_tree_type / mod_name)

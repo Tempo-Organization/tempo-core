@@ -93,13 +93,13 @@ def install_retoc_mod(*, mod_name: str, use_symlinks: bool) -> None:
 
     unreal_pak.move_files_for_packing(mod_name)
     intermediate_dest_dir = Path(settings.get_temp_directory()) / utilities.get_pak_dir_structure(mod_name)
-    final_dest_dir = Path(utilities.custom_get_game_paks_dir() / utilities.get_pak_dir_structure(mod_name))
+    final_dest_dir = Path(utilities.get_game_paks_dir() / utilities.get_pak_dir_structure(mod_name))
     extensions = data_structures.unreal_iostore_no_sigs_archive_extensions
 
     dest_prefix = f"{final_dest_dir}/{mod_name}."
     output_mod_prefix = f"{intermediate_dest_dir}/{mod_name}."
     intermediate_dest_dir.mkdir(parents=True, exist_ok=True)
-    Path(utilities.custom_get_game_paks_dir() / utilities.get_pak_dir_structure(mod_name)).mkdir(parents=True, exist_ok=True)
+    Path(utilities.get_game_paks_dir() / utilities.get_pak_dir_structure(mod_name)).mkdir(parents=True, exist_ok=True)
 
     for extension in extensions:
         output_file = Path(f"{output_mod_prefix}{extension}")

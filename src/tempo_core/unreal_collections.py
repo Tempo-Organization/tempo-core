@@ -1044,7 +1044,7 @@ def filter_by_extension(files: list[Path], extension: str) -> list[Path]:
 
 
 def get_unreal_collection_paths_from_mod_name(mod_name: str) -> list[Path]:
-    return utilities.get_mods_info_dict_from_mod_name(mod_name)["file_includes"][
+    return utilities.get_mod_info_from_mod_name(mod_name)["file_includes"][
         "unreal_collections"
     ]
 
@@ -1058,7 +1058,7 @@ def add_collection_to_mod_entry(
         with Path.open(config_file, encoding="utf-8") as file:
             settings = json.load(file)
 
-        mod_entry = utilities.get_mods_info_dict_from_mod_name(mod_name)
+        mod_entry = utilities.get_mod_info_from_mod_name(mod_name)
 
         if mod_entry:
             new_collections = mod_entry["file_includes"]["unreal_collections"]
@@ -1100,7 +1100,7 @@ def remove_collection_from_mod_entry(
     with Path.open(config_file, encoding="utf-8") as file:
         settings = json.load(file)
 
-    mod_entry = utilities.get_mods_info_dict_from_mod_name(mod_name)
+    mod_entry = utilities.get_mod_info_from_mod_name(mod_name)
 
     if mod_entry:
         new_collections = [

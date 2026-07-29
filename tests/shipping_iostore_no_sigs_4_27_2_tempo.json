@@ -20,7 +20,7 @@
   "process_kill_events": {
     "processes": [
       {
-        "hook_state": "constant",
+        "hook_state": "init",
         "process_name": "Fmodel",
         "use_substring_check": true
       },

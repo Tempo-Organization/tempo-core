@@ -18,7 +18,7 @@ settings_information = SettingsInformation(
     init_settings_done=False,
     config_file_dir=SettingSpecificInfo(None, None),
     program_dir=SettingSpecificInfo(None, None),
-    mod_names=[],
+    mod_names=set(),
     config_file=SettingSpecificInfo(None, None),
 )
 
@@ -76,7 +76,7 @@ def init_settings(config_file_path: Path) -> None:
 def load_settings(config_file: Path) -> None:
     logger.log_message(f"settings json: {config_file}")
     if not settings_information.init_settings_done:
-        init_settings(Path(config_file))
+        init_settings(config_file)
 
 
 def get_unreal_engine_dir() -> Path | None:
@@ -106,6 +106,13 @@ def get_unreal_engine_dir() -> Path | None:
         return Path(unreal_engine_directory)
     else:
         return None
+
+
+def get_unreal_engine_dir_or_raise() -> Path:
+    unreal_engine_dir = get_unreal_engine_dir()
+    if not unreal_engine_dir:
+        raise RuntimeError('Unreal engine install was not valid.')
+    return unreal_engine_dir
 
 
 def is_unreal_pak_packing_enum_in_use() -> bool:
@@ -167,6 +174,13 @@ def get_game_exe_path() -> Path | None:
     return None
 
 
+def get_game_exe_path_or_raise() -> Path:
+    game_exe = get_game_exe_path()
+    if not game_exe:
+        raise RuntimeError('Game exe was not valid.')
+    return game_exe
+
+
 def get_git_info_repo_path() -> Path | None:
     raw_path = settings_information.settings.get("git_info", {}).get("repo_path", None)
     if not raw_path:
@@ -208,11 +222,29 @@ def get_uproject_file() -> Path | None:
     else:
         return raw_path.resolve()
 
+
+def get_uproject_file_or_raise() -> Path:
+    uproject_file = get_uproject_file()
+    if not uproject_file:
+        uproject_not_found_error = (
+            f'could not find the specified uproject file "{uproject_file}"'
+        )
+        raise FileNotFoundError(uproject_not_found_error)
+    return uproject_file
+
+
 def get_uproject_name() -> str | None:
     uproject_file = get_uproject_file()
     if not uproject_file:
         return None
     return Path(uproject_file.name).stem
+
+
+def get_uproject_name_or_raise() -> str:
+    uproject_name = get_uproject_name()
+    if not uproject_name:
+        raise RuntimeError('Was unable to obtain a valid uproject name.')
+    return uproject_name
 
 
 def get_unreal_engine_packaging_main_command() -> str:
@@ -316,9 +348,7 @@ def get_persistent_mods_dir() -> Path:
     env_dir = os.environ.get("TEMPO_PERSISTENT_MODS_DIRECTORY", None)
     if env_dir and not env_dir:
         env_dir = Path(f"{initialization.ORIGINAL_CWD}/{env_dir}")
-    persistent_dir_from_settings_file = settings_information.settings.get(
-        "mods_info", {},
-    ).get("persistent_files_directory", None)
+    persistent_dir_from_settings_file = get_mods_info_dict_from_json().get("persistent_files_directory", None)
     if persistent_dir_from_settings_file and not persistent_dir_from_settings_file.is_absolute():
         persistent_dir_from_settings_file = Path(
             f"{settings_information.config_file_dir.path}/{persistent_dir_from_settings_file}",
@@ -335,7 +365,7 @@ def get_persistent_mods_dir() -> Path:
 
 def get_persistent_mod_dir(mod_name: str) -> Path:
     default_dir = Path(get_persistent_mods_dir(), mod_name)
-    mod_info = utilities.get_mods_info_dict_from_mod_name(mod_name)
+    mod_info = utilities.get_mod_info_from_mod_name(mod_name)
     dir_override = mod_info.get("persistent_files_directory", None)
     if dir_override and not dir_override.absolute():
         dir_override = Path(settings_information.config_file_dir.path / dir_override)
@@ -471,6 +501,13 @@ def get_unreal_engine_version(
     return None
 
 
+def get_unreal_engine_version_or_raise(engine_path: Path | None) -> data_structures.UnrealEngineVersion:
+    unreal_engine_version = get_unreal_engine_version(engine_path)
+    if not unreal_engine_version:
+        raise RuntimeError('Was unable to obtain the needed unreal engine version.')
+    return unreal_engine_version
+
+
 def get_temp_directory() -> Path:
     temp_dir = Path(file_io.SCRIPT_DIR / "temp")
     temp_dir.mkdir(parents=True, exist_ok=True)
@@ -525,3 +562,21 @@ def get_default_release_base_files_dir() -> Path:
     dir_to_return = Path(f'{Path.cwd()}/Modding/release_base_files')
     dir_to_return.mkdir(parents=True, exist_ok=True)
     return dir_to_return
+
+
+def get_enabled_mod_names() -> set[str]:
+    mod_names = set()
+    mods_info_dict = get_mods_info_dict_from_json()
+    for mod_name in settings_information.mod_names:
+        if mods_info_dict[mod_name].get('is_enabled', True) == True:
+            mod_names.add(mod_name)
+    return mod_names
+
+
+def get_disabled_mod_names() -> set[str]:
+    mod_names = set()
+    mods_info_dict = get_mods_info_dict_from_json()
+    for mod_name in settings_information.mod_names:
+        if mods_info_dict[mod_name].get('is_enabled', True) == False:
+            mod_names.add(mod_name)
+    return mod_names

@@ -18,9 +18,7 @@ def run_game_for_monitoring() -> None:
 
 
 def run_game_exe_sync() -> None:
-    game_exe_path = settings.get_game_exe_path()
-    if not game_exe_path:
-        raise FileNotFoundError('was unable to find the game executable path')
+    game_exe_path = settings.get_game_exe_path_or_raise()
     app_runner.run_app(
         exe_path=game_exe_path,
         exec_mode=ExecutionMode.SYNC,
@@ -29,9 +27,7 @@ def run_game_exe_sync() -> None:
 
 
 def run_game_exe_async() -> None:
-    game_exe_path = settings.get_game_exe_path()
-    if not game_exe_path:
-        raise FileNotFoundError('was unable to find the game executable path')
+    game_exe_path = settings.get_game_exe_path_or_raise()
     app_runner.run_app(
         exe_path=game_exe_path,
         exec_mode=ExecutionMode.ASYNC,

@@ -14,26 +14,13 @@ def run_patternsleuth_aes_key_scan_command(
     patternsleuth_exe: Path | None = None,
 ) -> list[str]:
 
-    if game_exe_path is None:
-        game_exe_path = settings.get_game_exe_path()
-
     if not game_exe_path:
-        raise RuntimeError(
-            'There was no game exe path provided, so we cannot run the AES key scan.',
-        )
+        game_exe_path = settings.get_game_exe_path_or_raise()
 
-    game_exe_path = Path(game_exe_path)
-
-    if patternsleuth_exe is None:
+    if not patternsleuth_exe:
         tool_info = patternsleuth.PatternsleuthToolInfo(cache=manager.tools_cache)
         tool_info.ensure_tool_installed()
         patternsleuth_exe = Path(tool_info.get_executable_path())
-
-    if not game_exe_path.exists():
-        raise FileNotFoundError(f'Game exe not found: {game_exe_path}')
-
-    if not patternsleuth_exe.exists():
-        raise FileNotFoundError(f'PatternSleuth not found: {patternsleuth_exe}')
 
     command: list[str] = [
         str(patternsleuth_exe),
@@ -86,26 +73,13 @@ def run_patternsleuth_engine_version_scan_command(
     patternsleuth_exe: Path | None = None,
 ) -> dict | None:
 
-    if game_exe_path is None:
-        game_exe_path = settings.get_game_exe_path()
-
     if not game_exe_path:
-        raise RuntimeError(
-            'There was no game exe path provided, so we cannot run the AES key scan.',
-        )
+        game_exe_path = settings.get_game_exe_path_or_raise()
 
-    game_exe_path = Path(game_exe_path)
-
-    if patternsleuth_exe is None:
+    if not patternsleuth_exe:
         tool_info = patternsleuth.PatternsleuthToolInfo(cache=manager.tools_cache)
         tool_info.ensure_tool_installed()
         patternsleuth_exe = Path(tool_info.get_executable_path())
-
-    if not game_exe_path.exists():
-        raise FileNotFoundError(f'Game exe not found: {game_exe_path}')
-
-    if not patternsleuth_exe.exists():
-        raise FileNotFoundError(f'PatternSleuth not found: {patternsleuth_exe}')
 
     command: list[str] = [
         str(patternsleuth_exe),
@@ -153,26 +127,13 @@ def run_patternsleuth_build_configuration_scan_command(
     patternsleuth_exe: Path | None = None,
 ) -> str:
 
-    if game_exe_path is None:
-        game_exe_path = settings.get_game_exe_path()
-
     if not game_exe_path:
-        raise RuntimeError(
-            'There was no game exe path provided, so we cannot run the build configuration scan.',
-        )
+        game_exe_path = settings.get_game_exe_path_or_raise()
 
-    game_exe_path = Path(game_exe_path)
-
-    if patternsleuth_exe is None:
+    if not patternsleuth_exe:
         tool_info = patternsleuth.PatternsleuthToolInfo(cache=manager.tools_cache)
         tool_info.ensure_tool_installed()
         patternsleuth_exe = Path(tool_info.get_executable_path())
-
-    if not game_exe_path.exists():
-        raise FileNotFoundError(f'Game exe not found: {game_exe_path}')
-
-    if not patternsleuth_exe.exists():
-        raise FileNotFoundError(f'PatternSleuth not found: {patternsleuth_exe}')
 
     command: list[str] = [
         str(patternsleuth_exe),

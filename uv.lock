@@ -800,7 +800,7 @@ dev = [
 requires-dist = [
     { name = "platformdirs", specifier = ">=4.3.8" },
     { name = "psutil", specifier = ">=7.0.0" },
-    { name = "requests", specifier = ">=2.32.4" },
+    { name = "requests", specifier = ">=2.34.2" },
     { name = "rich", specifier = ">=14.0.0" },
     { name = "screeninfo", specifier = ">=0.8.1" },
     { name = "tempo-binary-tool-manager", git = "https://www.github.com/Tempo-Organization/tempo-binary-tool-manager" },
