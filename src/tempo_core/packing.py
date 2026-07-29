@@ -1,4 +1,3 @@
-from commitizen.cli import data
 import os
 import shutil
 from pathlib import Path, PurePath
