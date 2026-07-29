@@ -19,7 +19,7 @@ classifiers = [
 dependencies = [
     "platformdirs>=4.3.8",
     "psutil>=7.0.0",
-    "requests>=2.32.4",
+    "requests>=2.34.2",
     "rich>=14.0.0",
     "screeninfo>=0.8.1",
     "tempo-binary-tool-manager",

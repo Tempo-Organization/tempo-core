@@ -26,11 +26,8 @@ def get_unreal_engine_version_from_build_version_file(
         )
 
 
-def get_game_paks_dir(uproject_file_path: Path, game_dir: Path) -> Path:
-    return Path(game_dir.parent / get_uproject_name(uproject_file_path) / 'Content' / 'Paks')
-
-
 def get_is_game_iostore(uproject_file_path: Path, game_dir: Path) -> bool:
+    from tempo_core import utilities
     first_check = settings.get_is_game_iostore_from_config()
     if first_check:
         return first_check
@@ -39,7 +36,7 @@ def get_is_game_iostore(uproject_file_path: Path, game_dir: Path) -> bool:
     _uproject_file_path = uproject_file_path
     is_game_iostore = False
     all_files = file_io.get_files_in_tree(
-        get_game_paks_dir(_uproject_file_path, _game_dir),
+        utilities.get_game_paks_dir(),
     )
     for file in all_files:
         file_extensions = file_io.get_file_extensions(str(file))
@@ -86,16 +83,12 @@ def get_editor_cmd_path(unreal_engine_dir: Path) -> Path:
 
 
 def is_game_ue5(unreal_engine_dir: Path | None) -> bool:
-    ue_version = settings.get_unreal_engine_version(unreal_engine_dir)
-    if not ue_version:
-        raise RuntimeError('No unreal version found, with is game ue5 check')
+    ue_version = settings.get_unreal_engine_version_or_raise(unreal_engine_dir)
     return ue_version.major_version == 5
 
 
 def is_game_ue4(unreal_engine_dir: Path | None) -> bool:
-    ue_version = settings.get_unreal_engine_version(unreal_engine_dir)
-    if not ue_version:
-        raise RuntimeError('No unreal version found, with is game ue4 check')
+    ue_version = settings.get_unreal_engine_version_or_raise(unreal_engine_dir)
     return ue_version.major_version == 4
 
 
@@ -217,7 +210,5 @@ def get_new_uproject_json_contents(
 
 
 def get_run_uat_script_path() -> Path:
-    unreal_engine_dir = settings.get_unreal_engine_dir()
-    if not unreal_engine_dir:
-        raise NotADirectoryError('was unable to locate the unreal engine directory')
+    unreal_engine_dir = settings.get_unreal_engine_dir_or_raise()
     return Path(f"{unreal_engine_dir}/Engine/Build/BatchFiles/RunUAT.{file_io.get_platform_wrapper_extension()}")

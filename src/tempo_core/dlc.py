@@ -13,12 +13,7 @@ from tempo_core.programs import unreal_engine
 
 
 def make_base_release(release_version: str, archive_dir: Path) -> None:
-    uproject_file = settings.get_uproject_file()
-    if not uproject_file:
-        uproject_not_found_error = (
-            f'could not find the specified uproject file "{uproject_file}"'
-        )
-        raise FileNotFoundError(uproject_not_found_error)
+    uproject_file = settings.get_uproject_file_or_raise()
 
     args = [
         "BuildCookRun",
@@ -38,12 +33,7 @@ def make_base_release(release_version: str, archive_dir: Path) -> None:
 
 
 def build_dlc_plugin(plugin_name: str, release_version: str) -> None:
-    uproject_file = settings.get_uproject_file()
-    if not uproject_file:
-        uproject_not_found_error = (
-            f'could not find the specified uproject file "{uproject_file}"'
-        )
-        raise FileNotFoundError(uproject_not_found_error)
+    uproject_file = settings.get_uproject_file_or_raise()
 
     archive_dir = Path(uproject_file.parent / "Packages/BaseRelease")
 
@@ -83,12 +73,7 @@ def generate_dlc_plugin(
     version: float,
     version_name: str,
 ) -> None:
-    uproject_file = settings.get_uproject_file()
-    if not uproject_file:
-        uproject_not_found_error = (
-            f'could not find the specified uproject file "{uproject_file}"'
-        )
-        raise FileNotFoundError(uproject_not_found_error)
+    uproject_file = settings.get_uproject_file_or_raise()
 
     plugins_directory.mkdir(exist_ok=True, parents=True)
 

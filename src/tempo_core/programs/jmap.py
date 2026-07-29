@@ -9,12 +9,8 @@ def run_dump_jmap_jmap_command(
     game_pid: int,
     output_jmap_location: Path,
 ) -> None:
-    unreal_engine_dir = settings.get_unreal_engine_dir()
-    if not unreal_engine_dir:
-        raise RuntimeError('no unreal engine dir')
-    unreal_engine_version = settings.get_unreal_engine_version(unreal_engine_dir)
-    if not unreal_engine_version:
-        raise RuntimeError('no unreal engine version')
+    unreal_engine_dir = settings.get_unreal_engine_dir_or_raise()
+    unreal_engine_version = settings.get_unreal_engine_version_or_raise(unreal_engine_dir)
     engine_ver_string = unreal_engine_version.get_jmap_unreal_version_str()
     os.environ["PATTERNSLEUTH_RES_EngineVersion"] = engine_ver_string
     exec_mode = data_structures.ExecutionMode.SYNC

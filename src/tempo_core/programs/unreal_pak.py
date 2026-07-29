@@ -86,17 +86,11 @@ def make_ue4_iostore_mod(
     # destroy temp dir on program start
 
     temp_dir = tempo_core.settings.get_temp_directory()
-    unreal_engine_dir = tempo_core.settings.get_unreal_engine_dir()
-    if not unreal_engine_dir:
-        raise RuntimeError('Unreal engine install was not valid.')
+    unreal_engine_dir = tempo_core.settings.get_unreal_engine_dir_or_raise()
     unreal_engine_editor_cmd_executable_path = unreal_engine.get_editor_cmd_path(unreal_engine_dir)
     ue_win_dir_str = unreal_engine.get_win_dir_str(unreal_engine_dir)
-    uproject_dir = utilities.get_uproject_dir()
-    if not uproject_dir:
-        raise RuntimeError('Uproject directory was not valid.')
-    uproject_file = tempo_core.settings.get_uproject_file()
-    if not uproject_file:
-        raise FileNotFoundError("uproject file returned None at a critical time")
+    uproject_dir = utilities.get_uproject_dir_or_raise()
+    uproject_file = tempo_core.settings.get_uproject_file_or_raise()
     uproject_name = Path(uproject_file.name).stem
 
     global_utoc_path = Path(
@@ -229,17 +223,14 @@ def make_ue5_iostore_mods(
     dest_pak_file: Path,
     use_symlinks: bool,
 ) -> None:
-    unreal_engine_dir = tempo_core.settings.get_unreal_engine_dir()
-    if not unreal_engine_dir:
-        raise RuntimeError('Unreal engine install was not valid.')
+    unreal_engine_dir = tempo_core.settings.get_unreal_engine_dir_or_raise()
     # unreal_pak = unreal_engine.get_unreal_pak_exe_path(unreal_engine_dir)
     unreal_engine_editor_cmd_executable_path = unreal_engine.get_editor_cmd_path(unreal_engine_dir)
     ue_win_dir_str = unreal_engine.get_win_dir_str(unreal_engine_dir)
-    uproject_name = tempo_core.settings.get_uproject_name()
-    if not uproject_name:
-        raise FileNotFoundError("uproject name returned None at a critical moment")
-    uproject_file = tempo_core.settings.get_uproject_file()
-    global_utoc_path = Path(f"{utilities.get_uproject_dir()}/Saved/StagedBuilds/{ue_win_dir_str}/{uproject_name}/Content/Paks/global.utoc")
+    uproject_name = tempo_core.settings.get_uproject_name_or_raise()
+    uproject_file = tempo_core.settings.get_uproject_file_or_raise()
+    uproject_dir = utilities.get_uproject_dir_or_raise()
+    global_utoc_path = Path(f"{uproject_dir}/Saved/StagedBuilds/{ue_win_dir_str}/{uproject_name}/Content/Paks/global.utoc")
     cooked_content_dir = Path(f"{tempo_core.settings.get_temp_directory()}/{mod_name}")
 
     commands_txt_content = get_iostore_commands_file_contents(mod_name, dest_pak_file)
@@ -248,7 +239,7 @@ def make_ue5_iostore_mods(
     with commands_txt_path.open("w") as file:
         file.write(commands_txt_content)
 
-    meta_data_dir = Path(f"{utilities.get_uproject_dir()}/Saved/Cooked/{ue_win_dir_str}/{uproject_name}/Metadata")
+    meta_data_dir = Path(f"{uproject_dir}/Saved/Cooked/{ue_win_dir_str}/{uproject_name}/Metadata")
     crypto_keys_json = Path(f"{meta_data_dir}/Crypto.json")
     script_objects_bin = Path(f"{meta_data_dir}/scriptobjects.bin")
     package_store_manifest = Path(f"{meta_data_dir}/packagestore.manifest")
@@ -281,7 +272,7 @@ def make_ue5_iostore_mods(
 
     shutil.copy(src_ubulk_manifest, dest_ubulk_manifest)
 
-    platform_string = unreal_engine.get_win_dir_str(tempo_core.settings.get_unreal_engine_dir())
+    platform_string = unreal_engine.get_win_dir_str(unreal_engine_dir)
     iostore_txt_location = Path(
         f"{tempo_core.settings.get_temp_directory()}/iostore_packaging/{mod_name}_iostore.txt",
     )
@@ -381,19 +372,13 @@ def install_unreal_pak_mod(
         compression_str = None
     output_pak_dir = Path(f"{tempo_core.settings.get_temp_directory()}/{utilities.get_pak_dir_structure(mod_name)}")
     intermediate_pak_file = Path(f"{tempo_core.settings.get_temp_directory()}/{utilities.get_pak_dir_structure(mod_name)}/{mod_name}.pak")
-    dest_pak_file = Path(f"{utilities.custom_get_game_paks_dir()}/{utilities.get_pak_dir_structure(mod_name)}/{mod_name}.pak")
+    dest_pak_file = Path(f"{utilities.get_game_paks_dir()}/{utilities.get_pak_dir_structure(mod_name)}/{mod_name}.pak")
     output_pak_dir.mkdir(parents=True, exist_ok=True)
-    Path(f"{utilities.custom_get_game_paks_dir()}/{utilities.get_pak_dir_structure(mod_name)}").mkdir(exist_ok=True)
-    unreal_engine_dir = tempo_core.settings.get_unreal_engine_dir()
-    if not unreal_engine_dir:
-        raise RuntimeError('Unreal engine install was not valid.')
+    Path(f"{utilities.get_game_paks_dir()}/{utilities.get_pak_dir_structure(mod_name)}").mkdir(exist_ok=True)
+    unreal_engine_dir = tempo_core.settings.get_unreal_engine_dir_or_raise()
     exe_path = unreal_engine.get_unreal_pak_exe_path(unreal_engine_dir)
-    uproject_file = tempo_core.settings.get_uproject_file()
-    if not uproject_file:
-        raise FileNotFoundError("get uproject file returned None at a critical moment")
-    custom_game_dir = utilities.custom_get_game_dir()
-    if not custom_game_dir:
-        raise RuntimeError('custom_game_dir was not valid.')
+    uproject_file = tempo_core.settings.get_uproject_file_or_raise()
+    custom_game_dir = utilities.get_game_dir_or_raise()
     is_game_iostore = unreal_engine.get_is_game_iostore(
         uproject_file, custom_game_dir,
     )

@@ -28,11 +28,11 @@ ZIP_STRS_TO_GAME_STRS = {
     "4_27_2_Shipping_Loose_NoSigs.zip": "shipping_loose_no_sigs_4_27_2",
     "4_27_2_Shipping_Paks_NoSigs.zip": "shipping_paks_no_sigs_4_27_2",
     "4_27_2_Shipping_Paks_Sigs.zip": "shipping_paks_sigs_4_27_2",
-    "5_1_1_Shipping_Iostore_NoSigs.zip": "shipping_iostore_no_sigs_5_1_1",
-    "5_1_1_Shipping_Iostore_Sigs.zip": "shipping_iostore_sigs_5_1_1",
-    "5_1_1_Shipping_Loose_NoSigs.zip": "shipping_loose_no_sigs_5_1_1",
-    "5_1_1_Shipping_Paks_NoSigs.zip": "shipping_paks_no_sigs_5_1_1",
-    "5_1_1_Shipping_Paks_Sigs.zip": "shipping_paks_sigs_5_1_1",
+    # "5_1_1_Shipping_Iostore_NoSigs.zip": "shipping_iostore_no_sigs_5_1_1",
+    # "5_1_1_Shipping_Iostore_Sigs.zip": "shipping_iostore_sigs_5_1_1",
+    # "5_1_1_Shipping_Loose_NoSigs.zip": "shipping_loose_no_sigs_5_1_1",
+    # "5_1_1_Shipping_Paks_NoSigs.zip": "shipping_paks_no_sigs_5_1_1",
+    # "5_1_1_Shipping_Paks_Sigs.zip": "shipping_paks_sigs_5_1_1",
 }
 
 ZIP_STR = "4_27_2_Shipping_Iostore_NoSigs.zip"
@@ -76,12 +76,21 @@ def cache_files() -> list[Path]:
     ue4ss_zip_cache_dir.mkdir(parents=True, exist_ok=True)
 
     for game_zip in ZIP_STRS_TO_GAME_STRS.keys():
-        game_url = f"https://github.com/Tempo-Organization/tempo-games/releases/download/1.0.0/{game_zip}"
+        game_url = f"https://www.github.com/Tempo-Organization/tempo-test-games/releases/download/1.0.0/{game_zip}"
         zip_path = Path(f"{packaged_games_cache_dir}/{game_zip}")
         # add some verification to make sure the zip was valid here
         if not zip_path.is_file():
             logger.log_message("the following game zip is being downloaded/cached. Please wait...")
             tempo_core.file_io.download_file(game_url, zip_path)
+
+
+    # game_url = f"https://www.github.com/Tempo-Organization/tempo-test-games/releases/download/1.0.0/4_27_2_Shipping_Iostore_NoSigs.zip"
+    # zip_path = Path(f"{packaged_games_cache_dir}/4_27_2_Shipping_Iostore_NoSigs.zip")
+    # # add some verification to make sure the zip was valid here
+    # if not zip_path.is_file():
+    #     logger.log_message("the following game zip is being downloaded/cached. Please wait...")
+    #     tempo_core.file_io.download_file(game_url, zip_path)
+
 
     template_files = [
         "Uprojects/4_11_2/ReusableMods/Content/Mods/LooseExampleMod/ModActor.uasset",
@@ -99,7 +108,7 @@ def cache_files() -> list[Path]:
     for template_file in template_files:
         if not Path(f"{uproject_files_cache_dir}/{template_file}").is_file():
             tempo_core.programs.git.download_files_from_github_repo(
-                repo_url="https://github.com/Tempo-Organization/tempo-tests",
+                repo_url="https://github.com/Tempo-Organization/tempo-blueprint-tests",
                 repo_branch="main",
                 file_paths=[template_file],
                 output_directory=uproject_files_cache_dir,
@@ -205,7 +214,7 @@ class TestShippingIostoreNoSigsUE4(unittest.TestCase):
     # def setUp(self):
     #     return
 
-    # def test_0001_repak(self):
+    # def test_0001_repak(self) -> None:
     #     tempo_core.main_logic.full_run(
     #         input_mod_names=["RepakMadeExampleMod"],
     #         toggle_engine=False,
@@ -214,13 +223,13 @@ class TestShippingIostoreNoSigsUE4(unittest.TestCase):
     #         use_symlinks=False,
     #     )
 
-    # def test_0002_unreal_pak(self):
-    #     # check full run all works, and test mods all works eventually
-    #     # tempo_core.main_logic.test_mods(
-    #     #     input_mod_names=["UnrealPakMadeExampleMod"],
-    #     #     toggle_engine=False,
-    #     #     use_symlinks=False,
-    #     # )
+    # def test_0002_unreal_pak(self) -> None:
+    # #     # check full run all works, and test mods all works eventually
+    # #     # tempo_core.main_logic.test_mods(
+    # #     #     input_mod_names=["UnrealPakMadeExampleMod"],
+    # #     #     toggle_engine=False,
+    # #     #     use_symlinks=False,
+    # #     # )
     #     tempo_core.main_logic.full_run(
     #         input_mod_names=["UnrealPakMadeExampleMod"],
     #         toggle_engine=False,
@@ -229,7 +238,7 @@ class TestShippingIostoreNoSigsUE4(unittest.TestCase):
     #         use_symlinks=False,
     #     )
 
-    # def test_0003_engine_made(self):
+    # def test_0003_engine_made(self) -> None:
     #     tempo_core.main_logic.full_run(
     #         input_mod_names=["EngineMadeExampleMod"],
     #         toggle_engine=False,
@@ -238,16 +247,16 @@ class TestShippingIostoreNoSigsUE4(unittest.TestCase):
     #         use_symlinks=False,
     #     )
 
-    # def test_0004_loose(self):
-    #     tempo_core.main_logic.full_run(
-    #         input_mod_names=["LooseExampleMod"],
-    #         toggle_engine=False,
-    #         base_files_directory=BASE_FILES_DIR,
-    #         output_directory=OUTPUT_DIR,
-    #         use_symlinks=False,
-    #     )
+    def test_0004_loose(self) -> None:
+        tempo_core.main_logic.full_run(
+            input_mod_names=["LooseExampleMod"],
+            toggle_engine=False,
+            base_files_directory=BASE_FILES_DIR,
+            output_directory=OUTPUT_DIR,
+            use_symlinks=False,
+        )
 
-    # def test_0005_material_test(self):
+    # def test_0005_material_test(self) -> None:
     #     tempo_core.main_logic.full_run(
     #         input_mod_names=["MaterialTest"],
     #         toggle_engine=False,
@@ -265,13 +274,13 @@ class TestShippingIostoreNoSigsUE4(unittest.TestCase):
     #         use_symlinks=False,
     #     )
 
-    def test_0007_all(self) -> None:
-        tempo_core.main_logic.full_run_all(
-            toggle_engine=False,
-            base_files_directory=BASE_FILES_DIR,
-            output_directory=OUTPUT_DIR,
-            use_symlinks=False,
-        )
+    # def test_0007_all(self) -> None:
+    #     tempo_core.main_logic.full_run_all(
+    #         toggle_engine=False,
+    #         base_files_directory=BASE_FILES_DIR,
+    #         output_directory=OUTPUT_DIR,
+    #         use_symlinks=False,
+    #     )
 
     # def test_0007_all(self):
     #     tempo_core.main_logic.test_mods_all(

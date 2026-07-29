@@ -31,9 +31,7 @@ def get_editor_preferences_ini_path() -> Path | None:
     if unreal_version:
         if unreal_version.major_version == 5:
             win_dir_str = f'{win_dir_str}Editor'
-        uproject_file = settings.get_uproject_file()
-        if not uproject_file:
-            raise FileNotFoundError('was unable to locate your uproject file')
+        uproject_file = settings.get_uproject_file_or_raise()
         uproject_dir = uproject_file.parent
         return Path(f'{uproject_dir}/Saved/Config/{win_dir_str}/EditorPerProjectUserSettings.ini')
     return None
@@ -66,7 +64,7 @@ It will result in unexpected packaging issues.
 It is reccomended to disable this setting, and do a fresh project clean before starting more work.
 You can disable this through the editor preferences in unreal, or manually.
 To manually disable chunk ids open "{get_editor_preferences_ini_path()}" and change {get_compare_string()} to False.
-To clean your project, close unreal editor and run the tempo_cli cleanup_full command, or you can manually delete
+To clean your project, close unreal editor and run the tempo_cli clean full command, or you can manually delete
 the following directories within your unreal uproject directory.
 Saved, Cooked, Intermediate, DerivedDataCache, Build, and Binaries.
 If you would like to suppress this warning, you can set the TEMPO_SUPPRESS_ASSIGN_CHUNK_ID_WARNING env var to True
@@ -86,11 +84,7 @@ def assign_chunk_id_usage_check() -> None:
 
 
 def uproject_check() -> None:
-    uproject_file = settings.get_uproject_file()
-
-    if not uproject_file:
-        logger.log_message("Error: No uproject file path provided.")
-        return
+    uproject_file = settings.get_uproject_file_or_raise()
 
     # Try full path first
     if uproject_file.is_file():
@@ -151,6 +145,7 @@ def clear_temp_dir() -> None:
         except OSError as e:
             logger.log_message(f'Warning: Failed to remove temp directory {temp_dir}: {e}')
 
+
 has_inited_already = False
 def initialization(reinit_if_applicable: bool = False) -> None:
     global has_inited_already
@@ -181,9 +176,10 @@ def initialization(reinit_if_applicable: bool = False) -> None:
     if not online_check.has_checked_online_status:
         online_check.init_is_online()
 
-    main_logic.init_thread_system()
     check_generate_wrapper()
     check_settings()
+
+    main_logic.init_thread_system()
 
     if settings.settings_information.init_settings_done:
         uproject_check()
@@ -196,7 +192,7 @@ def initialization(reinit_if_applicable: bool = False) -> None:
         # git_info_check()
         # repak.ensure_repak_installed()
         # retoc.ensure_retoc_installed()
-        game_exe_check()
+        # game_exe_check()
 
         # if repak.get_is_using_repak_path_override():
         #     file_io.check_file_exists(repak.get_repak_path_override())

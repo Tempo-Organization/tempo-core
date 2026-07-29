@@ -51,8 +51,7 @@ def generate_mods_other(*, use_symlinks: bool) -> None:
 def test_mods(*, input_mod_names: list[str], toggle_engine: bool, use_symlinks: bool) -> None:
     if toggle_engine:
         engine.toggle_engine_off()
-    for mod_name in input_mod_names:
-        settings.settings_information.mod_names.append(mod_name)
+    settings.settings_information.mod_names.update(input_mod_names)
     generate_mods_other(use_symlinks=use_symlinks)
     if toggle_engine:
         engine.toggle_engine_on()
@@ -62,9 +61,7 @@ def test_mods_all(*, toggle_engine: bool, use_symlinks: bool) -> None:
     if toggle_engine:
         engine.toggle_engine_off()
     mod_info_dict = settings.settings_information.settings.get("mods_info", {})
-    for name in mod_info_dict.keys():
-        if name not in settings.settings_information.mod_names:
-            settings.settings_information.mod_names.append(name)
+    settings.settings_information.mod_names.update(mod_info_dict.keys())
     generate_mods_other(use_symlinks=use_symlinks)
     if toggle_engine:
         engine.toggle_engine_on()
@@ -80,8 +77,7 @@ def full_run(
 ) -> None:
     if toggle_engine:
         engine.toggle_engine_off()
-    for mod_name in input_mod_names:
-        settings.settings_information.mod_names.append(mod_name)
+    settings.settings_information.mod_names.update(input_mod_names)
     packing.cooking()
     generate_mods(input_mod_names=input_mod_names, use_symlinks=use_symlinks)
     generate_mod_releases(
@@ -102,9 +98,7 @@ def full_run_all(
 ) -> None:
     if toggle_engine:
         engine.toggle_engine_off()
-    mods_info = settings.settings_information.settings.get("mods_info", {})
-    for key in mods_info.keys():
-        settings.settings_information.mod_names.append(key)
+    settings.settings_information.mod_names.update(settings.get_mods_info_dict_from_json().keys())
     packing.cooking()
     generate_mods_all(use_symlinks=use_symlinks)
     generate_mod_releases_all(
@@ -198,7 +192,7 @@ def install_fmodel(run_after_install: bool) -> None:
 def get_solo_build_project_command() -> str:
     command = (
         f'"Engine\\Build\\BatchFiles\\RunUAT.{file_io.get_platform_wrapper_extension()}" {settings.get_unreal_engine_building_main_command()} '
-        f'-project="{settings.get_uproject_file()}" '
+        f'-project="{settings.get_uproject_file_or_raise()}" '
     )
     for arg in settings.get_engine_building_args():
         command = f"{command} {arg}"
@@ -209,9 +203,7 @@ def run_proj_build_command(command: str) -> None:
     command_parts = command.split(" ")
     executable = Path(command_parts[0])
     args = command_parts[1:]
-    unreal_engine_dir = settings.get_unreal_engine_dir()
-    if not unreal_engine_dir:
-        raise RuntimeError('Unreal engine install was not valid.')
+    unreal_engine_dir = settings.get_unreal_engine_dir_or_raise()
     app_runner.run_app(
         exe_path=executable, args=args, working_dir=unreal_engine_dir,
     )
@@ -508,15 +500,10 @@ def remove_mods(config_file: Path, mod_names: list) -> None:
 
 
 def get_solo_cook_project_command() -> str:
-    uproject_file = settings.get_uproject_file()
-    if not uproject_file:
-        uproject_not_found_error = (
-            f'could not find the specified uproject file "{uproject_file}"'
-        )
-        raise FileNotFoundError(uproject_not_found_error)
+    uproject_file = settings.get_uproject_file_or_raise()
     command = (
         f'"Engine\\Build\\BatchFiles\\RunUAT.{file_io.get_platform_wrapper_extension()}" {settings.get_unreal_engine_cooking_main_command()} '
-        f'-project="{settings.get_uproject_file()}" '
+        f'-project="{settings.get_uproject_file_or_raise()}" '
     )
     if not unreal_engine.has_build_target_been_built(uproject_file):
         build_arg = "-build"
@@ -537,24 +524,17 @@ def cook(*, toggle_engine: bool) -> None:
 
 
 def get_solo_package_command() -> str:
-    uproject_file = settings.get_uproject_file()
-    if not uproject_file:
-        uproject_not_found_error = (
-            f'could not find the specified uproject file "{uproject_file}"'
-        )
-        raise FileNotFoundError(uproject_not_found_error)
+    uproject_file = settings.get_uproject_file_or_raise()
     command = (
         f'"Engine\\Build\\BatchFiles\\RunUAT.{file_io.get_platform_wrapper_extension()}" {settings.get_unreal_engine_packaging_main_command()} '
-        f'-project="{settings.get_uproject_file()}"'
+        f'-project="{settings.get_uproject_file_or_raise()}"'
     )
     # technically it shouldn't auto build itself, since this is not a auto run sequence but used in an explicit command
     # if not ue_dev_py_utils.has_build_target_been_built(utilities.get_uproject_file()):
     #     command = f'{command} -build'
     for arg in settings.get_engine_packaging_args():
         command = f"{command} {arg}"
-    custom_game_dir = utilities.custom_get_game_dir()
-    if not custom_game_dir:
-        raise NotADirectoryError('could not obtain the custom game directory')
+    custom_game_dir = utilities.get_game_dir_or_raise()
     is_game_iostore = unreal_engine.get_is_game_iostore(
         uproject_file, custom_game_dir,
     )
@@ -569,8 +549,7 @@ def get_solo_package_command() -> str:
 def package(*, toggle_engine: bool, use_symlinks: bool) -> None:
     if toggle_engine:
         engine.toggle_engine_off()
-    for entry in settings.get_mods_info_dict_from_json().keys():
-        settings.settings_information.mod_names.append(entry)
+    settings.settings_information.mod_names.update(settings.get_mods_info_dict_from_json().keys())
     logger.log_message("Packaging Starting")
     run_proj_build_command(get_solo_package_command())
     packing.generate_mods(use_symlinks=use_symlinks)
@@ -580,13 +559,11 @@ def package(*, toggle_engine: bool, use_symlinks: bool) -> None:
 
 
 def resave_packages_and_fix_up_redirectors() -> None:
-    unreal_engine_dir = settings.get_unreal_engine_dir()
-    if not unreal_engine_dir:
-        raise NotADirectoryError('was unable to locate the unreal engine directory')
+    unreal_engine_dir = settings.get_unreal_engine_dir_or_raise()
     engine.close_game_engine()
     exe = unreal_engine.get_unreal_editor_exe_path(unreal_engine_dir)
     args = [
-        f'"{settings.get_uproject_file()}"',
+        f'"{settings.get_uproject_file_or_raise()}"',
         '-run=ResavePackages',
         '-fixupredirects',
     ]
@@ -675,9 +652,7 @@ def cleanup_game(output_json: Path | None = None) -> None:
         if not config_file_dir:
             raise NotADirectoryError('could not obtain your settings json directory')
         file_list_json = Path(config_file_dir / "game_file_list.json")
-    custom_game_dir = utilities.custom_get_game_dir()
-    if not custom_game_dir:
-        raise NotADirectoryError('could not obtain the custom game directory')
+    custom_game_dir = utilities.get_game_dir_or_raise()
     game_directory = custom_game_dir.parent
     delete_unlisted_files(game_directory, file_list_json)
 
@@ -690,9 +665,7 @@ def generate_game_file_list_json(output_json: Path | None = None) -> None:
         if not config_file_dir:
             raise NotADirectoryError('was unable to obtain the settings json directory')
         file_list_json = Path(config_file_dir / "game_file_list.json")
-    custom_game_dir = utilities.custom_get_game_dir()
-    if not custom_game_dir:
-        raise NotADirectoryError('was unable to locate the game directory')
+    custom_game_dir = utilities.get_game_dir_or_raise()
     game_directory = custom_game_dir.parent
     generate_file_paths_json(game_directory, file_list_json)
 
@@ -706,15 +679,12 @@ def generate_file_list(directory: Path, file_list_path: Path) -> None:
 
 
 def generate_mods(*, input_mod_names: list[str], use_symlinks: bool) -> None:
-    for mod_name in input_mod_names:
-        settings.settings_information.mod_names.append(mod_name)
+    settings.settings_information.mod_names.update(input_mod_names)
     packing.generate_mods(use_symlinks=use_symlinks)
 
 
 def generate_mods_all(*, use_symlinks: bool) -> None:
-    for mod_name in settings.get_mods_info_dict_from_json().keys():
-        settings.settings_information.mod_names.append(mod_name)
-        logger.log_message(mod_name)
+    settings.settings_information.mod_names.update(settings.get_mods_info_dict_from_json().keys())
     packing.generate_mods(use_symlinks=use_symlinks)
 
 
@@ -724,7 +694,7 @@ def make_unreal_pak_mod_release(
 ) -> None:
     # currently assumes mod was installed to game and not temporarily in the working dir, maybe?
     src_pak = Path(
-        f"{utilities.custom_get_game_paks_dir()}/{utilities.get_pak_dir_structure(mod_name)}/{mod_name}.pak",
+        f"{utilities.get_game_paks_dir()}/{utilities.get_pak_dir_structure(mod_name)}/{mod_name}.pak",
     )
     dest_pak_file = Path(
         f"{base_files_directory}/{mod_name}/{utilities.get_pak_dir_structure(mod_name)}/{mod_name}.pak",
@@ -767,12 +737,8 @@ def make_engine_mod_release(
 ) -> None:
     mod_files = []
     pak_chunk_num = singular_mod_info["pak_chunk_num"]
-    uproject_file = settings.get_uproject_file()
-    if not uproject_file:
-        raise FileNotFoundError('was unable to locate the uproject file')
-    custom_game_dir = utilities.custom_get_game_dir()
-    if not custom_game_dir:
-        raise NotADirectoryError('was unable to locate the game directory')
+    uproject_file = settings.get_uproject_file_or_raise()
+    custom_game_dir = utilities.get_game_dir_or_raise()
     uproject_dir = unreal_engine.get_uproject_dir(uproject_file)
     win_dir_str = unreal_engine.get_win_dir_str(settings.get_unreal_engine_dir())
     uproject_name = unreal_engine.get_uproject_name(uproject_file)
@@ -801,15 +767,8 @@ def get_mod_files_asset_paths_for_loose_mods(
     mod_name: str, base_files_directory: Path,
 ) -> dict[Path, Path]:
     file_dict = {}
-    uproject_file = settings.get_uproject_file()
-    if not uproject_file:
-        uproject_not_found_error = (
-            f'could not find the specified uproject file "{uproject_file}"'
-        )
-        raise FileNotFoundError(uproject_not_found_error)
-    unreal_engine_dir = settings.get_unreal_engine_dir()
-    if not unreal_engine_dir:
-        raise RuntimeError('Unreal engine install was not valid.')
+    uproject_file = settings.get_uproject_file_or_raise()
+    unreal_engine_dir = settings.get_unreal_engine_dir_or_raise()
     cooked_uproject_dir = unreal_engine.get_cooked_uproject_dir(
         uproject_file, unreal_engine_dir,
     )
@@ -827,15 +786,8 @@ def get_mod_files_tree_paths_for_loose_mods(
     mod_name: str, base_files_directory: Path,
 ) -> dict[Path, Path]:
     file_dict = {}
-    uproject_file = settings.get_uproject_file()
-    if not uproject_file:
-        uproject_not_found_error = (
-            f'could not find the specified uproject file "{uproject_file}"'
-        )
-        raise FileNotFoundError(uproject_not_found_error)
-    unreal_engine_dir = settings.get_unreal_engine_dir()
-    if not unreal_engine_dir:
-        raise RuntimeError('Unreal engine install was not valid.')
+    uproject_file = settings.get_uproject_file_or_raise()
+    unreal_engine_dir = settings.get_unreal_engine_dir_or_raise()
     cooked_uproject_dir = unreal_engine.get_cooked_uproject_dir(
         uproject_file, unreal_engine_dir,
     )
@@ -872,15 +824,8 @@ def get_mod_files_mod_name_dir_paths_for_loose_mods(
     mod_name: str, base_files_directory: Path,
 ) -> dict[Path, Path]:
     file_dict = {}
-    uproject_file = settings.get_uproject_file()
-    if not uproject_file:
-        uproject_not_found_error = (
-            f'could not find the specified uproject file "{uproject_file}"'
-        )
-        raise FileNotFoundError(uproject_not_found_error)
-    unreal_engine_dir = settings.get_unreal_engine_dir()
-    if not unreal_engine_dir:
-        raise RuntimeError('Unreal engine install was not valid.')
+    uproject_file = settings.get_uproject_file_or_raise()
+    unreal_engine_dir = settings.get_unreal_engine_dir_or_raise()
     mod_name_dir_name = utilities.get_mod_name_dir_name(mod_name)
     unreal_mod_tree_type_str = utilities.get_unreal_mod_tree_type_str(mod_name)
     cooked_uproject_dir = unreal_engine.get_cooked_uproject_dir(uproject_file, unreal_engine_dir)
@@ -998,17 +943,13 @@ def generate_mod_release(
 def generate_mod_releases(
     mod_names: list[str], base_files_directory: Path, output_directory: Path,
 ) -> None:
-    mods_info_dict = settings.get_mods_info_dict_from_json()
-    for mod_name in mod_names:
-        if mods_info_dict[mod_name]['is_enabled']:
-            generate_mod_release(mod_name, base_files_directory, output_directory)
+    for mod_name in settings.get_enabled_mod_names():
+        generate_mod_release(mod_name, base_files_directory, output_directory)
 
 
 def generate_mod_releases_all(base_files_directory: Path, output_directory: Path) -> None:
-    mods_info_dict = settings.get_mods_info_dict_from_json()
-    for mod_name in mods_info_dict.keys():
-        if mods_info_dict[mod_name]['is_enabled']:
-            generate_mod_release(mod_name, base_files_directory, output_directory)
+    for mod_name in settings.get_enabled_mod_names():
+        generate_mod_release(mod_name, base_files_directory, output_directory)
 
 
 def resync_dir_with_repo() -> None:
