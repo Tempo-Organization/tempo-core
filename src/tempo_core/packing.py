@@ -159,7 +159,7 @@ def get_cook_project_commands() -> list[str]:
             asset_paths.extend(mods_info[key].get("file_includes", {}).get("asset_paths", []))
             tree_paths.extend(mods_info[key].get("file_includes", {}).get("tree_paths", []))
             if settings.get_should_mod_auto_include_mod_name_dir_name(key):
-                path_to_check = f'{uproject_dir}/Content/{mods_info[key]["mod_name_dir_type"]}/{key}'
+                path_to_check = f'{uproject_dir}/Content/Mods/{utilities.get_mod_name_dir_name(key)}'
                 files_in_mod_name_dir_name_tree = file_io.get_files_in_tree(Path(path_to_check))
                 for path in files_in_mod_name_dir_name_tree:
                     if path.is_file():
