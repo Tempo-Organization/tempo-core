@@ -1,9 +1,16 @@
+import os
 import itertools
 import winreg
-import pathlib
+from pathlib import Path
+from uuid import UUID
+from dataclasses import replace
+
+from tempo_core.programs import unreal_engine
+from tempo_core.data_structures import UnrealEngineVersion
+from tempo_core import logger
 
 
-def get_unreal_installs_from_registry() -> dict[str, str]:
+def get_unreal_installs_from_registry() -> dict[UnrealEngineVersion | UUID, Path]:
     installs = {}
 
     # Machine-wide installs (Epic Games Launcher)
@@ -26,7 +33,9 @@ def get_unreal_installs_from_registry() -> dict[str, str]:
                                 install_dir, _ = winreg.QueryValueEx(
                                     subkey, "InstalledDirectory",
                                 )
-                                installs[subkey_name] = install_dir
+                                unreal_version = UnrealEngineVersion.from_raw_unreal_version_str(subkey_name)
+                                install_dir = Path(install_dir)
+                                installs[unreal_version] = install_dir
                             except FileNotFoundError:
                                 pass
                     except OSError:
@@ -43,9 +52,15 @@ def get_unreal_installs_from_registry() -> dict[str, str]:
             i = 0
             while True:
                 try:
-                    name, value, _ = winreg.EnumValue(root, i)
+                    unreal_guid, unreal_engine_directory, _ = winreg.EnumValue(root, i)
+                    unreal_engine_directory = Path(unreal_engine_directory)
                     i += 1
-                    installs[name] = value
+                    unreal_version = unreal_engine.get_unreal_engine_version_from_build_version_file(unreal_engine_directory)
+                    if unreal_version:
+                        unreal_version = replace(unreal_version, guid=UUID(unreal_guid))
+                        installs[unreal_version] = unreal_engine_directory
+                    else:
+                        installs[UUID(unreal_guid)] = unreal_engine_directory
                 except OSError:
                     break
     except FileNotFoundError:
@@ -54,22 +69,9 @@ def get_unreal_installs_from_registry() -> dict[str, str]:
     return installs
 
 
-import os
-import winreg
 
 
 def remove_invalid_unreal_engine_registry_entries() -> None:
-    def is_valid_install(path: pathlib.Path) -> bool:
-        path = pathlib.Path(path)
-        if not path.is_dir():
-            return False
-        for _, _, files in path.walk():
-            if any(f.lower().endswith(".exe") for f in files):
-                return True
-        return False
-
-    unreal_installs = get_unreal_installs_from_registry()
-
     # Machine-wide installs
     machine_paths = [
         r"SOFTWARE\EpicGames\Unreal Engine",
@@ -78,19 +80,30 @@ def remove_invalid_unreal_engine_registry_entries() -> None:
 
     for reg_path in machine_paths:
         try:
-            with winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, reg_path, 0, winreg.KEY_ALL_ACCESS) as root:
+            with winreg.OpenKey(
+                winreg.HKEY_LOCAL_MACHINE,
+                reg_path,
+                0,
+                winreg.KEY_ALL_ACCESS,
+            ) as root:
                 i = 0
                 while True:
                     try:
                         subkey_name = winreg.EnumKey(root, i)
+
                         with winreg.OpenKey(root, subkey_name) as subkey:
                             try:
-                                install_dir, _ = winreg.QueryValueEx(subkey, "InstalledDirectory")
-                                if not is_valid_install(install_dir):
+                                install_dir, _ = winreg.QueryValueEx(
+                                    subkey,
+                                    "InstalledDirectory",
+                                )
+
+                                if not Path(install_dir).is_dir():
                                     winreg.DeleteKey(root, subkey_name)
-                                    continue  # don't increment i after deletion
+                                    continue  # Don't increment after deletion.
                             except FileNotFoundError:
                                 pass
+
                         i += 1
                     except OSError:
                         break
@@ -108,12 +121,30 @@ def remove_invalid_unreal_engine_registry_entries() -> None:
             i = 0
             while True:
                 try:
-                    name, value, _ = winreg.EnumValue(root, i)
-                    if not is_valid_install(value):
-                        winreg.DeleteValue(root, name)
-                        continue  # don't increment i after deletion
+                    guid, install_dir, _ = winreg.EnumValue(root, i)
+
+                    if not Path(install_dir).is_dir():
+                        winreg.DeleteValue(root, guid)
+                        continue  # Don't increment after deletion.
+
                     i += 1
                 except OSError:
                     break
     except FileNotFoundError:
         pass
+
+
+def list_unreal_installs(clean: bool) -> None:
+    unreal_installs = get_unreal_installs_from_registry()
+    if unreal_installs:
+        for unreal_version in unreal_installs.keys():
+            if isinstance(unreal_version, UnrealEngineVersion):
+                unreal_version_str = unreal_version.get_raw_unreal_version_str()
+                logger.log_message(f"{unreal_version_str}: {str(unreal_installs[unreal_version])} directory_exists: {unreal_installs[unreal_version].is_dir()}")
+            if isinstance(unreal_version, UUID):
+                logger.log_message(f"{str(unreal_version)}: {unreal_installs[unreal_version]} directory_exists: {unreal_installs[unreal_version].is_dir()}")
+
+    else:
+        logger.log_message('There were no detected unreal engine installs.')
+    if clean:
+        remove_invalid_unreal_engine_registry_entries()
