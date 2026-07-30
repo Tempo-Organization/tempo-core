@@ -1,6 +1,7 @@
 from enum import Enum, IntEnum
 from typing import Type, TypeVar, Any
 from dataclasses import dataclass
+from uuid import UUID
 
 
 class PackingType(Enum):
@@ -241,10 +242,30 @@ def get_enum_strings_from_enum(enum_cls: Type[Enum]) -> list[str]:
     return [entry.value for entry in enum_cls]
 
 
-@dataclass
+@dataclass(frozen=True)
 class UnrealEngineVersion:
     major_version: int
     minor_version: int
+    guid: UUID | None = None
+
+    @classmethod
+    def from_raw_unreal_version_str(
+        cls,
+        version: str,
+        guid: UUID | None = None,
+    ) -> "UnrealEngineVersion":
+        parts = version.split(".")
+
+        if len(parts) < 2:
+            raise ValueError(
+                f"Invalid Unreal Engine version '{version}'. Expected at least 'major.minor'.",
+            )
+
+        return cls(
+            major_version=int(parts[0]),
+            minor_version=int(parts[1]),
+            guid=guid,
+        )
 
     def get_retoc_unreal_version_str(self) -> str:
         return f"UE{self.major_version}_{self.minor_version}"
@@ -262,6 +283,9 @@ class UnrealEngineVersion:
         )
 
     def get_jmap_unreal_version_str(self) -> str:
+        return f"{self.major_version}.{self.minor_version}"
+
+    def get_raw_unreal_version_str(self) -> str:
         return f"{self.major_version}.{self.minor_version}"
 
 

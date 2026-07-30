@@ -8,7 +8,7 @@ import subprocess
 from pathlib import Path
 
 from tempo_core.programs import unreal_engine
-from tempo_core import data_structures, file_io, logger, process_management, utilities
+from tempo_core import data_structures, file_io, logger, process_management, utilities, registry
 
 from tempo_settings.tempo_settings import SettingSpecificInfo, SettingsInformation, SettingsOrigin
 
@@ -105,6 +105,13 @@ def get_unreal_engine_dir() -> Path | None:
     if unreal_engine_directory:
         return Path(unreal_engine_directory)
     else:
+        unreal_version = get_unreal_engine_version(engine_path=None)
+        if not unreal_version:
+            return None
+        registry_installs = registry.get_unreal_installs_from_registry()
+        raw_unreal_version_str = unreal_version.get_raw_unreal_version_str()
+        if raw_unreal_version_str in registry_installs.keys():
+            return registry_installs[raw_unreal_version_str]
         return None
 
 
