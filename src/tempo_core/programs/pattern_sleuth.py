@@ -3,7 +3,7 @@ from pathlib import Path
 import subprocess
 import json
 
-from tempo_core import settings, logger, manager
+from tempo_core import settings, logger, manager, env
 from tempo_core.data_structures import UnrealEngineVersion
 
 from tempo_binary_tools import patternsleuth
@@ -183,15 +183,9 @@ def dump_engine_version(config_file: Path, directory: Path, dump_to_tempo_config
 
     logger.log_message(f'output path: {output_path}')
 
-    def env_var_is_true(name: str) -> bool:
-        value = os.getenv(name)
-        if value is None:
-            return False
-        return value.strip().lower() in {"1", "true", "yes", "on"}
-
     env_var = os.getenv('TEMPO_DUMP_PATTERNSLEUTH_VERSION')
 
-    if not dump_to_tempo_config or not env_var:
+    if not dump_to_tempo_config or not env.env_true(env_var):
         return unreal_engine_version
 
     with Path.open(config_file, "r", encoding="utf-8") as f:
