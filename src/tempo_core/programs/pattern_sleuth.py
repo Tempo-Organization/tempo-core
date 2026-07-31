@@ -1,8 +1,10 @@
 import re
 from pathlib import Path
 import subprocess
+import json
 
 from tempo_core import settings, logger, manager
+from tempo_core.data_structures import UnrealEngineVersion
 
 from tempo_binary_tools import patternsleuth
 
@@ -51,7 +53,7 @@ def run_patternsleuth_aes_key_scan_command(
     return keys
 
 
-def parse_engine_version(output: str) -> dict[str, int] | None:
+def parse_engine_version(output: str) -> UnrealEngineVersion | None:
     """
     Extract EngineVersion major/minor from PatternSleuth output.
     Returns:
@@ -62,16 +64,13 @@ def parse_engine_version(output: str) -> dict[str, int] | None:
         return None
 
     major, minor = match.groups()
-    return {
-        "major": int(major),
-        "minor": int(minor),
-    }
+    return UnrealEngineVersion(major_version=int(major), minor_version=int(minor))
 
 
 def run_patternsleuth_engine_version_scan_command(
     game_exe_path: Path | None = None,
     patternsleuth_exe: Path | None = None,
-) -> dict | None:
+) -> UnrealEngineVersion | None:
 
     if not game_exe_path:
         game_exe_path = settings.get_game_exe_path_or_raise()
@@ -100,12 +99,12 @@ def run_patternsleuth_engine_version_scan_command(
 
     output = f"{result.stdout}\n{result.stderr}"
     logger.log_message(f'output: {output}')
-    engine_version = parse_engine_version(output)
-    if not engine_version:
-        raise RuntimeError('parsing unreal engine version with patternsleuth failed.')
-    logger.log_message(f'unreal engine major version: {engine_version["major"]}')
-    logger.log_message(f'unreal engine minor version: {engine_version["minor"]}')
-    return engine_version
+    unreal_engine_version = parse_engine_version(output)
+    if not unreal_engine_version:
+        raise RuntimeWarning('parsing unreal engine version with patternsleuth failed.')
+    logger.log_message(f'unreal engine major version: {unreal_engine_version.major_version}')
+    logger.log_message(f'unreal engine minor version: {unreal_engine_version.minor_version}')
+    return unreal_engine_version
 
 
 def parse_build_configuration(output: str) -> str | None:
@@ -162,3 +161,50 @@ def run_patternsleuth_build_configuration_scan_command(
 
     logger.log_message(f'Build Configuration: {build_configuration}')
     return build_configuration
+
+
+def dump_engine_version(config_file: Path, directory: Path, dump_to_tempo_config: bool) -> UnrealEngineVersion | None:
+
+    unreal_engine_version = run_patternsleuth_engine_version_scan_command()
+    if not unreal_engine_version:
+        raise RuntimeError("was unable to obtain the unreal engine version with patternsleuth")
+
+    directory.mkdir(parents=True, exist_ok=True)
+
+    output_path = Path(directory / "engine_version.json")
+
+    data = {
+        "engine_major_version": unreal_engine_version.major_version,
+        "engine_minor_version": unreal_engine_version.minor_version,
+    }
+
+    with Path.open(output_path, "w", encoding="utf-8") as f:
+        json.dump(data, f, indent=4)
+
+    logger.log_message(f'output path: {output_path}')
+
+    def env_var_is_true(name: str) -> bool:
+        value = os.getenv(name)
+        if value is None:
+            return False
+        return value.strip().lower() in {"1", "true", "yes", "on"}
+
+    env_var = os.getenv('TEMPO_DUMP_PATTERNSLEUTH_VERSION')
+
+    if not dump_to_tempo_config or not env_var:
+        return unreal_engine_version
+
+    with Path.open(config_file, "r", encoding="utf-8") as f:
+        settings = json.load(f)
+
+    engine_info = settings.setdefault("engine_info", {})
+
+    engine_info["unreal_engine_major_version"] = unreal_engine_version.major_version
+    engine_info["unreal_engine_minor_version"] = unreal_engine_version.minor_version
+
+    with Path.open(config_file, "w", encoding="utf-8") as f:
+        json.dump(settings, f, indent=4)
+
+    logger.log_message(f"updated settings json: {config_file}")
+
+    return unreal_engine_version

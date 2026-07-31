@@ -493,6 +493,8 @@ def get_unreal_engine_version(
     engine_path: Path | None,
 ) -> data_structures.UnrealEngineVersion | None:
 
+    from tempo_core.programs import pattern_sleuth
+
     env_var_unreal_engine_version = get_unreal_engine_version_from_env_vars()
     if env_var_unreal_engine_version:
         return env_var_unreal_engine_version
@@ -504,6 +506,19 @@ def get_unreal_engine_version(
     auto_detected_version = unreal_engine.get_unreal_engine_version_from_build_version_file(engine_path)
     if auto_detected_version:
         return auto_detected_version
+
+    output_path = Path(settings_information.config_file.path.parent / "Modding")
+    pattern_sleuth_unreal_engine_version = pattern_sleuth.dump_engine_version(
+        settings_information.config_file.path,
+        output_path,
+        True,
+    )
+
+
+    if pattern_sleuth_unreal_engine_version:
+        settings_information.settings.get("engine_info", {})["unreal_engine_major_version"] = pattern_sleuth_unreal_engine_version.major_version
+        settings_information.settings.get("engine_info", {})["unreal_engine_minor_version"] = pattern_sleuth_unreal_engine_version.minor_version
+        return pattern_sleuth_unreal_engine_version
 
     return None
 
