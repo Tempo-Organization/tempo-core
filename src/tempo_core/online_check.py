@@ -1,7 +1,7 @@
 import os
 import socket
 
-from tempo_core import logger
+from tempo_core import logger, env
 
 is_online = False
 has_checked_online_status = False
@@ -29,8 +29,8 @@ def init_is_online(timeout: float = 1) -> None:
     """
     global is_online
 
-    force_online = _env_true(os.getenv("TEMPO_FORCE_ONLINE"))
-    force_offline = _env_true(os.getenv("TEMPO_FORCE_OFFLINE"))
+    force_online = env.env_true(os.getenv("TEMPO_FORCE_ONLINE"))
+    force_offline = env.env_true(os.getenv("TEMPO_FORCE_OFFLINE"))
 
     if force_online:
         is_online = True

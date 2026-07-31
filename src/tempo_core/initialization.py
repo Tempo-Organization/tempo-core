@@ -12,7 +12,7 @@ from tempo_core import (
     wrapper,
 )
 from tempo_core.programs import unreal_engine
-from tempo_core import online_check
+from tempo_core import online_check, env
 # from tempo_core.threads import input_monitor
 
 from tempo_binary_tool_manager import manager
@@ -38,16 +38,11 @@ def get_editor_preferences_ini_path() -> Path | None:
 
 
 def is_assign_chunk_id_warning_being_suppressed() -> bool:
-    def env_var_is_true(name: str) -> bool:
-        value = os.getenv(name)
-        if value is None:
-            return False
-        return value.strip().lower() in {"1", "true", "yes", "on"}
 
-    if env_var_is_true("TEMPO_SUPPRESS_ASSIGN_CHUNK_ID_WARNING"):
+    if env.env_true("TEMPO_SUPPRESS_ASSIGN_CHUNK_ID_WARNING"):
         return True
 
-    if env_var_is_true("SUPPRESS_ASSIGN_CHUNK_ID_WARNING"):
+    if env.env_true("SUPPRESS_ASSIGN_CHUNK_ID_WARNING"):
         return True
 
     return False
