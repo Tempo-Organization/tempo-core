@@ -1,3 +1,4 @@
+from tempo_core.programs.unreal_engine import get_run_uat_script_path
 import json
 import os
 import shutil
@@ -189,10 +190,23 @@ def install_fmodel(run_after_install: bool) -> None:
         app_runner.run_app(tool_path)
 
 
+# def get_solo_build_project_command() -> str:
+#     command = (
+#         f'"{unreal_engine.get_run_uat_script_path()}" {settings.get_unreal_engine_building_main_command()} '
+#         f'-project="{settings.get_uproject_file_or_raise()}" '
+#     )
+#     for arg in settings.get_engine_building_args():
+#         command = f"{command} {arg}"
+#     return command
+
+
 def get_solo_build_project_command() -> str:
     command = (
-        f'"Engine\\Build\\BatchFiles\\RunUAT.{file_io.get_platform_wrapper_extension()}" {settings.get_unreal_engine_building_main_command()} '
-        f'-project="{settings.get_uproject_file_or_raise()}" '
+        f'"{unreal_engine.get_build_script_path()}" '
+        f'"{unreal_engine.get_main_build_target_name_or_raise()}" '
+        f'"{settings.get_build_target_platform()}" '
+        f'"{settings.get_build_configuration_state()}" '
+        f'-project="{settings.get_uproject_file_or_raise()}"'
     )
     for arg in settings.get_engine_building_args():
         command = f"{command} {arg}"
@@ -219,65 +233,65 @@ def build(*, toggle_engine: bool) -> None:
         engine.toggle_engine_on()
 
 
-def upload_changes_to_repo() -> None:
-    if not online_check.is_online:
-        raise RuntimeError('You are not able to upload changes to repos when not connected to the web.')
-    repo_path = settings.settings_information.settings["git_info"]["repo_path"]
-    branch = settings.settings_information.settings["git_info"]["repo_branch"]
-    desc = input("Enter commit description: ")
-    git_path = shutil.which("git")
-    if git_path is None:
-        raise FileNotFoundError(
-            "Git executable not found. Ensure it's installed and in your system PATH.",
-        )
+# def upload_changes_to_repo() -> None:
+#     if not online_check.is_online:
+#         raise RuntimeError('You are not able to upload changes to repos when not connected to the web.')
+#     repo_path = settings.settings_information.settings["git_info"]["repo_path"]
+#     branch = settings.settings_information.settings["git_info"]["repo_branch"]
+#     desc = input("Enter commit description: ")
+#     git_path = shutil.which("git")
+#     if git_path is None:
+#         raise FileNotFoundError(
+#             "Git executable not found. Ensure it's installed and in your system PATH.",
+#         )
 
-    status_result = subprocess.run(
-        [git_path, "status", "--porcelain"],
-        capture_output=True,
-        text=True,
-        cwd=repo_path,
-        check=False,
-    )
-    if status_result.returncode != 0 or not status_result.stdout.strip():
-        logger.log_message("No changes detected or not in a Git repository.")
-        sys.exit(1)
+#     status_result = subprocess.run(
+#         [git_path, "status", "--porcelain"],
+#         capture_output=True,
+#         text=True,
+#         cwd=repo_path,
+#         check=False,
+#     )
+#     if status_result.returncode != 0 or not status_result.stdout.strip():
+#         logger.log_message("No changes detected or not in a Git repository.")
+#         sys.exit(1)
 
-    checkout_result = subprocess.run(
-        [git_path, "checkout", branch],
-        capture_output=True,
-        text=True,
-        cwd=repo_path,
-        check=False,
-    )
-    if checkout_result.returncode != 0:
-        logger.log_message(f"Failed to switch to the {branch} branch.")
-        sys.exit(1)
+#     checkout_result = subprocess.run(
+#         [git_path, "checkout", branch],
+#         capture_output=True,
+#         text=True,
+#         cwd=repo_path,
+#         check=False,
+#     )
+#     if checkout_result.returncode != 0:
+#         logger.log_message(f"Failed to switch to the {branch} branch.")
+#         sys.exit(1)
 
-    subprocess.run([git_path, "add", "."], check=True, cwd=repo_path)
+#     subprocess.run([git_path, "add", "."], check=True, cwd=repo_path)
 
-    commit_result = subprocess.run(
-        [git_path, "commit", "-m", desc],
-        capture_output=True,
-        text=True,
-        cwd=repo_path,
-        check=False,
-    )
-    if commit_result.returncode != 0:
-        logger.log_message("Commit failed.")
-        sys.exit(1)
+#     commit_result = subprocess.run(
+#         [git_path, "commit", "-m", desc],
+#         capture_output=True,
+#         text=True,
+#         cwd=repo_path,
+#         check=False,
+#     )
+#     if commit_result.returncode != 0:
+#         logger.log_message("Commit failed.")
+#         sys.exit(1)
 
-    push_result = subprocess.run(
-        [git_path, "push", "origin", branch],
-        capture_output=True,
-        text=True,
-        cwd=repo_path,
-        check=False,
-    )
-    if push_result.returncode != 0:
-        logger.log_message("Push failed.")
-        sys.exit(1)
+#     push_result = subprocess.run(
+#         [git_path, "push", "origin", branch],
+#         capture_output=True,
+#         text=True,
+#         cwd=repo_path,
+#         check=False,
+#     )
+#     if push_result.returncode != 0:
+#         logger.log_message("Push failed.")
+#         sys.exit(1)
 
-    logger.log_message("Changes committed and pushed successfully.")
+#     logger.log_message("Changes committed and pushed successfully.")
 
 
 def enable_mods(config_file: Path, mod_names: list) -> None:
@@ -502,7 +516,7 @@ def remove_mods(config_file: Path, mod_names: list) -> None:
 def get_solo_cook_project_command() -> str:
     uproject_file = settings.get_uproject_file_or_raise()
     command = (
-        f'"Engine\\Build\\BatchFiles\\RunUAT.{file_io.get_platform_wrapper_extension()}" {settings.get_unreal_engine_cooking_main_command()} '
+        f'"{unreal_engine.get_run_uat_script_path()}" BuildCookRun '
         f'-project="{settings.get_uproject_file_or_raise()}" '
     )
     if not unreal_engine.has_build_target_been_built(uproject_file):
@@ -526,7 +540,7 @@ def cook(*, toggle_engine: bool) -> None:
 def get_solo_package_command() -> str:
     uproject_file = settings.get_uproject_file_or_raise()
     command = (
-        f'"Engine\\Build\\BatchFiles\\RunUAT.{file_io.get_platform_wrapper_extension()}" {settings.get_unreal_engine_packaging_main_command()} '
+        f'"{unreal_engine.get_run_uat_script_path()}" BuildCookRun '
         f'-project="{settings.get_uproject_file_or_raise()}"'
     )
     # technically it shouldn't auto build itself, since this is not a auto run sequence but used in an explicit command

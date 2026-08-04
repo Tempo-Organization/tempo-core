@@ -82,7 +82,7 @@ def get_is_mod_installed(mod_name: str) -> bool:
 
 def get_engine_pak_command() -> str:
     command = (
-        f'"{unreal_engine.get_run_uat_script_path()}" {settings.get_unreal_engine_packaging_main_command()} '
+        f'"{unreal_engine.get_run_uat_script_path()}" BuildCookRun '
         f'-project="{settings.get_uproject_file_or_raise()}"'
     )
     uproject_file = settings.get_uproject_file_or_raise()
@@ -780,7 +780,7 @@ def does_iostore_game_need_utoc_ucas() -> bool:
 
 def get_debug_build_project_command() -> str:
     command = (
-        f'"Engine\\Build\\BatchFiles\\RunUAT.{file_io.get_platform_wrapper_extension()}" {settings.get_unreal_engine_building_main_command()} '
+        f'"{unreal_engine.get_run_uat_script_path()}" BuildCookRun '
         f'-project="{settings.get_uproject_file_or_raise()}" '
     )
     for arg in get_debug_engine_building_args():

@@ -29,6 +29,7 @@ def run_app(
         for arg in args:
             command = f"{command} {arg}"
         logger.log_message("----------------------------------------------------")
+        logger.log_message(f"Command: working directory: {working_dir}")
         logger.log_message(f"Command: main executable: {exe_path_str}")
         for arg in args:
             logger.log_message(f"Command: arg: {arg}")
@@ -60,5 +61,11 @@ def run_app(
         command = exe_path_str
         for arg in args:
             command = f"{command} {arg}"
-        logger.log_message(f"Command: {command} started with the {exec_mode} enum")
+        logger.log_message("----------------------------------------------------")
+        logger.log_message(f"Command: working directory: {working_dir}")
+        logger.log_message(f"Command: main executable: {exe_path_str}")
+        for arg in args:
+            logger.log_message(f"Command: arg: {arg}")
+        logger.log_message("----------------------------------------------------")
+        logger.log_message(f"Command: {command} running with the {exec_mode} enum")
         subprocess.Popen(command, cwd=working_dir, start_new_session=True)

@@ -1,3 +1,4 @@
+from tempo_core.utilities import get_uproject_dir_or_raise
 import os
 import json
 from pathlib import Path
@@ -212,3 +213,41 @@ def get_new_uproject_json_contents(
 def get_run_uat_script_path() -> Path:
     unreal_engine_dir = settings.get_unreal_engine_dir_or_raise()
     return Path(f"{unreal_engine_dir}/Engine/Build/BatchFiles/RunUAT.{file_io.get_platform_wrapper_extension()}")
+
+
+def get_build_script_path() -> Path:
+    # not sure if there is a linux equivalent or if it's names similarly, check later
+    unreal_engine_dir = settings.get_unreal_engine_dir_or_raise()
+    return Path(f"{unreal_engine_dir}/Engine/Build/BatchFiles/Build.{file_io.get_platform_wrapper_extension()}")
+
+
+# allow this to be specified within the config file as well and use the config value instead of checking the cs files if supplied
+def get_main_build_target_name_or_raise() -> str:
+    uproject_dir = get_uproject_dir_or_raise()
+    src_dir = uproject_dir / "Source"
+
+    if not src_dir.is_dir():
+        raise RuntimeError("Was unable to locate a Source directory in your uproject directory.")
+
+    target_files = list(src_dir.rglob("*.Target.cs"))
+
+    if not target_files:
+        raise RuntimeError("No Unreal target files found.")
+
+    candidates = []
+
+    for target_file in target_files:
+        name = target_file.name.removesuffix(".Target.cs")
+
+        # Ignore editor/game variants
+        if name.endswith("Editor"):
+            continue
+
+        candidates.append(name)
+
+    if len(candidates) != 1:
+        raise RuntimeError(
+            f"Unable to uniquely determine main target. Candidates: {candidates}",
+        )
+
+    return candidates[0]

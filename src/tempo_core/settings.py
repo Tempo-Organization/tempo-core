@@ -254,24 +254,6 @@ def get_uproject_name_or_raise() -> str:
     return uproject_name
 
 
-def get_unreal_engine_packaging_main_command() -> str:
-    return settings_information.settings.get("engine_info", {}).get(
-        "engine_packaging_command", "BuildCookRun",
-    )
-
-
-def get_unreal_engine_cooking_main_command() -> str:
-    return settings_information.settings.get("engine_info", {}).get(
-        "engine_cooking_command", "BuildCookRun",
-    )
-
-
-def get_unreal_engine_building_main_command() -> str:
-    return settings_information.settings.get("engine_info", {}).get(
-        "engine_building_command", "BuildCookRun",
-    )
-
-
 def get_cleanup_repo_path() -> Path | None:
     raw_path = settings_information.settings.get("git_info", {}).get("repo_path", None)
     if not raw_path:
@@ -295,12 +277,9 @@ def get_window_title_override() -> str | None:
 
 def get_engine_building_args() -> list:
     default_args = [
-        "-build",
         "-skipstage",
         "-nodebuginfo",
         "-noP4",
-        f"-targetplatform={get_build_target_platform()}",
-        f'-clientconfig="{get_build_configuration_state()}"',
     ]
     return settings_information.settings.get("engine_info", {}).get(
         "engine_building_args", default_args,
@@ -447,7 +426,7 @@ def get_engine_launch_args() -> list:
     )
 
 
-# Debug, DebugGame, Development, Shipping, Test
+# Debug, DebugGame, Development, Shipping, Test, Unknown
 def get_build_configuration_state() -> str:
     return settings_information.settings.get("engine_info", {}).get(
         "build_type", "Shipping",
