@@ -16,10 +16,6 @@ def log_online_status() -> None:
     has_checked_online_status = True
 
 
-def _env_true(value: str | None) -> bool:
-    return str(value).strip().lower() in {"1", "true", "yes", "on"}
-
-
 def init_is_online(timeout: float = 1) -> None:
     """
     Determine online status with the following priority:
