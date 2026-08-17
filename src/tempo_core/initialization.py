@@ -1,4 +1,3 @@
-import os
 import sys
 import shutil
 from pathlib import Path
@@ -10,12 +9,10 @@ from tempo_core import (
     main_logic,
     settings,
     wrapper,
+    packing,
 )
 from tempo_core.programs import unreal_engine
 from tempo_core import online_check, env
-# from tempo_core.threads import input_monitor
-
-from tempo_binary_tool_manager import manager
 
 
 ORIGINAL_CWD = Path.cwd()
@@ -130,6 +127,7 @@ def git_info_check() -> None:
 
 def game_exe_check() -> None:
     file_io.verify_file_exists(settings.get_game_exe_path())
+    logger.log_message("Check: Game exists")
 
 
 def clear_temp_dir() -> None:
@@ -173,6 +171,7 @@ def initialization(reinit_if_applicable: bool = False) -> None:
 
     check_generate_wrapper()
     check_settings()
+    packing.populate_queue_information()
 
     main_logic.init_thread_system()
 
@@ -184,20 +183,10 @@ def initialization(reinit_if_applicable: bool = False) -> None:
                 assign_chunk_id_usage_check()
         unreal_engine_check()
         game_launcher_exe_override_check()
+
         # git_info_check()
-        # repak.ensure_repak_installed()
-        # retoc.ensure_retoc_installed()
+        
         # game_exe_check()
-
-        # if repak.get_is_using_repak_path_override():
-        #     file_io.check_file_exists(repak.get_repak_path_override())
-        #     logger.log_message("Check: Repak exists")
-
-        # if retoc.get_is_using_retoc_path_override():
-        #     file_io.check_file_exists(retoc.get_retoc_path_override())
-        #     logger.log_message("Check: Retoc exists")
-
-        logger.log_message("Check: Game exists")
 
         logger.log_message("Check: Passed all init checks")
 

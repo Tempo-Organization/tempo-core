@@ -111,7 +111,7 @@ def get_unreal_engine_dir() -> Path | None:
         registry_installs = registry.get_unreal_installs_from_registry()
         raw_unreal_version_str = unreal_version.get_raw_unreal_version_str()
         if raw_unreal_version_str in registry_installs.keys():
-            return registry_installs[raw_unreal_version_str]
+            return registry_installs[raw_unreal_version_str] # ty: ignore
         return None
 
 
@@ -485,6 +485,9 @@ def get_unreal_engine_version(
     auto_detected_version = unreal_engine.get_unreal_engine_version_from_build_version_file(engine_path)
     if auto_detected_version:
         return auto_detected_version
+    
+    if not settings_information.config_file.path:
+        raise FileNotFoundError('Could not locate your config file in the settings_information.')
 
     output_path = Path(settings_information.config_file.path.parent / "Modding")
     pattern_sleuth_unreal_engine_version = pattern_sleuth.dump_engine_version(

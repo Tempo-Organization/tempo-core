@@ -14,7 +14,7 @@ def get_color_system_type() -> ColorSystem | None:
             if value == "none":
                 return None
             if value in ("auto", "standard", "256", "truecolor", "windows"):
-                return typing.cast(ColorSystem, value)
+                return value
     return "auto"
 
 

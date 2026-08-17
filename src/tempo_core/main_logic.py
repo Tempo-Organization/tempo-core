@@ -196,7 +196,7 @@ def get_solo_build_project_command() -> list[str]:
         f'"{unreal_engine.get_main_build_target_name_or_raise()}"',
         f'"{settings.get_build_target_platform()}"',
         f'"{settings.get_build_configuration_state()}"',
-        f'-project="{settings.get_uproject_file_or_raise()}"'
+        f'-project="{settings.get_uproject_file_or_raise()}"',
     ]
     for arg in settings.get_engine_building_args():
         command.append(arg)
@@ -206,7 +206,7 @@ def get_solo_build_project_command() -> list[str]:
 def run_proj_build_command(command: list[str]) -> None:
     unreal_engine_dir = settings.get_unreal_engine_dir_or_raise()
     app_runner.run_app(
-        exe_path=command[0], args=command[1:], working_dir=unreal_engine_dir,
+        exe_path=Path(command[0]), args=command[1:], working_dir=unreal_engine_dir,
     )
 
 
@@ -436,7 +436,7 @@ def get_solo_package_command() -> list[str]:
     command = [
         f'"{unreal_engine.get_run_uat_script_path()}"',
         "BuildCookRun",
-        f'-project="{settings.get_uproject_file_or_raise()}"'
+        f'-project="{settings.get_uproject_file_or_raise()}"',
     ]
 
     uproject_file = settings.get_uproject_file_or_raise()
