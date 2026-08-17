@@ -73,8 +73,6 @@ def generate_dlc_plugin(
     version: float,
     version_name: str,
 ) -> None:
-    uproject_file = settings.get_uproject_file_or_raise()
-
     plugins_directory.mkdir(exist_ok=True, parents=True)
 
     main_logic.generate_uplugin(
