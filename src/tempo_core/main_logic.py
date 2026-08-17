@@ -43,7 +43,7 @@ def close_thread_system() -> None:
 
 
 def generate_mods_other(*, use_symlinks: bool) -> None:
-    packing.cooking()
+    packing.build_cook()
     packing.generate_mods(use_symlinks=use_symlinks)
     game_runner.run_game()
     game_monitor.game_monitor_thread()
@@ -79,7 +79,7 @@ def full_run(
     if toggle_engine:
         engine.toggle_engine_off()
     settings.settings_information.mod_names.update(input_mod_names)
-    packing.cooking()
+    packing.build_cook()
     generate_mods(input_mod_names=input_mod_names, use_symlinks=use_symlinks)
     generate_mod_releases(
         mod_names=input_mod_names,
@@ -100,7 +100,7 @@ def full_run_all(
     if toggle_engine:
         engine.toggle_engine_off()
     settings.settings_information.mod_names.update(settings.get_mods_info_dict_from_json().keys())
-    packing.cooking()
+    packing.build_cook()
     generate_mods_all(use_symlinks=use_symlinks)
     generate_mod_releases_all(
         base_files_directory=base_files_directory, output_directory=output_directory,
@@ -190,108 +190,32 @@ def install_fmodel(run_after_install: bool) -> None:
         app_runner.run_app(tool_path)
 
 
-# def get_solo_build_project_command() -> str:
-#     command = (
-#         f'"{unreal_engine.get_run_uat_script_path()}" {settings.get_unreal_engine_building_main_command()} '
-#         f'-project="{settings.get_uproject_file_or_raise()}" '
-#     )
-#     for arg in settings.get_engine_building_args():
-#         command = f"{command} {arg}"
-#     return command
-
-
-def get_solo_build_project_command() -> str:
-    command = (
-        f'"{unreal_engine.get_build_script_path()}" '
-        f'"{unreal_engine.get_main_build_target_name_or_raise()}" '
-        f'"{settings.get_build_target_platform()}" '
-        f'"{settings.get_build_configuration_state()}" '
+def get_solo_build_project_command() -> list[str]:
+    command = [
+        f'"{unreal_engine.get_build_script_path()}"',
+        f'"{unreal_engine.get_main_build_target_name_or_raise()}"',
+        f'"{settings.get_build_target_platform()}"',
+        f'"{settings.get_build_configuration_state()}"',
         f'-project="{settings.get_uproject_file_or_raise()}"'
-    )
+    ]
     for arg in settings.get_engine_building_args():
-        command = f"{command} {arg}"
+        command.append(arg)
     return command
 
 
-def run_proj_build_command(command: str) -> None:
-    command_parts = command.split(" ")
-    executable = Path(command_parts[0])
-    args = command_parts[1:]
+def run_proj_build_command(command: list[str]) -> None:
     unreal_engine_dir = settings.get_unreal_engine_dir_or_raise()
     app_runner.run_app(
-        exe_path=executable, args=args, working_dir=unreal_engine_dir,
+        exe_path=command[0], args=command[1:], working_dir=unreal_engine_dir,
     )
 
 
 def build(*, toggle_engine: bool) -> None:
     if toggle_engine:
         engine.toggle_engine_off()
-    logger.log_message("Project Building Starting")
-    run_proj_build_command(get_solo_build_project_command())
-    logger.log_message("Project Building Complete")
+    packing.build_uproject()
     if toggle_engine:
         engine.toggle_engine_on()
-
-
-# def upload_changes_to_repo() -> None:
-#     if not online_check.is_online:
-#         raise RuntimeError('You are not able to upload changes to repos when not connected to the web.')
-#     repo_path = settings.settings_information.settings["git_info"]["repo_path"]
-#     branch = settings.settings_information.settings["git_info"]["repo_branch"]
-#     desc = input("Enter commit description: ")
-#     git_path = shutil.which("git")
-#     if git_path is None:
-#         raise FileNotFoundError(
-#             "Git executable not found. Ensure it's installed and in your system PATH.",
-#         )
-
-#     status_result = subprocess.run(
-#         [git_path, "status", "--porcelain"],
-#         capture_output=True,
-#         text=True,
-#         cwd=repo_path,
-#         check=False,
-#     )
-#     if status_result.returncode != 0 or not status_result.stdout.strip():
-#         logger.log_message("No changes detected or not in a Git repository.")
-#         sys.exit(1)
-
-#     checkout_result = subprocess.run(
-#         [git_path, "checkout", branch],
-#         capture_output=True,
-#         text=True,
-#         cwd=repo_path,
-#         check=False,
-#     )
-#     if checkout_result.returncode != 0:
-#         logger.log_message(f"Failed to switch to the {branch} branch.")
-#         sys.exit(1)
-
-#     subprocess.run([git_path, "add", "."], check=True, cwd=repo_path)
-
-#     commit_result = subprocess.run(
-#         [git_path, "commit", "-m", desc],
-#         capture_output=True,
-#         text=True,
-#         cwd=repo_path,
-#         check=False,
-#     )
-#     if commit_result.returncode != 0:
-#         logger.log_message("Commit failed.")
-#         sys.exit(1)
-
-#     push_result = subprocess.run(
-#         [git_path, "push", "origin", branch],
-#         capture_output=True,
-#         text=True,
-#         cwd=repo_path,
-#         check=False,
-#     )
-#     if push_result.returncode != 0:
-#         logger.log_message("Push failed.")
-#         sys.exit(1)
-
-#     logger.log_message("Changes committed and pushed successfully.")
 
 
 def enable_mods(config_file: Path, mod_names: list) -> None:
@@ -404,22 +328,6 @@ def add_mod(
             },
         }
 
-        # def remove_none_values(data):
-        #     if isinstance(data, dict):
-        #         return {
-        #             key: remove_none_values(value)
-        #             for key, value in data.items()
-        #             if value is not None
-        #         }
-        #     elif isinstance(data, list):
-        #         return [
-        #             remove_none_values(item)
-        #             for item in data
-        #             if item is not None
-        #         ]
-        #     else:
-        #         return data
-
         JSONLike: TypeAlias = (
             dict[str, "JSONLike"]
             | list["JSONLike"]
@@ -513,47 +421,33 @@ def remove_mods(config_file: Path, mod_names: list) -> None:
         )
 
 
-def get_solo_cook_project_command() -> str:
-    uproject_file = settings.get_uproject_file_or_raise()
-    command = (
-        f'"{unreal_engine.get_run_uat_script_path()}" BuildCookRun '
-        f'-project="{settings.get_uproject_file_or_raise()}" '
-    )
-    if not unreal_engine.has_build_target_been_built(uproject_file):
-        build_arg = "-build"
-        command = f"{command} {build_arg}"
-    for arg in settings.get_engine_cooking_args():
-        command = f"{command} {arg}"
-    return command
-
-
 def cook(*, toggle_engine: bool) -> None:
     if toggle_engine:
         engine.toggle_engine_off()
     logger.log_message("Content Cooking Starting")
-    run_proj_build_command(get_solo_cook_project_command())
+    packing.cook_uproject()
+    # run_proj_build_command(get_solo_cook_project_command())
     logger.log_message("Content Cook Complete")
     if toggle_engine:
         engine.toggle_engine_on()
 
 
-def get_solo_package_command() -> str:
-    uproject_file = settings.get_uproject_file_or_raise()
-    command = (
-        f'"{unreal_engine.get_run_uat_script_path()}" BuildCookRun '
+def get_solo_package_command() -> list[str]:
+    command = [
+        f'"{unreal_engine.get_run_uat_script_path()}"',
+        "BuildCookRun",
         f'-project="{settings.get_uproject_file_or_raise()}"'
-    )
-    # technically it shouldn't auto build itself, since this is not a auto run sequence but used in an explicit command
-    # if not ue_dev_py_utils.has_build_target_been_built(utilities.get_uproject_file()):
-    #     command = f'{command} -build'
+    ]
+
+    uproject_file = settings.get_uproject_file_or_raise()
     for arg in settings.get_engine_packaging_args():
-        command = f"{command} {arg}"
+        command.append(arg)
     custom_game_dir = utilities.get_game_dir_or_raise()
     is_game_iostore = unreal_engine.get_is_game_iostore(
         uproject_file, custom_game_dir,
     )
     if is_game_iostore:
-        command = f"{command} -iostore"
+        command.append('-iostore')
         logger.log_message("Check: Game is iostore")
     else:
         logger.log_message("Check: Game is not iostore")
@@ -565,7 +459,7 @@ def package(*, toggle_engine: bool, use_symlinks: bool) -> None:
         engine.toggle_engine_off()
     settings.settings_information.mod_names.update(settings.get_mods_info_dict_from_json().keys())
     logger.log_message("Packaging Starting")
-    run_proj_build_command(get_solo_package_command())
+    packing.run_proj_command(get_solo_package_command())
     packing.generate_mods(use_symlinks=use_symlinks)
     logger.log_message("Packaging Complete")
     if toggle_engine:
@@ -598,7 +492,7 @@ def cleanup_full() -> None:
     args = ["clean", "-d", "-X", "--force"]
     app_runner.run_app(
         exe_path=git_path,
-        exec_mode=data_structures.ExecutionMode.ASYNC,
+        exec_mode=data_structures.ExecutionMode.SYNC,
         args=args,
         working_dir=repo_path,
     )
@@ -929,28 +823,29 @@ def generate_mod_release(
     mod_name: str, base_files_directory: Path, output_directory: Path,
 ) -> None:
     singular_mod_info = settings.get_mods_info_dict_from_json()[mod_name]
-    if singular_mod_info["packing_type"] == "unreal_pak":
+    packing_type = data_structures.get_enum_from_val(data_structures.PackingType, singular_mod_info["packing_type"])
+    if packing_type == data_structures.PackingType.UNREAL_PAK:
         make_unreal_pak_mod_release(
             singular_mod_info, base_files_directory, output_directory, mod_name,
         )
-    elif singular_mod_info["packing_type"] == "repak":
+    elif packing_type == data_structures.PackingType.REPAK:
         make_repak_mod_release(
             singular_mod_info, base_files_directory, output_directory, mod_name,
         )
-    elif singular_mod_info["packing_type"] == "engine":
+    elif packing_type == data_structures.PackingType.ENGINE:
         make_engine_mod_release(
             singular_mod_info, base_files_directory, output_directory, mod_name,
         )
-    elif singular_mod_info["packing_type"] == "loose":
+    elif packing_type == data_structures.PackingType.LOOSE:
         make_loose_mod_release(
             singular_mod_info, base_files_directory, output_directory, mod_name,
         )
-    elif singular_mod_info["packing_type"] == "retoc":
+    elif packing_type == data_structures.PackingType.RETOC:
         make_retoc_mod_release(
             singular_mod_info, base_files_directory, output_directory, mod_name,
         )
     else:
-        packing_type_error = f'The following incorrect packing type was supplied "{singular_mod_info["packing_type"]}".'
+        packing_type_error = f'The following incorrect packing type was supplied "{packing_type.value}".'
         raise ValueError(packing_type_error)
 
 

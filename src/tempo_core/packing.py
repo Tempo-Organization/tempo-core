@@ -35,7 +35,7 @@ queue_information = QueueInformation(install_queue_types=set(), uninstall_queue_
 command_queue = []
 
 
-def populate_queue() -> None:
+def populate_queue_information() -> None:
 
     mod_info_dict = settings.get_mods_info_dict_from_json()
 
@@ -80,54 +80,36 @@ def get_is_mod_installed(mod_name: str) -> bool:
     )
 
 
-def get_engine_pak_command() -> str:
-    command = (
-        f'"{unreal_engine.get_run_uat_script_path()}" BuildCookRun '
+def get_engine_pak_command() -> list[str]:
+    command = [
+        f'"{unreal_engine.get_run_uat_script_path()}"',
+        'BuildCookRun',
         f'-project="{settings.get_uproject_file_or_raise()}"'
-    )
+    ]
     uproject_file = settings.get_uproject_file_or_raise()
     if not unreal_engine.has_build_target_been_built(uproject_file):
-        command = f"{command} -build"
+        command.append('-build')
     for arg in settings.get_engine_packaging_args():
-        command = f"{command} {arg}"
+        command.append(arg)
     custom_game_dir = utilities.get_game_dir_or_raise()
     is_game_iostore = unreal_engine.get_is_game_iostore(
         uproject_file, custom_game_dir,
     )
     if is_game_iostore:
-        command = f"{command} -iostore"
+        command.append('-iostore')
         logger.log_message("Check: Game is iostore")
     else:
         logger.log_message("Check: Game is not iostore")
     return command
 
 
-# def get_cook_project_command() -> str:
-#     command = (
-#         f'"Engine\\Build\\BatchFiles\\RunUAT.{file_io.get_platform_wrapper_extension()}" {settings.get_unreal_engine_cooking_main_command()} '
-#         f'-project="{settings.get_uproject_file()}" '
-#         f"-skipstage "
-#         f"-nodebuginfo"
-#     )
-#     uproject_path = settings.get_uproject_file()
-#     if not uproject_path:
-#         raise FileNotFoundError("cannot find the uproject file")
-#     if not unreal_engine.has_build_target_been_built(uproject_path):
-#         build_arg = "-build"
-#         command = f"{command} {build_arg}"
-#     for arg in settings.get_engine_cooking_args():
-#         command = f"{command} {arg}"
-#     return command
-
-
 # add support for collections later like this file_includes - unreal_collections
 # make sure the right iterate command is being used based on correct versions later
-def get_cook_project_commands() -> list[str]:
+def get_cook_project_commands() -> list[list[str]]:
     uproject_path = settings.get_uproject_file_or_raise()
     unreal_engine_dir = settings.get_unreal_engine_dir_or_raise()
     uproject_dir = utilities.get_uproject_dir_or_raise()
 
-    # these comparisons might need to be version specific, check later
     if unreal_engine.is_game_ue4(unreal_engine_dir):
         single_cooking_arg = '-cooksinglepackage'
         partial_arg = '-Map='
@@ -135,17 +117,18 @@ def get_cook_project_commands() -> list[str]:
         single_cooking_arg = '-cooksinglepackagenorefs'
         partial_arg = '-Package='
 
-    command = (
-        f'"{str(unreal_engine.get_editor_cmd_path(unreal_engine_dir))}" '
-        f'"{uproject_path}" '
-        '-run=cook '
-        f'-targetplatform={settings.get_unreal_engine_target_platform()} '
-        '-SkipCookingEditorContent '
-        '-NODEV '
-        '-iterative '
-        '-fastcook '
-        f'{single_cooking_arg}'
-    )
+    command = [
+        str(unreal_engine.get_editor_cmd_path(unreal_engine_dir)),
+        str(uproject_path),
+        '-run=cook',
+        f'-targetplatform={settings.get_unreal_engine_target_platform()}',
+        f'-clientconfig={settings.get_build_configuration_state()}',
+        '-SkipCookingEditorContent',
+        '-NODEV',
+        '-iterative',
+        '-fastcook',
+        single_cooking_arg,
+    ]
 
     mods_info = settings.get_mods_info_dict_from_json()
 
@@ -154,53 +137,80 @@ def get_cook_project_commands() -> list[str]:
     mod_name_dir_type_paths = []
 
     for key in mods_info.keys():
-        if mods_info[key].get('is_enabled', True) and not mods_info[key]['packing_type'] == 'engine':
-            asset_paths.extend(mods_info[key].get("file_includes", {}).get("asset_paths", []))
-            tree_paths.extend(mods_info[key].get("file_includes", {}).get("tree_paths", []))
+        if mods_info[key].get('is_enabled', True) and mods_info[key]['packing_type'] != 'engine':
+            asset_paths.extend(
+                mods_info[key].get("file_includes", {}).get("asset_paths", [])
+            )
+            tree_paths.extend(
+                mods_info[key].get("file_includes", {}).get("tree_paths", [])
+            )
+
             if settings.get_should_mod_auto_include_mod_name_dir_name(key):
                 path_to_check = f'{uproject_dir}/Content/Mods/{utilities.get_mod_name_dir_name(key)}'
-                files_in_mod_name_dir_name_tree = file_io.get_files_in_tree(Path(path_to_check))
+                files_in_mod_name_dir_name_tree = file_io.get_files_in_tree(
+                    Path(path_to_check)
+                )
+
                 for path in files_in_mod_name_dir_name_tree:
                     if path.is_file():
                         path_to_append = str(path.as_posix())
-                        path_to_append = path_to_append.replace(str(uproject_dir.as_posix()), "")
+                        path_to_append = path_to_append.replace(
+                            str(uproject_dir.as_posix()), ""
+                        )
                         path_to_append = path_to_append.replace("Content", "Game", 1)
                         mod_name_dir_type_paths.append(path_to_append)
 
     final_file_list = []
+
     for path in asset_paths:
         final_file_list.append(path.replace("Content", "/Game", 1).as_posix())
+
     for path in tree_paths:
         full_path = f'{uproject_dir}/{path}'
         files_in_dir_tree = file_io.get_files_in_tree(Path(full_path))
+
         for file in files_in_dir_tree:
             if file.is_file():
-                trimmed_path = str(file.as_posix()).replace(str(uproject_dir.as_posix()), "")
+                trimmed_path = str(file.as_posix()).replace(
+                    str(uproject_dir.as_posix()), ""
+                )
                 trimmed_path = trimmed_path.replace("Content", "Game", 1)
                 final_file_list.append(trimmed_path)
+
     final_file_list.extend(mod_name_dir_type_paths)
 
     maximum_command_length = utilities.get_maximum_command_length()
-    max_length = maximum_command_length - (len(final_file_list) * (len(partial_arg) + 1)) - len(command) - 100 # 100 is extra buffer
+
+    max_length = (
+        maximum_command_length
+        - sum(len(arg) + 1 for arg in command)
+        - 100
+    )
 
     chunked_file_list = utilities.chunk_strings(final_file_list, max_length)
 
     commands_to_return = []
 
     for entry in chunked_file_list:
-        base_command = command
+        command_args = command.copy()
+
         for file in entry:
-            base_command = f'{base_command} {partial_arg}{os.path.splitext(file)[0]}' #noqa
-        commands_to_return.append(base_command)
+            command_args.append(f'{partial_arg}{os.path.splitext(file)[0]}')
+
+        commands_to_return.append(command_args)
 
     return commands_to_return
 
 
-def cook_uproject() -> None:
+def build_uproject() -> None:
     from tempo_core import main_logic
-    uproject_path = settings.get_uproject_file_or_raise()
-    if not unreal_engine.has_build_target_been_built(uproject_path):
-        main_logic.run_proj_build_command(main_logic.get_solo_build_project_command())
+    logger.log_message("Project Building Starting")
+    run_proj_command(main_logic.get_solo_build_project_command())
+    logger.log_message("Project Building Complete")
+    
+
+
+def cook_uproject() -> None:
     cook_commands = get_cook_project_commands()
     for command in cook_commands:
         # not using shell to make command max length more consistent
@@ -211,14 +221,11 @@ def package_uproject_non_iostore() -> None:
     run_proj_command(get_engine_pak_command())
 
 
-def run_proj_command(command: str, use_shell: bool = True) -> None:
-    command_parts = command.split(" ")
-    executable = Path(command_parts[0])
-    args = command_parts[1:]
+def run_proj_command(command: list[str], use_shell: bool = True) -> None:
     unreal_engine_dir = settings.get_unreal_engine_dir_or_raise()
     app_runner.run_app(
-        exe_path=executable,
-        args=args,
+        exe_path=command[0],
+        args=command[1:],
         working_dir=unreal_engine_dir,
         use_shell=use_shell,
     )
@@ -299,7 +306,7 @@ def mods_install(*, use_symlinks: bool) -> None:
 
 
 def generate_mods(*, use_symlinks: bool) -> None:
-    populate_queue()
+    populate_queue_information()
     mods_uninstall()
     mods_install(use_symlinks=use_symlinks)
 
@@ -571,7 +578,6 @@ def contains_source_dir(root: Path) -> bool:
 
 
 def package_project_iostore() -> None:
-    cook_uproject()
     if unreal_engine.is_game_ue4(settings.get_unreal_engine_dir()):
         package_project_iostore_ue4()
     else:
@@ -665,101 +671,6 @@ def package_project_iostore_ue5() -> None:
     )
 
 
-
-# def package_project_iostore_ue4() -> None:
-#     unreal_engine_dir = settings.get_unreal_engine_dir()
-#     if not unreal_engine_dir:
-#         raise RuntimeError('Unreal engine install was not valid.')
-#     main_exec = Path(f'"{unreal_engine_dir}/Engine/Build/BatchFiles/RunUAT.{file_io.get_platform_wrapper_extension()}"')
-#     uproject_path = settings.get_uproject_file()
-#     if not uproject_path:
-#         raise FileNotFoundError('was unable to obtain the uproject path')
-#     unreal_engine_dir = unreal_engine_dir
-#     if not unreal_engine_dir:
-#         raise RuntimeError('Unreal engine install was not valid.')
-#     editor_cmd_exe_path = unreal_engine.get_editor_cmd_path(
-#         unreal_engine_dir,
-#     )
-#     archive_directory = f"{settings.get_temp_directory()}/iostore_packaging/output"
-#     args = [
-#         f'-ScriptsForProject="{uproject_path}"',
-#         "BuildCookRun",
-#         "-nocompileeditor",
-#         "-installed",
-#         "-nop4",
-#         f'-project="{uproject_path}"',
-#         "-cook",
-#         "-stage",
-#         "-archive",
-#         f'-archivedirectory="{archive_directory}"',
-#         "-package",
-#         f"-ue4exe={editor_cmd_exe_path}",
-#         "-ddc=InstalledDerivedDataBackendGraph",
-#         "-iostore",
-#         "-pak",
-#         "-iostore",
-#         "-prereqs",
-#         "-nodebuginfo",
-#         "-manifests",
-#         f"-targetplatform={settings.get_build_target_platform()}",
-#         f'-clientconfig="{settings.get_build_configuration_state()}"',
-#         "-utf8output",
-#         "-iterate",
-#     ]
-#     if not unreal_engine.get_build_target_file_path(uproject_path).is_file():
-#         args.append('-build')
-#     app_runner.run_app(
-#         exe_path=main_exec,
-#         args=args,
-#         working_dir=unreal_engine_dir,
-#     )
-
-
-# def package_project_iostore_ue5() -> None:
-#     # add an option here for -legacyiterative instead of -cookincremental later
-#     unreal_engine_dir = settings.get_unreal_engine_dir()
-#     if not unreal_engine_dir:
-#         raise RuntimeError('Unreal engine install was not valid.')
-#     main_exec = Path(f'"{unreal_engine_dir}/Engine/Build/BatchFiles/RunUAT.{file_io.get_platform_wrapper_extension()}"')
-#     uproject_path = settings.get_uproject_file()
-#     if not uproject_path:
-#         raise FileNotFoundError('was unable to obtain the uproject path')
-#     editor_cmd_exe_path = unreal_engine.get_editor_cmd_path(unreal_engine_dir)
-#     archive_directory = Path(f"{settings.get_temp_directory()}/iostore_packaging/output")
-#     args = [
-#         f'-ScriptsForProject="{uproject_path}"',
-#         "BuildCookRun",
-#         "-nocompileeditor",
-#         "-installed",
-#         "-nop4",
-#         f'-project="{uproject_path}"',
-#         "-cook",
-#         "-stage",
-#         "-archive",
-#         f'-archivedirectory="{archive_directory}"',
-#         "-package",
-#         f"-unrealexe={editor_cmd_exe_path}",
-#         "-ddc=InstalledDerivedDataBackendGraph",
-#         "-iostore",
-#         "-pak",
-#         "-iostore",
-#         "-prereqs",
-#         "-nodebuginfo",
-#         "-manifests",
-#         f"-targetplatform={settings.get_build_target_platform()}",
-#         f'-clientconfig="{settings.get_build_configuration_state()}"',
-#         "-utf8output",
-#         "-cookincremental",
-#     ]
-#     if not unreal_engine.get_build_target_file_path(uproject_path).is_file():
-#         args.append('-build')
-#     app_runner.run_app(
-#         exe_path=main_exec,
-#         args=args,
-#         working_dir=unreal_engine_dir,
-#     )
-
-
 def get_debug_engine_building_args() -> list:
     return [
         "-build",
@@ -778,42 +689,54 @@ def does_iostore_game_need_utoc_ucas() -> bool:
     # return needs_more_than_pak
     return True
 
-def get_debug_build_project_command() -> str:
-    command = (
-        f'"{unreal_engine.get_run_uat_script_path()}" BuildCookRun '
-        f'-project="{settings.get_uproject_file_or_raise()}" '
-    )
+
+def get_debug_build_project_command() -> list[str]:
+    command = [
+        f'"{unreal_engine.get_run_uat_script_path()}"',
+        'BuildCookRun',
+        f'-project="{settings.get_uproject_file_or_raise()}"'
+    ]
     for arg in get_debug_engine_building_args():
-        command = f"{command} {arg}"
+        command.append(arg)
     return command
+
+
+def build_editor_target():
+    run_proj_command(get_debug_build_project_command()) # Can it use the new build system instead?
 
 
 @hook_states.hook_state_decorator(
     start_hook_state_type=HookStateType.PRE_COOKING,
     end_hook_state_type=HookStateType.POST_COOKING,
 )
-def cooking() -> None:
-    populate_queue()
+def build_cook() -> None:
+    # the below uses a build command that is slower, user the newer method, don't check the build target path, command that out and just run it
+    populate_queue_information()
     uproject_file = settings.get_uproject_file_or_raise()
     game_dir = utilities.get_game_dir_or_raise()
     is_game_iostore = unreal_engine.get_is_game_iostore(uproject_file, game_dir)
-    if is_game_iostore:
-        if does_iostore_game_need_utoc_ucas() and settings.is_engine_packing_enum_in_use():
-            file_to_check = Path(f'{unreal_engine.get_uproject_dir(uproject_file)}/Binaries/{settings.get_build_target_platform()}/{unreal_engine.get_uproject_name(uproject_file)}Editor.target')
-            logger.log_message(f'file_to_check: {file_to_check}')
-            if not file_to_check.is_file():
-                from tempo_core import main_logic
-                main_logic.run_proj_build_command(get_debug_build_project_command()) # why is this using debug build args?
-            package_project_iostore()
-        else:
-            # not sure if this needs the target as well, check by cooking the project probably after a clean using command
-            cook_uproject()
-    elif PackingType.ENGINE in queue_information.install_queue_types:
-        # maybe should still cook uproject here? for now yes, the manual specified ones may not cook but be expected, they souldn't recook twice usually nless args are changed to not iterate maybe
+    needs_engine_command_run = PackingType.ENGINE in queue_information.install_queue_types
+    does_iostore_needs_all_three_files = does_iostore_game_need_utoc_ucas()
+
+    if needs_engine_command_run and does_iostore_needs_all_three_files and is_game_iostore:
+        build_editor_target()
+        build_uproject()
+        cook_uproject()
+        package_project_iostore()
+    if needs_engine_command_run and not does_iostore_needs_all_three_files and is_game_iostore:
+        build_uproject()
         cook_uproject()
         package_uproject_non_iostore()
-    else:
+    if not is_game_iostore and needs_engine_command_run:
+        # maybe should still cook uproject here? for now yes, the manual specified ones may not cook but be expected, they souldn't recook twice usually nless args are changed to not iterate maybe
+        build_uproject()
         cook_uproject()
+        package_uproject_non_iostore()
+    if not is_game_iostore and not needs_engine_command_run:
+        build_editor_target() # didn't seem to always need this but now do?
+        build_uproject()
+        cook_uproject()
+
 
 
 def get_mod_files_asset_paths_for_loose_mods(mod_name: str) -> dict[Path, Path]:
@@ -965,7 +888,6 @@ def get_mod_file_paths_for_manually_made_pak_mods_mod_name_dir_paths(
     uproject_path = settings.get_uproject_file_or_raise()
 
     unreal_engine_dir = settings.get_unreal_engine_dir_or_raise()
-
 
     # the below line is returning incorrectly for some reason
     cooked_uproject_dir = unreal_engine.get_cooked_uproject_dir(uproject_path, unreal_engine_dir)

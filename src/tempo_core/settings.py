@@ -125,7 +125,7 @@ def get_unreal_engine_dir_or_raise() -> Path:
 def is_unreal_pak_packing_enum_in_use() -> bool:
     is_in_use = False
     mod_info_dict = get_mods_info_dict_from_json()
-    for mod_key in mod_info_dict.keys():
+    for mod_key in get_enabled_mod_names():
         if mod_info_dict[mod_key]["packing_type"] == "unreal_pak":
             is_in_use = True
     return is_in_use
@@ -134,7 +134,7 @@ def is_unreal_pak_packing_enum_in_use() -> bool:
 def is_engine_packing_enum_in_use() -> bool:
     is_in_use = False
     mod_info_dict = get_mods_info_dict_from_json()
-    for mod_key in mod_info_dict.keys():
+    for mod_key in get_enabled_mod_names():
         if mod_info_dict[mod_key]["packing_type"] == "engine":
             is_in_use = True
     return is_in_use
@@ -143,7 +143,7 @@ def is_engine_packing_enum_in_use() -> bool:
 def is_repak_packing_enum_in_use() -> bool:
     is_in_use = False
     mod_info_dict = get_mods_info_dict_from_json()
-    for mod_key in mod_info_dict.keys():
+    for mod_key in get_enabled_mod_names():
         if mod_info_dict[mod_key]["packing_type"] == "repak":
             is_in_use = True
     return is_in_use
@@ -152,7 +152,7 @@ def is_repak_packing_enum_in_use() -> bool:
 def is_retoc_packing_enum_in_use() -> bool:
     is_in_use = False
     mod_info_dict = get_mods_info_dict_from_json()
-    for mod_key in mod_info_dict.keys():
+    for mod_key in get_enabled_mod_names():
         if mod_info_dict[mod_key]["packing_type"] == "retoc":
             is_in_use = True
     return is_in_use
@@ -161,7 +161,7 @@ def is_retoc_packing_enum_in_use() -> bool:
 def is_loose_packing_enum_in_use() -> bool:
     is_in_use = False
     mod_info_dict = get_mods_info_dict_from_json()
-    for mod_key in mod_info_dict.keys():
+    for mod_key in get_enabled_mod_names():
         if mod_info_dict[mod_key]["packing_type"] == "loose":
             is_in_use = True
     return is_in_use

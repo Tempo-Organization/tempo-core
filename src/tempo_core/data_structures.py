@@ -1,5 +1,5 @@
 from enum import Enum, IntEnum
-from typing import Type, TypeVar, Any
+from typing import Type, TypeVar
 from dataclasses import dataclass
 from uuid import UUID
 
