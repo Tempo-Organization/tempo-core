@@ -84,7 +84,7 @@ def get_engine_pak_command() -> list[str]:
     command = [
         f'"{unreal_engine.get_run_uat_script_path()}"',
         'BuildCookRun',
-        f'-project="{settings.get_uproject_file_or_raise()}"'
+        f'-project="{settings.get_uproject_file_or_raise()}"',
     ]
     uproject_file = settings.get_uproject_file_or_raise()
     if not unreal_engine.has_build_target_been_built(uproject_file):
@@ -139,23 +139,23 @@ def get_cook_project_commands() -> list[list[str]]:
     for key in mods_info.keys():
         if mods_info[key].get('is_enabled', True) and mods_info[key]['packing_type'] != 'engine':
             asset_paths.extend(
-                mods_info[key].get("file_includes", {}).get("asset_paths", [])
+                mods_info[key].get("file_includes", {}).get("asset_paths", []),
             )
             tree_paths.extend(
-                mods_info[key].get("file_includes", {}).get("tree_paths", [])
+                mods_info[key].get("file_includes", {}).get("tree_paths", []),
             )
 
             if settings.get_should_mod_auto_include_mod_name_dir_name(key):
                 path_to_check = f'{uproject_dir}/Content/Mods/{utilities.get_mod_name_dir_name(key)}'
                 files_in_mod_name_dir_name_tree = file_io.get_files_in_tree(
-                    Path(path_to_check)
+                    Path(path_to_check),
                 )
 
                 for path in files_in_mod_name_dir_name_tree:
                     if path.is_file():
                         path_to_append = str(path.as_posix())
                         path_to_append = path_to_append.replace(
-                            str(uproject_dir.as_posix()), ""
+                            str(uproject_dir.as_posix()), "",
                         )
                         path_to_append = path_to_append.replace("Content", "Game", 1)
                         mod_name_dir_type_paths.append(path_to_append)
@@ -172,7 +172,7 @@ def get_cook_project_commands() -> list[list[str]]:
         for file in files_in_dir_tree:
             if file.is_file():
                 trimmed_path = str(file.as_posix()).replace(
-                    str(uproject_dir.as_posix()), ""
+                    str(uproject_dir.as_posix()), "",
                 )
                 trimmed_path = trimmed_path.replace("Content", "Game", 1)
                 final_file_list.append(trimmed_path)
@@ -195,7 +195,8 @@ def get_cook_project_commands() -> list[list[str]]:
         command_args = command.copy()
 
         for file in entry:
-            command_args.append(f'{partial_arg}{os.path.splitext(file)[0]}')
+            # command_args.append(f'{partial_arg}{os.path.splitext(file)[0]}')
+            command_args.append(f'{partial_arg}{Path(file).stem}')
 
         commands_to_return.append(command_args)
 
@@ -224,7 +225,7 @@ def package_uproject_non_iostore() -> None:
 def run_proj_command(command: list[str], use_shell: bool = True) -> None:
     unreal_engine_dir = settings.get_unreal_engine_dir_or_raise()
     app_runner.run_app(
-        exe_path=command[0],
+        exe_path=Path(command[0]),
         args=command[1:],
         working_dir=unreal_engine_dir,
         use_shell=use_shell,
@@ -306,7 +307,6 @@ def mods_install(*, use_symlinks: bool) -> None:
 
 
 def generate_mods(*, use_symlinks: bool) -> None:
-    populate_queue_information()
     mods_uninstall()
     mods_install(use_symlinks=use_symlinks)
 
@@ -548,8 +548,6 @@ def install_mod(
     elif packing_type == PackingType.REPAK:
         install_repak_mod(mod_name, use_symlinks=use_symlinks)
     elif packing_type == PackingType.UNREAL_PAK:
-        # if not compression_type:
-        #     raise RuntimeError('compression type is None for some reason')
         unreal_pak.install_unreal_pak_mod(
             mod_name, compression_type, use_symlinks=use_symlinks,
         )
@@ -694,14 +692,14 @@ def get_debug_build_project_command() -> list[str]:
     command = [
         f'"{unreal_engine.get_run_uat_script_path()}"',
         'BuildCookRun',
-        f'-project="{settings.get_uproject_file_or_raise()}"'
+        f'-project="{settings.get_uproject_file_or_raise()}"',
     ]
     for arg in get_debug_engine_building_args():
         command.append(arg)
     return command
 
 
-def build_editor_target():
+def build_editor_target() -> None:
     run_proj_command(get_debug_build_project_command()) # Can it use the new build system instead?
 
 
@@ -711,7 +709,6 @@ def build_editor_target():
 )
 def build_cook() -> None:
     # the below uses a build command that is slower, user the newer method, don't check the build target path, command that out and just run it
-    populate_queue_information()
     uproject_file = settings.get_uproject_file_or_raise()
     game_dir = utilities.get_game_dir_or_raise()
     is_game_iostore = unreal_engine.get_is_game_iostore(uproject_file, game_dir)
