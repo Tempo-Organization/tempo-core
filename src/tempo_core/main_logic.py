@@ -39,6 +39,13 @@ def close_thread_system() -> None:
     constant.stop_constant_thread()
 
 
+def atleast_one_enabled_mod_check():
+    enabled_mods = settings.get_enabled_mod_names()
+    print(enabled_mods)
+    if len(enabled_mods) == 0:
+        raise RuntimeError('You are attempting to run an action for mods, when you have no enabled mods within your config.')
+
+
 # all things below this should be functions that correspond to cli logic
 
 
@@ -53,6 +60,7 @@ def test_mods(*, input_mod_names: list[str], toggle_engine: bool, use_symlinks: 
     if toggle_engine:
         engine.toggle_engine_off()
     settings.settings_information.mod_names.update(input_mod_names)
+    atleast_one_enabled_mod_check()
     generate_mods_other(use_symlinks=use_symlinks)
     if toggle_engine:
         engine.toggle_engine_on()
@@ -63,6 +71,7 @@ def test_mods_all(*, toggle_engine: bool, use_symlinks: bool) -> None:
         engine.toggle_engine_off()
     mod_info_dict = settings.settings_information.settings.get("mods_info", {})
     settings.settings_information.mod_names.update(mod_info_dict.keys())
+    atleast_one_enabled_mod_check()
     generate_mods_other(use_symlinks=use_symlinks)
     if toggle_engine:
         engine.toggle_engine_on()
@@ -79,6 +88,7 @@ def full_run(
     if toggle_engine:
         engine.toggle_engine_off()
     settings.settings_information.mod_names.update(input_mod_names)
+    atleast_one_enabled_mod_check()
     packing.build_cook()
     generate_mods(input_mod_names=input_mod_names, use_symlinks=use_symlinks)
     generate_mod_releases(
@@ -100,6 +110,7 @@ def full_run_all(
     if toggle_engine:
         engine.toggle_engine_off()
     settings.settings_information.mod_names.update(settings.get_mods_info_dict_from_json().keys())
+    atleast_one_enabled_mod_check()
     packing.build_cook()
     generate_mods_all(use_symlinks=use_symlinks)
     generate_mod_releases_all(
@@ -587,11 +598,13 @@ def generate_file_list(directory: Path, file_list_path: Path) -> None:
 
 
 def generate_mods(*, input_mod_names: list[str], use_symlinks: bool) -> None:
+    atleast_one_enabled_mod_check()
     settings.settings_information.mod_names.update(input_mod_names)
     packing.generate_mods(use_symlinks=use_symlinks)
 
 
 def generate_mods_all(*, use_symlinks: bool) -> None:
+    atleast_one_enabled_mod_check()
     settings.settings_information.mod_names.update(settings.get_mods_info_dict_from_json().keys())
     packing.generate_mods(use_symlinks=use_symlinks)
 
@@ -852,11 +865,13 @@ def generate_mod_release(
 def generate_mod_releases(
     mod_names: list[str], base_files_directory: Path, output_directory: Path,
 ) -> None:
+    atleast_one_enabled_mod_check()
     for mod_name in settings.get_enabled_mod_names():
         generate_mod_release(mod_name, base_files_directory, output_directory)
 
 
 def generate_mod_releases_all(base_files_directory: Path, output_directory: Path) -> None:
+    atleast_one_enabled_mod_check()
     for mod_name in settings.get_enabled_mod_names():
         generate_mod_release(mod_name, base_files_directory, output_directory)
 
