@@ -8,7 +8,7 @@ import subprocess
 from pathlib import Path
 
 from tempo_core.programs import unreal_engine
-from tempo_core import data_structures, file_io, logger, process_management, utilities, registry
+from tempo_core import data_structures, file_io, logger, process_management, utilities, registry, env
 
 from tempo_settings.tempo_settings import SettingSpecificInfo, SettingsInformation, SettingsOrigin
 
@@ -94,13 +94,13 @@ def get_unreal_engine_dir() -> Path | None:
         if unreal_version:
             env_var_string_three = f"{env_var_string_one}_{unreal_version.major_version}_{unreal_version.minor_version}"
             env_var_string_four = f"TEMPO_{env_var_string_three}"
-            var_three = os.environ.get(env_var_string_three)
-            var_four = os.environ.get(env_var_string_four)
+            var_three = env.getenv(env_var_string_three)
+            var_four = env.getenv(env_var_string_four)
         else:
             var_four = None
             var_three = None
-        var_one = os.environ.get(env_var_string_one)
-        var_two = os.environ.get(env_var_string_two)
+        var_one = env.getenv(env_var_string_one)
+        var_two = env.getenv(env_var_string_two)
         unreal_engine_directory = var_four or var_three or var_two or var_one
     if unreal_engine_directory:
         return Path(unreal_engine_directory)
@@ -331,7 +331,7 @@ def get_window_management_events() -> dict:
 
 def get_persistent_mods_dir() -> Path:
     from tempo_core import initialization
-    env_dir = os.environ.get("TEMPO_PERSISTENT_MODS_DIRECTORY", None)
+    env_dir = env.getenv("TEMPO_PERSISTENT_MODS_DIRECTORY", None)
     if env_dir and not env_dir:
         env_dir = Path(f"{initialization.ORIGINAL_CWD}/{env_dir}")
     persistent_dir_from_settings_file = get_mods_info_dict_from_json().get("persistent_files_directory", None)
@@ -454,10 +454,10 @@ def get_unreal_engine_version_from_env_vars() -> data_structures.UnrealEngineVer
     tempo_unreal_minor_version_string = "TEMPO_UNREAL_ENGINE_MINOR_VERSION"
     unreal_major_version_string = "UNREAL_ENGINE_MAJOR_VERSION"
     unreal_minor_version_string = "UNREAL_ENGINE_MINOR_VERSION"
-    tempo_unreal_major_version_env_var = os.environ.get(tempo_unreal_major_version_string)
-    tempo_unreal_minor_version_env_var = os.environ.get(tempo_unreal_minor_version_string)
-    unreal_major_version_env_var = os.environ.get(unreal_major_version_string)
-    unreal_minor_version_env_var = os.environ.get(unreal_minor_version_string)
+    tempo_unreal_major_version_env_var = env.getenv(tempo_unreal_major_version_string)
+    tempo_unreal_minor_version_env_var = env.getenv(tempo_unreal_minor_version_string)
+    unreal_major_version_env_var = env.getenv(unreal_major_version_string)
+    unreal_minor_version_env_var = env.getenv(unreal_minor_version_string)
     prioritized_major_value = tempo_unreal_major_version_env_var or unreal_major_version_env_var
     prioritized_minor_value = tempo_unreal_minor_version_env_var or unreal_minor_version_env_var
     if prioritized_major_value and prioritized_minor_value:

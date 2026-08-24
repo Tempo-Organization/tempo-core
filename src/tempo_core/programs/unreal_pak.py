@@ -404,9 +404,7 @@ def install_unreal_pak_mod(
 
 
 def move_files_for_packing(mod_name: str) -> None:
-    from tempo_core import settings
-
-    should_use_progress_bars = settings.should_show_progress_bars()
+    should_use_progress_bars = tempo_core.settings.should_show_progress_bars()
     mod_files_dict = packing.get_mod_file_paths_for_manually_made_pak_mods(mod_name)
     mod_files_dict = utilities.filter_file_paths(mod_files_dict)
 

@@ -184,7 +184,7 @@ def dump_engine_version(config_file: Path, directory: Path, dump_to_tempo_config
 
     logger.log_message(f'output path: {output_path}')
 
-    env_var = os.getenv('TEMPO_DUMP_PATTERNSLEUTH_VERSION')
+    env_var = env.getenv('TEMPO_DUMP_PATTERNSLEUTH_VERSION')
 
     if not dump_to_tempo_config or not env.env_true(env_var):
         return unreal_engine_version

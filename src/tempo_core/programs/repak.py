@@ -3,7 +3,7 @@ import sys
 from enum import Enum
 from pathlib import Path
 
-from tempo_core import settings, app_runner, data_structures, manager
+from tempo_core import settings, app_runner, data_structures, manager, env
 
 from tempo_binary_tools import repak
 
@@ -23,7 +23,7 @@ class RepakCompressionType(Enum):
 def run_repak_pack_command(input_directory: Path, output_pak_file: Path) -> None:
     tool_info = repak.RepakToolInfo(cache=manager.tools_cache)
     tool_info.ensure_tool_installed()
-    repak_path = tool_info.get_executable_path()
+    repak_path = tool_info.get_executable_path() # add ways to override the executable to use a custom one later
     args = [
         'pack',
         f'"{input_directory}"',
@@ -45,7 +45,7 @@ def get_repak_compression_type() -> RepakCompressionType:
     if settings.settings_information.settings:
         config_value = settings.settings_information.settings.get('repak_info', {}).get('repak_compression_type', None)
 
-    env_value = os.environ.get('TEMPO_REPAK_COMPRESSION_TYPE')
+    env_value = env.getenv('TEMPO_REPAK_COMPRESSION_TYPE')
 
     cli_value = None
     if '--repak-compression-type' in sys.argv:
@@ -84,7 +84,7 @@ def get_repak_pack_version() -> str:
     if settings.settings_information.settings:
         config_value = settings.settings_information.settings.get('repak_info', {}).get('repak_pack_version', None)
 
-    env_value = os.environ.get('TEMPO_REPAK_PACK_VERSION')
+    env_value = env.getenv('TEMPO_REPAK_PACK_VERSION')
 
     cli_value = None
     if '--repak-pack-version' in sys.argv:
