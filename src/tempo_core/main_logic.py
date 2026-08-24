@@ -1,10 +1,7 @@
-from tempo_core.programs.unreal_engine import get_run_uat_script_path
 import json
-import os
 import shutil
 import subprocess
-import sys
-from pathlib import Path, PurePath
+from pathlib import Path
 from typing import TypeAlias
 
 from tempo_core import (
@@ -19,8 +16,9 @@ from tempo_core import (
     process_management,
     settings,
     utilities,
-    online_check,
     manager,
+    checks,
+    timer
 )
 from tempo_core.programs import unreal_engine
 from tempo_core.threads import constant, game_monitor
@@ -39,29 +37,51 @@ def close_thread_system() -> None:
     constant.stop_constant_thread()
 
 
-def atleast_one_enabled_mod_check():
-    enabled_mods = settings.get_enabled_mod_names()
-    print(enabled_mods)
-    if len(enabled_mods) == 0:
-        raise RuntimeError('You are attempting to run an action for mods, when you have no enabled mods within your config.')
 
 
 # all things below this should be functions that correspond to cli logic
 
 
-def generate_mods_other(*, use_symlinks: bool) -> None:
-    packing.build_cook()
+def build(*, toggle_engine: bool) -> None:
+    if toggle_engine:
+        engine.toggle_engine_off()
+    packing.build_uproject()
+    if toggle_engine:
+        engine.toggle_engine_on()
+
+
+def cook(*, toggle_engine: bool) -> None:
+    if toggle_engine:
+        engine.toggle_engine_off()
+    logger.log_message("Content Cooking Starting")
+    packing.cook_uproject()
+    logger.log_message("Content Cook Complete")
+    if toggle_engine:
+        engine.toggle_engine_on()
+
+
+def package(*, toggle_engine: bool, use_symlinks: bool) -> None:
+    if toggle_engine:
+        engine.toggle_engine_off()
+    settings.settings_information.mod_names.update(settings.get_mods_info_dict_from_json().keys())
+    checks.atleast_one_enabled_mod_check()
+    logger.log_message("Packaging Starting")
+    packing.run_proj_command(packing.get_solo_package_command())
     packing.generate_mods(use_symlinks=use_symlinks)
-    game_runner.run_game()
-    game_monitor.game_monitor_thread()
+    logger.log_message("Packaging Complete")
+    if toggle_engine:
+        engine.toggle_engine_on()
 
 
 def test_mods(*, input_mod_names: list[str], toggle_engine: bool, use_symlinks: bool) -> None:
     if toggle_engine:
         engine.toggle_engine_off()
     settings.settings_information.mod_names.update(input_mod_names)
-    atleast_one_enabled_mod_check()
-    generate_mods_other(use_symlinks=use_symlinks)
+    checks.atleast_one_enabled_mod_check()
+    packing.build_cook()
+    packing.generate_mods(use_symlinks=use_symlinks)
+    game_runner.run_game()
+    game_monitor.game_monitor_thread()
     if toggle_engine:
         engine.toggle_engine_on()
 
@@ -71,8 +91,11 @@ def test_mods_all(*, toggle_engine: bool, use_symlinks: bool) -> None:
         engine.toggle_engine_off()
     mod_info_dict = settings.settings_information.settings.get("mods_info", {})
     settings.settings_information.mod_names.update(mod_info_dict.keys())
-    atleast_one_enabled_mod_check()
-    generate_mods_other(use_symlinks=use_symlinks)
+    checks.atleast_one_enabled_mod_check()
+    packing.build_cook()
+    packing.generate_mods(use_symlinks=use_symlinks)
+    game_runner.run_game()
+    game_monitor.game_monitor_thread()
     if toggle_engine:
         engine.toggle_engine_on()
 
@@ -88,7 +111,7 @@ def full_run(
     if toggle_engine:
         engine.toggle_engine_off()
     settings.settings_information.mod_names.update(input_mod_names)
-    atleast_one_enabled_mod_check()
+    checks.atleast_one_enabled_mod_check()
     packing.build_cook()
     generate_mods(input_mod_names=input_mod_names, use_symlinks=use_symlinks)
     generate_mod_releases(
@@ -110,7 +133,7 @@ def full_run_all(
     if toggle_engine:
         engine.toggle_engine_off()
     settings.settings_information.mod_names.update(settings.get_mods_info_dict_from_json().keys())
-    atleast_one_enabled_mod_check()
+    checks.atleast_one_enabled_mod_check()
     packing.build_cook()
     generate_mods_all(use_symlinks=use_symlinks)
     generate_mod_releases_all(
@@ -118,6 +141,48 @@ def full_run_all(
     )
     if toggle_engine:
         engine.toggle_engine_on()
+
+        
+def generate_mods(*, input_mod_names: list[str], use_symlinks: bool) -> None:
+    settings.settings_information.mod_names.update(input_mod_names)
+    checks.atleast_one_enabled_mod_check()
+    packing.generate_mods(use_symlinks=use_symlinks)
+
+
+def generate_mods_all(*, use_symlinks: bool) -> None:
+    settings.settings_information.mod_names.update(settings.get_mods_info_dict_from_json().keys())
+    checks.atleast_one_enabled_mod_check()
+    packing.generate_mods(use_symlinks=use_symlinks)
+
+
+def generate_mod_releases(
+    mod_names: list[str], base_files_directory: Path, output_directory: Path,
+) -> None:
+    settings.settings_information.mod_names.update(mod_names)
+    checks.atleast_one_enabled_mod_check()
+    for mod_name in settings.get_enabled_mod_names():
+        packing.generate_mod_release(mod_name, base_files_directory, output_directory)
+
+
+def generate_mod_releases_all(base_files_directory: Path, output_directory: Path) -> None:
+    mod_info_dict = settings.settings_information.settings.get("mods_info", {})
+    settings.settings_information.mod_names.update(mod_info_dict.keys())
+    checks.atleast_one_enabled_mod_check()
+    for mod_name in settings.get_enabled_mod_names():
+        packing.generate_mod_release(mod_name, base_files_directory, output_directory)
+    logger.log_message(
+        f"Timer: Time since script execution: {timer.get_running_time()}",
+    )
+
+
+
+
+
+
+
+
+
+
 
 
 def install_spaghetti(run_after_install: bool) -> None:
@@ -156,6 +221,22 @@ def install_uasset_gui(run_after_install: bool) -> None:
         app_runner.run_app(tool_path)
 
 
+def install_umodel(run_after_install: bool) -> None:
+    tool_info = umodel.UmodelToolInfo(cache=manager.tools_cache)
+    tool_info.ensure_tool_installed()
+    tool_path = tool_info.get_executable_path()
+    if run_after_install:
+        app_runner.run_app(tool_path)
+
+
+def install_fmodel(run_after_install: bool) -> None:
+    tool_info = fmodel.FmodelToolInfo(cache=manager.tools_cache)
+    tool_info.ensure_tool_installed()
+    tool_path = tool_info.get_executable_path()
+    if run_after_install:
+        app_runner.run_app(tool_path)
+
+
 def open_latest_log() -> None:
     file_to_open = Path(f"{logger.log_information.log_base_dir}/{logger.log_information.log_prefix}_latest.log")
     file_io.open_file_in_default(file_to_open)
@@ -183,50 +264,6 @@ def run_engine() -> None:
 
 def close_engine() -> None:
     engine.close_game_engine()
-
-
-def install_umodel(run_after_install: bool) -> None:
-    tool_info = umodel.UmodelToolInfo(cache=manager.tools_cache)
-    tool_info.ensure_tool_installed()
-    tool_path = tool_info.get_executable_path()
-    if run_after_install:
-        app_runner.run_app(tool_path)
-
-
-def install_fmodel(run_after_install: bool) -> None:
-    tool_info = fmodel.FmodelToolInfo(cache=manager.tools_cache)
-    tool_info.ensure_tool_installed()
-    tool_path = tool_info.get_executable_path()
-    if run_after_install:
-        app_runner.run_app(tool_path)
-
-
-def get_solo_build_project_command() -> list[str]:
-    command = [
-        f'"{unreal_engine.get_build_script_path()}"',
-        f'"{unreal_engine.get_main_build_target_name_or_raise()}"',
-        f'"{settings.get_build_target_platform()}"',
-        f'"{settings.get_build_configuration_state()}"',
-        f'-project="{settings.get_uproject_file_or_raise()}"',
-    ]
-    for arg in settings.get_engine_building_args():
-        command.append(arg)
-    return command
-
-
-def run_proj_build_command(command: list[str]) -> None:
-    unreal_engine_dir = settings.get_unreal_engine_dir_or_raise()
-    app_runner.run_app(
-        exe_path=Path(command[0]), args=command[1:], working_dir=unreal_engine_dir,
-    )
-
-
-def build(*, toggle_engine: bool) -> None:
-    if toggle_engine:
-        engine.toggle_engine_off()
-    packing.build_uproject()
-    if toggle_engine:
-        engine.toggle_engine_on()
 
 
 def enable_mods(config_file: Path, mod_names: list) -> None:
@@ -432,51 +469,6 @@ def remove_mods(config_file: Path, mod_names: list) -> None:
         )
 
 
-def cook(*, toggle_engine: bool) -> None:
-    if toggle_engine:
-        engine.toggle_engine_off()
-    logger.log_message("Content Cooking Starting")
-    packing.cook_uproject()
-    # run_proj_build_command(get_solo_cook_project_command())
-    logger.log_message("Content Cook Complete")
-    if toggle_engine:
-        engine.toggle_engine_on()
-
-
-def get_solo_package_command() -> list[str]:
-    command = [
-        f'"{unreal_engine.get_run_uat_script_path()}"',
-        "BuildCookRun",
-        f'-project="{settings.get_uproject_file_or_raise()}"',
-    ]
-
-    uproject_file = settings.get_uproject_file_or_raise()
-    for arg in settings.get_engine_packaging_args():
-        command.append(arg)
-    custom_game_dir = utilities.get_game_dir_or_raise()
-    is_game_iostore = unreal_engine.get_is_game_iostore(
-        uproject_file, custom_game_dir,
-    )
-    if is_game_iostore:
-        command.append('-iostore')
-        logger.log_message("Check: Game is iostore")
-    else:
-        logger.log_message("Check: Game is not iostore")
-    return command
-
-
-def package(*, toggle_engine: bool, use_symlinks: bool) -> None:
-    if toggle_engine:
-        engine.toggle_engine_off()
-    settings.settings_information.mod_names.update(settings.get_mods_info_dict_from_json().keys())
-    logger.log_message("Packaging Starting")
-    packing.run_proj_command(get_solo_package_command())
-    packing.generate_mods(use_symlinks=use_symlinks)
-    logger.log_message("Packaging Complete")
-    if toggle_engine:
-        engine.toggle_engine_on()
-
-
 def resave_packages_and_fix_up_redirectors() -> None:
     unreal_engine_dir = settings.get_unreal_engine_dir_or_raise()
     engine.close_game_engine()
@@ -573,7 +565,7 @@ def cleanup_game(output_json: Path | None = None) -> None:
         file_list_json = Path(config_file_dir / "game_file_list.json")
     custom_game_dir = utilities.get_game_dir_or_raise()
     game_directory = custom_game_dir.parent
-    delete_unlisted_files(game_directory, file_list_json)
+    file_io.delete_unlisted_files(game_directory, file_list_json)
 
 
 def generate_game_file_list_json(output_json: Path | None = None) -> None:
@@ -586,294 +578,15 @@ def generate_game_file_list_json(output_json: Path | None = None) -> None:
         file_list_json = Path(config_file_dir / "game_file_list.json")
     custom_game_dir = utilities.get_game_dir_or_raise()
     game_directory = custom_game_dir.parent
-    generate_file_paths_json(game_directory, file_list_json)
+    file_io.generate_file_paths_json(game_directory, file_list_json)
 
 
 def cleanup_from_file_list(file_list_path: Path, directory: Path) -> None:
-    delete_unlisted_files(directory, file_list_path)
+    file_io.delete_unlisted_files(directory, file_list_path)
 
 
 def generate_file_list(directory: Path, file_list_path: Path) -> None:
-    generate_file_paths_json(directory, file_list_path)
-
-
-def generate_mods(*, input_mod_names: list[str], use_symlinks: bool) -> None:
-    atleast_one_enabled_mod_check()
-    settings.settings_information.mod_names.update(input_mod_names)
-    packing.generate_mods(use_symlinks=use_symlinks)
-
-
-def generate_mods_all(*, use_symlinks: bool) -> None:
-    atleast_one_enabled_mod_check()
-    settings.settings_information.mod_names.update(settings.get_mods_info_dict_from_json().keys())
-    packing.generate_mods(use_symlinks=use_symlinks)
-
-
-# doesn't account for when there are ucas/utoc to copy over
-def make_unreal_pak_mod_release(
-    singular_mod_info: dict, base_files_directory: Path, output_directory: Path, mod_name: str,
-) -> None:
-    # currently assumes mod was installed to game and not temporarily in the working dir, maybe?
-    src_pak = Path(
-        f"{utilities.get_game_paks_dir()}/{utilities.get_pak_dir_structure(mod_name)}/{mod_name}.pak",
-    )
-    dest_pak_file = Path(
-        f"{base_files_directory}/{mod_name}/{utilities.get_pak_dir_structure(mod_name)}/{mod_name}.pak",
-    )
-    if dest_pak_file.is_file():
-        dest_pak_file.unlink()
-    logger.log_message(dest_pak_file.parent)
-    dest_pak_file.parent.mkdir(parents=True, exist_ok=True)
-    if not src_pak.is_file():
-        # this creates it when it doesn't exist, sometimes there are no files to make a pak, but one is needed
-        src_pak.open("w").close()
-    else:
-        shutil.copyfile(src_pak, dest_pak_file)
-    file_io.zip_directory_tree(
-        input_dir=Path(f"{base_files_directory}/{mod_name}"),
-        output_dir=output_directory,
-        zip_name=f"{mod_name}.zip",
-    )
-
-
-def make_repak_mod_release(
-    singular_mod_info: dict, base_files_directory: Path, output_directory: Path, mod_name: str,
-) -> None:
-    src_pak = Path(f"{settings.get_temp_directory()}/{utilities.get_pak_dir_structure(mod_name)}/{mod_name}.pak")
-    dest_pak = Path(f"{base_files_directory}/{mod_name}/{utilities.get_pak_dir_structure(mod_name)}/{mod_name}.pak")
-    if dest_pak.is_file():
-        dest_pak.unlink()
-    logger.log_message(dest_pak.parent)
-    dest_pak.parent.mkdir(parents=True, exist_ok=True)
-    shutil.copyfile(src_pak, dest_pak)
-    file_io.zip_directory_tree(
-        input_dir=Path(f"{base_files_directory}/{mod_name}"),
-        output_dir=output_directory,
-        zip_name=f"{mod_name}.zip",
-    )
-
-
-def make_engine_mod_release(
-    singular_mod_info: dict, base_files_directory: Path, output_directory: Path, mod_name: str,
-) -> None:
-    mod_files = []
-    pak_chunk_num = singular_mod_info["pak_chunk_num"]
-    uproject_file = settings.get_uproject_file_or_raise()
-    custom_game_dir = utilities.get_game_dir_or_raise()
-    uproject_dir = unreal_engine.get_uproject_dir(uproject_file)
-    win_dir_str = unreal_engine.get_win_dir_str(settings.get_unreal_engine_dir())
-    uproject_name = unreal_engine.get_uproject_name(uproject_file)
-    prefix = f"{uproject_dir}/Saved/StagedBuilds/{win_dir_str}/{uproject_name}/Content/Paks/pakchunk{pak_chunk_num}-{win_dir_str}."
-    mod_files.append(prefix)
-    for file in mod_files:
-        for suffix in unreal_engine.get_game_pak_folder_archives(
-            uproject_file, custom_game_dir,
-        ):
-            dir_engine_mod = Path(f"{custom_game_dir}/Content/Paks/{utilities.get_pak_dir_structure(mod_name)}")
-            dir_engine_mod.mkdir(parents=True, exist_ok=True)
-            src_file = Path(f"{file}{suffix}")
-            dest_file = Path(f"{base_files_directory}/{mod_name}/{utilities.get_pak_dir_structure(mod_name)}/{mod_name}.{suffix}")
-            if dest_file.is_file():
-                dest_file.unlink()
-            dest_file.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copyfile(src_file, dest_file)
-    file_io.zip_directory_tree(
-        input_dir=Path(f"{base_files_directory}/{mod_name}"),
-        output_dir=output_directory,
-        zip_name=f"{mod_name}.zip",
-    )
-
-
-def get_mod_files_asset_paths_for_loose_mods(
-    mod_name: str, base_files_directory: Path,
-) -> dict[Path, Path]:
-    file_dict = {}
-    uproject_file = settings.get_uproject_file_or_raise()
-    unreal_engine_dir = settings.get_unreal_engine_dir_or_raise()
-    cooked_uproject_dir = unreal_engine.get_cooked_uproject_dir(
-        uproject_file, unreal_engine_dir,
-    )
-    mod_info = packing.get_mod_pak_entry(mod_name)
-    for asset in mod_info.get("file_includes", {}).get("asset_paths", []):
-        base_path = f"{cooked_uproject_dir}/{asset}"
-        for extension in file_io.get_file_extensions(base_path):
-            src_file = Path(f"{base_path}.{extension}")
-            dest_file = Path((f"{base_files_directory}/{mod_name}/mod_files/{asset}.{extension}"))
-            file_dict[src_file] = dest_file
-    return file_dict
-
-
-def get_mod_files_tree_paths_for_loose_mods(
-    mod_name: str, base_files_directory: Path,
-) -> dict[Path, Path]:
-    file_dict = {}
-    uproject_file = settings.get_uproject_file_or_raise()
-    unreal_engine_dir = settings.get_unreal_engine_dir_or_raise()
-    cooked_uproject_dir = unreal_engine.get_cooked_uproject_dir(
-        uproject_file, unreal_engine_dir,
-    )
-    mod_info = packing.get_mod_pak_entry(mod_name)
-    for tree in mod_info.get("file_includes", {}).get("tree_paths", []):
-        tree_path = Path(f"{cooked_uproject_dir}/{tree}")
-        for entry in file_io.get_files_in_tree(tree_path):
-            if entry.is_file():
-                base_entry = entry.with_suffix('')
-                for extension in file_io.get_file_extensions(str(entry)):
-                    src_path = Path(f"{base_entry}.{extension}")
-                    relative_path = os.path.relpath(base_entry, cooked_uproject_dir)
-                    dest_path = Path(f"{base_files_directory}/{mod_name}/mod_files/{relative_path}.{extension}")
-                    file_dict[src_path] = dest_path
-    return file_dict
-
-
-def get_mod_files_persistent_paths_for_loose_mods(
-    mod_name: str, base_files_directory: Path,
-) -> dict[Path, Path]:
-    file_dict = {}
-    persistent_mod_dir = settings.get_persistent_mod_dir(mod_name)
-
-    for root, _, files in persistent_mod_dir.walk():
-        for file in files:
-            file_path = Path(root / file)
-            relative_path = os.path.relpath(file_path, persistent_mod_dir)
-            after_path = Path(f"{base_files_directory}/{mod_name}/mod_files/{relative_path}")
-            file_dict[file_path] = after_path
-    return file_dict
-
-
-def get_mod_files_mod_name_dir_paths_for_loose_mods(
-    mod_name: str, base_files_directory: Path,
-) -> dict[Path, Path]:
-    file_dict = {}
-    uproject_file = settings.get_uproject_file_or_raise()
-    unreal_engine_dir = settings.get_unreal_engine_dir_or_raise()
-    mod_name_dir_name = utilities.get_mod_name_dir_name(mod_name)
-    unreal_mod_tree_type_str = utilities.get_unreal_mod_tree_type_str(mod_name)
-    cooked_uproject_dir = unreal_engine.get_cooked_uproject_dir(uproject_file, unreal_engine_dir)
-    cooked_game_name_mod_dir = Path(f"{cooked_uproject_dir}/Content/{unreal_mod_tree_type_str}/{mod_name_dir_name}")
-
-    for file in file_io.get_files_in_tree(cooked_game_name_mod_dir):
-        relative_file_path = os.path.relpath(file, cooked_game_name_mod_dir)
-        src_path = Path(file.absolute())
-        dest_path = Path(f"{base_files_directory}/{mod_name}/mod_files/{relative_file_path}")
-        file_dict[src_path] = dest_path
-    return file_dict
-
-
-def get_mod_paths_for_loose_mods(mod_name: str, base_files_directory: Path) -> dict[Path, Path]:
-    file_dict = {}
-    file_dict.update(
-        get_mod_files_asset_paths_for_loose_mods(mod_name, base_files_directory),
-    )
-    file_dict.update(
-        get_mod_files_tree_paths_for_loose_mods(mod_name, base_files_directory),
-    )
-    file_dict.update(
-        get_mod_files_persistent_paths_for_loose_mods(mod_name, base_files_directory),
-    )
-    file_dict.update(
-        get_mod_files_mod_name_dir_paths_for_loose_mods(mod_name, base_files_directory),
-    )
-
-    return file_dict
-
-
-def make_loose_mod_release(
-    singular_mod_info: dict, base_files_directory: Path, output_directory: Path, mod_name: str,
-) -> None:
-    mod_files = get_mod_paths_for_loose_mods(mod_name, base_files_directory)
-    dict_keys = mod_files.keys()
-    for key in dict_keys:
-        src_file = key
-        dest_file = mod_files[key]
-        dest_file.parent.mkdir(parents=True, exist_ok=True)
-        if src_file.exists():
-            if dest_file.is_symlink():
-                dest_file.unlink()
-            if dest_file.is_file():
-                dest_file.unlink()
-        if src_file.is_file():
-            shutil.copy(src_file, dest_file)
-    file_io.zip_directory_tree(
-        input_dir=Path(f"{base_files_directory}/{mod_name}"),
-        output_dir=output_directory,
-        zip_name=f"{mod_name}.zip",
-    )
-
-    # this doesn't use the output_dir/mod_name/mod_files convention
-
-
-def make_retoc_mod_release(
-    singular_mod_info: dict, base_files_directory: Path, output_directory: Path, mod_name: str,
-) -> None:
-    temp_dir = settings.get_temp_directory()
-    pak_dir_structure = utilities.get_pak_dir_structure(mod_name)
-    input_dir = Path(f"{base_files_directory}/{mod_name}")
-    base_src = Path(f"{temp_dir}/{pak_dir_structure}/{mod_name}.")
-    base_dest_dir = Path(f"{temp_dir}/{mod_name}/mod_files/{pak_dir_structure}")
-    base_dest = Path(f"{base_dest_dir}/{mod_name}.")
-    base_dest_dir.mkdir(parents=True, exist_ok=True)
-    packing.install_mod_sig(mod_name=mod_name, use_symlinks=False)
-
-    extensions = data_structures.unreal_iostore_sigs_archive_extensions
-
-    for extension in extensions:
-        src_file = Path(f"{base_src}{extension}")
-        dest_file = Path(f"{base_dest}{extension}")
-        if dest_file.is_file():
-            dest_file.unlink()
-        if src_file.is_file():
-            shutil.copy(src_file, dest_file)
-
-    file_io.zip_directory_tree(
-        input_dir=input_dir,
-        output_dir=output_directory,
-        zip_name=f"{mod_name}.zip",
-    )
-
-
-def generate_mod_release(
-    mod_name: str, base_files_directory: Path, output_directory: Path,
-) -> None:
-    singular_mod_info = settings.get_mods_info_dict_from_json()[mod_name]
-    packing_type = data_structures.get_enum_from_val(data_structures.PackingType, singular_mod_info["packing_type"])
-    if packing_type == data_structures.PackingType.UNREAL_PAK:
-        make_unreal_pak_mod_release(
-            singular_mod_info, base_files_directory, output_directory, mod_name,
-        )
-    elif packing_type == data_structures.PackingType.REPAK:
-        make_repak_mod_release(
-            singular_mod_info, base_files_directory, output_directory, mod_name,
-        )
-    elif packing_type == data_structures.PackingType.ENGINE:
-        make_engine_mod_release(
-            singular_mod_info, base_files_directory, output_directory, mod_name,
-        )
-    elif packing_type == data_structures.PackingType.LOOSE:
-        make_loose_mod_release(
-            singular_mod_info, base_files_directory, output_directory, mod_name,
-        )
-    elif packing_type == data_structures.PackingType.RETOC:
-        make_retoc_mod_release(
-            singular_mod_info, base_files_directory, output_directory, mod_name,
-        )
-    else:
-        packing_type_error = f'The following incorrect packing type was supplied "{packing_type.value}".'
-        raise ValueError(packing_type_error)
-
-
-def generate_mod_releases(
-    mod_names: list[str], base_files_directory: Path, output_directory: Path,
-) -> None:
-    atleast_one_enabled_mod_check()
-    for mod_name in settings.get_enabled_mod_names():
-        generate_mod_release(mod_name, base_files_directory, output_directory)
-
-
-def generate_mod_releases_all(base_files_directory: Path, output_directory: Path) -> None:
-    atleast_one_enabled_mod_check()
-    for mod_name in settings.get_enabled_mod_names():
-        generate_mod_release(mod_name, base_files_directory, output_directory)
+    file_io.generate_file_paths_json(directory, file_list_path)
 
 
 def resync_dir_with_repo() -> None:
@@ -1162,45 +875,3 @@ def remove_uplugins(uplugin_paths: list) -> None:
         uplugin_dir = uplugin_path.parent
         if uplugin_dir.is_dir():
             shutil.rmtree(uplugin_dir)
-
-
-def generate_file_paths_json(dir_path: Path, output_json: Path) -> None:
-    all_file_paths = []
-
-    for root, _, files in dir_path.walk():
-        for file in files:
-            full_path = Path(root / file)
-            all_file_paths.append(full_path)
-
-    json_string = json.dumps(all_file_paths)
-    output_json.parent.mkdir(parents=True, exist_ok=True)
-    with output_json.open("w", encoding="utf-8") as json_file:
-        json_file.write(json_string)
-
-    logger.log_message(f"JSON file with all file paths created at: {output_json}")
-
-
-def delete_unlisted_files(dir_path: Path, json_file: Path) -> None:
-    with json_file.open() as file:
-        allowed_files = set(json.load(file))
-
-    for root, _, files in dir_path.walk():
-        for file in files:
-            full_path = Path(root / file)
-            if full_path not in allowed_files:
-                full_path.unlink()
-                logger.log_message(f"Deleted: {full_path}")
-
-    logger.log_message("Cleanup complete. All unlisted files have been removed.")
-
-
-def save_json_to_file(json_string: str, file_path: Path) -> None:
-    try:
-        parsed_json = json.loads(json_string)
-
-        with file_path.open("w") as file:
-            json.dump(parsed_json, file, indent=4)
-
-        logger.log_message(f"JSON data successfully saved to {file_path}")
-    except json.JSONDecodeError as e:
-        logger.log_message(f"Invalid JSON string: {e}")

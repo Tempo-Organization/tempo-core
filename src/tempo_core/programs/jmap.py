@@ -1,7 +1,7 @@
 import os
 from pathlib import Path
 
-from tempo_core import settings, app_runner, data_structures
+from tempo_core import settings, app_runner, data_structures, env
 
 
 def run_dump_jmap_jmap_command(
@@ -12,7 +12,7 @@ def run_dump_jmap_jmap_command(
     unreal_engine_dir = settings.get_unreal_engine_dir_or_raise()
     unreal_engine_version = settings.get_unreal_engine_version_or_raise(unreal_engine_dir)
     engine_ver_string = unreal_engine_version.get_jmap_unreal_version_str()
-    os.environ["PATTERNSLEUTH_RES_EngineVersion"] = engine_ver_string
+    env.getenv["PATTERNSLEUTH_RES_EngineVersion"] = engine_ver_string
     exec_mode = data_structures.ExecutionMode.SYNC
     args = [
         '--pid',

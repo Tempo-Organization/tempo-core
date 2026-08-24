@@ -1,5 +1,4 @@
-from questionary import path
-import glob
+import json
 import hashlib
 import os
 import shutil
@@ -337,3 +336,45 @@ def delete(input_paths: list[Path]) -> None:
         else:
             path.unlink()
         logger.log_message(f"Successfully deleted {path}")
+
+
+def generate_file_paths_json(dir_path: Path, output_json: Path) -> None:
+    all_file_paths = []
+
+    for root, _, files in dir_path.walk():
+        for file in files:
+            full_path = Path(root / file)
+            all_file_paths.append(full_path)
+
+    json_string = json.dumps(all_file_paths)
+    output_json.parent.mkdir(parents=True, exist_ok=True)
+    with output_json.open("w", encoding="utf-8") as json_file:
+        json_file.write(json_string)
+
+    logger.log_message(f"JSON file with all file paths created at: {output_json}")
+
+
+def delete_unlisted_files(dir_path: Path, json_file: Path) -> None:
+    with json_file.open() as file:
+        allowed_files = set(json.load(file))
+
+    for root, _, files in dir_path.walk():
+        for file in files:
+            full_path = Path(root / file)
+            if full_path not in allowed_files:
+                full_path.unlink()
+                logger.log_message(f"Deleted: {full_path}")
+
+    logger.log_message("Cleanup complete. All unlisted files have been removed.")
+
+
+def save_json_to_file(json_string: str, file_path: Path) -> None:
+    try:
+        parsed_json = json.loads(json_string)
+
+        with file_path.open("w") as file:
+            json.dump(parsed_json, file, indent=4)
+
+        logger.log_message(f"JSON data successfully saved to {file_path}")
+    except json.JSONDecodeError as e:
+        logger.log_message(f"Invalid JSON string: {e}")

@@ -1,6 +1,6 @@
 import os
 import shutil
-from pathlib import Path, PurePath
+from pathlib import Path
 from dataclasses import dataclass
 
 from rich.progress import Progress
@@ -195,18 +195,31 @@ def get_cook_project_commands() -> list[list[str]]:
         command_args = command.copy()
 
         for file in entry:
-            # command_args.append(f'{partial_arg}{os.path.splitext(file)[0]}')
-            command_args.append(f'{partial_arg}{Path(file).stem}')
+            command_args.append(f'{partial_arg}{os.path.splitext(file)[0]}') #noqa
+            # command_args.append(f'{partial_arg}{Path(file).stem}')
 
         commands_to_return.append(command_args)
 
     return commands_to_return
 
 
+def get_solo_build_project_command() -> list[str]:
+    command = [
+        f'"{unreal_engine.get_build_script_path()}"',
+        f'"{unreal_engine.get_main_build_target_name_or_raise()}"',
+        f'"{settings.get_build_target_platform()}"',
+        f'"{settings.get_build_configuration_state()}"',
+        f'-project="{settings.get_uproject_file_or_raise()}"',
+    ]
+    for arg in settings.get_engine_building_args():
+        command.append(arg)
+    return command
+
+
 def build_uproject() -> None:
-    from tempo_core import main_logic
     logger.log_message("Project Building Starting")
-    run_proj_command(main_logic.get_solo_build_project_command())
+    run_proj_command(get_solo_build_project_command())
+    build_editor_target() # maybe make this optional
     logger.log_message("Project Building Complete")
     
 
@@ -918,3 +931,278 @@ def get_mod_file_paths_for_manually_made_pak_mods(mod_name: str) -> dict[Path, P
     )
 
     return file_dict
+
+
+def get_solo_package_command() -> list[str]:
+    command = [
+        f'"{unreal_engine.get_run_uat_script_path()}"',
+        "BuildCookRun",
+        f'-project="{settings.get_uproject_file_or_raise()}"',
+    ]
+
+    uproject_file = settings.get_uproject_file_or_raise()
+    for arg in settings.get_engine_packaging_args():
+        command.append(arg)
+    custom_game_dir = utilities.get_game_dir_or_raise()
+    is_game_iostore = unreal_engine.get_is_game_iostore(
+        uproject_file, custom_game_dir,
+    )
+    if is_game_iostore:
+        command.append('-iostore')
+        logger.log_message("Check: Game is iostore")
+    else:
+        logger.log_message("Check: Game is not iostore")
+    return command
+
+
+# doesn't account for when there are ucas/utoc to copy over
+def make_unreal_pak_mod_release(
+    singular_mod_info: dict, base_files_directory: Path, output_directory: Path, mod_name: str,
+) -> None:
+    # currently assumes mod was installed to game and not temporarily in the working dir, maybe?
+    src_pak = Path(
+        f"{utilities.get_game_paks_dir()}/{utilities.get_pak_dir_structure(mod_name)}/{mod_name}.pak",
+    )
+    dest_pak_file = Path(
+        f"{base_files_directory}/{mod_name}/{utilities.get_pak_dir_structure(mod_name)}/{mod_name}.pak",
+    )
+    if dest_pak_file.is_file():
+        dest_pak_file.unlink()
+    logger.log_message(dest_pak_file.parent)
+    dest_pak_file.parent.mkdir(parents=True, exist_ok=True)
+    if not src_pak.is_file():
+        # this creates it when it doesn't exist, sometimes there are no files to make a pak, but one is needed
+        src_pak.open("w").close()
+    else:
+        shutil.copyfile(src_pak, dest_pak_file)
+    file_io.zip_directory_tree(
+        input_dir=Path(f"{base_files_directory}/{mod_name}"),
+        output_dir=output_directory,
+        zip_name=f"{mod_name}.zip",
+    )
+
+
+def make_repak_mod_release(
+    singular_mod_info: dict, base_files_directory: Path, output_directory: Path, mod_name: str,
+) -> None:
+    src_pak = Path(f"{settings.get_temp_directory()}/{utilities.get_pak_dir_structure(mod_name)}/{mod_name}.pak")
+    dest_pak = Path(f"{base_files_directory}/{mod_name}/{utilities.get_pak_dir_structure(mod_name)}/{mod_name}.pak")
+    if dest_pak.is_file():
+        dest_pak.unlink()
+    logger.log_message(dest_pak.parent)
+    dest_pak.parent.mkdir(parents=True, exist_ok=True)
+        
+    file_io.zip_directory_tree(
+        input_dir=Path(f"{base_files_directory}/{mod_name}"),
+        output_dir=output_directory,
+        zip_name=f"{mod_name}.zip",
+    )
+
+
+def make_engine_mod_release(
+    singular_mod_info: dict, base_files_directory: Path, output_directory: Path, mod_name: str,
+) -> None:
+    mod_files = []
+    pak_chunk_num = singular_mod_info["pak_chunk_num"]
+    uproject_file = settings.get_uproject_file_or_raise()
+    custom_game_dir = utilities.get_game_dir_or_raise()
+    uproject_dir = unreal_engine.get_uproject_dir(uproject_file)
+    win_dir_str = unreal_engine.get_win_dir_str(settings.get_unreal_engine_dir())
+    uproject_name = unreal_engine.get_uproject_name(uproject_file)
+    prefix = f"{uproject_dir}/Saved/StagedBuilds/{win_dir_str}/{uproject_name}/Content/Paks/pakchunk{pak_chunk_num}-{win_dir_str}."
+    mod_files.append(prefix)
+    for file in mod_files:
+        for suffix in unreal_engine.get_game_pak_folder_archives(
+            uproject_file, custom_game_dir,
+        ):
+            dir_engine_mod = Path(f"{custom_game_dir}/Content/Paks/{utilities.get_pak_dir_structure(mod_name)}")
+            dir_engine_mod.mkdir(parents=True, exist_ok=True)
+            src_file = Path(f"{file}{suffix}")
+            dest_file = Path(f"{base_files_directory}/{mod_name}/{utilities.get_pak_dir_structure(mod_name)}/{mod_name}.{suffix}")
+            if dest_file.is_file():
+                dest_file.unlink()
+            dest_file.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(src_file, dest_file)
+    file_io.zip_directory_tree(
+        input_dir=Path(f"{base_files_directory}/{mod_name}"),
+        output_dir=output_directory,
+        zip_name=f"{mod_name}.zip",
+    )
+
+
+def get_mod_files_asset_paths_for_loose_mods(
+    mod_name: str, base_files_directory: Path,
+) -> dict[Path, Path]:
+    file_dict = {}
+    uproject_file = settings.get_uproject_file_or_raise()
+    unreal_engine_dir = settings.get_unreal_engine_dir_or_raise()
+    cooked_uproject_dir = unreal_engine.get_cooked_uproject_dir(
+        uproject_file, unreal_engine_dir,
+    )
+    mod_info = get_mod_pak_entry(mod_name)
+    for asset in mod_info.get("file_includes", {}).get("asset_paths", []):
+        base_path = f"{cooked_uproject_dir}/{asset}"
+        for extension in file_io.get_file_extensions(base_path):
+            src_file = Path(f"{base_path}.{extension}")
+            dest_file = Path((f"{base_files_directory}/{mod_name}/mod_files/{asset}.{extension}"))
+            file_dict[src_file] = dest_file
+    return file_dict
+
+
+def get_mod_files_tree_paths_for_loose_mods(
+    mod_name: str, base_files_directory: Path,
+) -> dict[Path, Path]:
+    file_dict = {}
+    uproject_file = settings.get_uproject_file_or_raise()
+    unreal_engine_dir = settings.get_unreal_engine_dir_or_raise()
+    cooked_uproject_dir = unreal_engine.get_cooked_uproject_dir(
+        uproject_file, unreal_engine_dir,
+    )
+    mod_info = get_mod_pak_entry(mod_name)
+    for tree in mod_info.get("file_includes", {}).get("tree_paths", []):
+        tree_path = Path(f"{cooked_uproject_dir}/{tree}")
+        for entry in file_io.get_files_in_tree(tree_path):
+            if entry.is_file():
+                base_entry = entry.with_suffix('')
+                for extension in file_io.get_file_extensions(str(entry)):
+                    src_path = Path(f"{base_entry}.{extension}")
+                    relative_path = os.path.relpath(base_entry, cooked_uproject_dir)
+                    dest_path = Path(f"{base_files_directory}/{mod_name}/mod_files/{relative_path}.{extension}")
+                    file_dict[src_path] = dest_path
+    return file_dict
+
+
+def get_mod_files_persistent_paths_for_loose_mods(
+    mod_name: str, base_files_directory: Path,
+) -> dict[Path, Path]:
+    file_dict = {}
+    persistent_mod_dir = settings.get_persistent_mod_dir(mod_name)
+
+    for root, _, files in persistent_mod_dir.walk():
+        for file in files:
+            file_path = Path(root / file)
+            relative_path = os.path.relpath(file_path, persistent_mod_dir)
+            after_path = Path(f"{base_files_directory}/{mod_name}/mod_files/{relative_path}")
+            file_dict[file_path] = after_path
+    return file_dict
+
+
+def get_mod_files_mod_name_dir_paths_for_loose_mods(
+    mod_name: str, base_files_directory: Path,
+) -> dict[Path, Path]:
+    file_dict = {}
+    uproject_file = settings.get_uproject_file_or_raise()
+    unreal_engine_dir = settings.get_unreal_engine_dir_or_raise()
+    mod_name_dir_name = utilities.get_mod_name_dir_name(mod_name)
+    unreal_mod_tree_type_str = utilities.get_unreal_mod_tree_type_str(mod_name)
+    cooked_uproject_dir = unreal_engine.get_cooked_uproject_dir(uproject_file, unreal_engine_dir)
+    cooked_game_name_mod_dir = Path(f"{cooked_uproject_dir}/Content/{unreal_mod_tree_type_str}/{mod_name_dir_name}")
+
+    for file in file_io.get_files_in_tree(cooked_game_name_mod_dir):
+        relative_file_path = os.path.relpath(file, cooked_game_name_mod_dir)
+        src_path = Path(file.absolute())
+        dest_path = Path(f"{base_files_directory}/{mod_name}/mod_files/{relative_file_path}")
+        file_dict[src_path] = dest_path
+    return file_dict
+
+
+def get_mod_paths_for_loose_mods(mod_name: str, base_files_directory: Path) -> dict[Path, Path]:
+    file_dict = {}
+    file_dict.update(
+        get_mod_files_asset_paths_for_loose_mods(mod_name, base_files_directory),
+    )
+    file_dict.update(
+        get_mod_files_tree_paths_for_loose_mods(mod_name, base_files_directory),
+    )
+    file_dict.update(
+        get_mod_files_persistent_paths_for_loose_mods(mod_name, base_files_directory),
+    )
+    file_dict.update(
+        get_mod_files_mod_name_dir_paths_for_loose_mods(mod_name, base_files_directory),
+    )
+
+    return file_dict
+
+
+def make_loose_mod_release(
+    singular_mod_info: dict, base_files_directory: Path, output_directory: Path, mod_name: str,
+) -> None:
+    mod_files = get_mod_paths_for_loose_mods(mod_name, base_files_directory)
+    dict_keys = mod_files.keys()
+    for key in dict_keys:
+        src_file = key
+        dest_file = mod_files[key]
+        dest_file.parent.mkdir(parents=True, exist_ok=True)
+        if src_file.exists():
+            if dest_file.is_symlink():
+                dest_file.unlink()
+            if dest_file.is_file():
+                dest_file.unlink()
+        if src_file.is_file():
+            shutil.copy(src_file, dest_file)
+    file_io.zip_directory_tree(
+        input_dir=Path(f"{base_files_directory}/{mod_name}"),
+        output_dir=output_directory,
+        zip_name=f"{mod_name}.zip",
+    )
+
+    # this doesn't use the output_dir/mod_name/mod_files convention
+
+
+def make_retoc_mod_release(
+    singular_mod_info: dict, base_files_directory: Path, output_directory: Path, mod_name: str,
+) -> None:
+    temp_dir = settings.get_temp_directory()
+    pak_dir_structure = utilities.get_pak_dir_structure(mod_name)
+    input_dir = Path(f"{base_files_directory}/{mod_name}")
+    base_src = Path(f"{temp_dir}/{pak_dir_structure}/{mod_name}.")
+    base_dest_dir = Path(f"{temp_dir}/{mod_name}/mod_files/{pak_dir_structure}")
+    base_dest = Path(f"{base_dest_dir}/{mod_name}.")
+    base_dest_dir.mkdir(parents=True, exist_ok=True)
+    install_mod_sig(mod_name=mod_name, use_symlinks=False)
+
+    extensions = data_structures.unreal_iostore_sigs_archive_extensions
+
+    for extension in extensions:
+        src_file = Path(f"{base_src}{extension}")
+        dest_file = Path(f"{base_dest}{extension}")
+        if dest_file.is_file():
+            dest_file.unlink()
+        if src_file.is_file():
+            shutil.copy(src_file, dest_file)
+
+    file_io.zip_directory_tree(
+        input_dir=input_dir,
+        output_dir=output_directory,
+        zip_name=f"{mod_name}.zip",
+    )
+
+
+def generate_mod_release(
+    mod_name: str, base_files_directory: Path, output_directory: Path,
+) -> None:
+    singular_mod_info = settings.get_mods_info_dict_from_json()[mod_name]
+    packing_type = data_structures.get_enum_from_val(data_structures.PackingType, singular_mod_info["packing_type"])
+    if packing_type == data_structures.PackingType.UNREAL_PAK:
+        make_unreal_pak_mod_release(
+            singular_mod_info, base_files_directory, output_directory, mod_name,
+        )
+    elif packing_type == data_structures.PackingType.REPAK:
+        make_repak_mod_release(
+            singular_mod_info, base_files_directory, output_directory, mod_name,
+        )
+    elif packing_type == data_structures.PackingType.ENGINE:
+        make_engine_mod_release(
+            singular_mod_info, base_files_directory, output_directory, mod_name,
+        )
+    elif packing_type == data_structures.PackingType.LOOSE:
+        make_loose_mod_release(
+            singular_mod_info, base_files_directory, output_directory, mod_name,
+        )
+    elif packing_type == data_structures.PackingType.RETOC:
+        make_retoc_mod_release(
+            singular_mod_info, base_files_directory, output_directory, mod_name,
+        )
+    else:
+        packing_type_error = f'The following incorrect packing type was supplied "{packing_type.value}".'
+        raise ValueError(packing_type_error)
