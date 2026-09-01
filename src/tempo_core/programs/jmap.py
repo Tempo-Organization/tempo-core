@@ -12,12 +12,13 @@ def run_dump_jmap_jmap_command(
     unreal_engine_dir = settings.get_unreal_engine_dir_or_raise()
     unreal_engine_version = settings.get_unreal_engine_version_or_raise(unreal_engine_dir)
     engine_ver_string = unreal_engine_version.get_jmap_unreal_version_str()
-    env.getenv["PATTERNSLEUTH_RES_EngineVersion"] = engine_ver_string
     exec_mode = data_structures.ExecutionMode.SYNC
     args = [
         '--pid',
         game_pid,
         output_jmap_location,
+        "--engine-version",
+        engine_ver_string
     ]
 
     app_runner.run_app(
