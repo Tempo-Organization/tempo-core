@@ -57,11 +57,11 @@ if IS_WINDOWS:
     ]
     user32.GetWindowThreadProcessId.restype = wintypes.DWORD
 
-    def enum_windows():
+    def enum_windows(): # noqa
         windows = []
 
         @EnumWindowsProc
-        def foreach_window(hwnd, lParam) -> bool:
+        def foreach_window(hwnd, lParam) -> bool: # noqa
             if user32.IsWindowVisible(hwnd):
                 length = user32.GetWindowTextLengthW(hwnd)
                 if length > 0:
@@ -75,7 +75,7 @@ if IS_WINDOWS:
         return windows
 
     def does_window_exist(
-        process_name: str, *, use_substring_check: bool = False
+        process_name: str, *, use_substring_check: bool = False,
     ) -> bool:
         for proc in psutil.process_iter(["name"]):
             if proc.info["name"] and proc.info["name"].lower() == process_name.lower():
@@ -83,47 +83,47 @@ if IS_WINDOWS:
         return False
 
     def get_windows_by_title(
-        window_title: str, *, use_substring_check: bool = False
+        window_title: str, *, use_substring_check: bool = False,
     ) -> list:
         matched_windows = []
         try:
             windows = enum_windows()
             if use_substring_check:
                 matched_windows = [
-                    (hwnd, title) for hwnd, title in windows if window_title in title
+                    (hwnd, title) for hwnd, title in windows if window_title in title  # type: ignore
                 ]
             else:
                 matched_windows = [
                     (hwnd, title)
-                    for hwnd, title in windows
+                    for hwnd, title in windows  # type: ignore
                     if title.strip() == window_title.strip()
                 ]
-        except Exception as e:
+        except Exception as e: # noqa
             logger.log_message(f"Error in get_windows_by_title: {e}")
         return matched_windows
 
-    def get_window_by_title(window_title: str, *, use_substring_check: bool = False):
+    def get_window_by_title(window_title: str, *, use_substring_check: bool = False): # noqa
         windows = get_windows_by_title(
-            window_title=window_title, use_substring_check=use_substring_check
+            window_title=window_title, use_substring_check=use_substring_check,
         )
         if not windows:
             logger.log_message(f'Warning: No windows found with title "{window_title}"')
             return None
         return windows[0]
 
-    def minimize_window(hwnd) -> None:
+    def minimize_window(hwnd) -> None: # noqa
         user32.ShowWindow(hwnd, SW_MINIMIZE)
 
-    def maximize_window(hwnd) -> None:
+    def maximize_window(hwnd) -> None: # noqa
         user32.ShowWindow(hwnd, SW_MAXIMIZE)
 
-    def restore_window(hwnd) -> None:
+    def restore_window(hwnd) -> None: # noqa
         user32.ShowWindow(hwnd, SW_RESTORE)
 
-    def close_window(hwnd) -> None:
+    def close_window(hwnd) -> None: # noqa
         user32.PostMessageW(hwnd, WM_CLOSE, 0, 0)
 
-    def move_window_to_monitor(hwnd, monitor_index=0) -> None:
+    def move_window_to_monitor(hwnd, monitor_index=0) -> None: # noqa
         monitors = screeninfo.get_monitors()
         if monitor_index >= len(monitors):
             logger.log_message("Invalid monitor index")
@@ -131,7 +131,7 @@ if IS_WINDOWS:
         monitor = monitors[monitor_index]
         move_window(hwnd, monitor.x, monitor.y, None, None)
 
-    def set_window_size(hwnd, width, height) -> None:
+    def set_window_size(hwnd, width, height) -> None: # noqa
         rect = wintypes.RECT()
         if not user32.GetWindowRect(hwnd, ctypes.byref(rect)):
             logger.log_message("Failed to get window rect")
@@ -139,7 +139,7 @@ if IS_WINDOWS:
         x, y = rect.left, rect.top
         user32.MoveWindow(hwnd, x, y, width, height, True)
 
-    def move_window(hwnd, x, y, width=None, height=None) -> None:
+    def move_window(hwnd, x, y, width=None, height=None) -> None: # noqa
         rect = wintypes.RECT()
         if not user32.GetWindowRect(hwnd, ctypes.byref(rect)):
             logger.log_message("Failed to get window rect")
@@ -152,11 +152,11 @@ if IS_WINDOWS:
         if not success:
             logger.log_message("Failed to move window")
 
-    def change_window_name(hwnd, new_title: str) -> None:
+    def change_window_name(hwnd, new_title: str) -> None: # noqa
         if not user32.SetWindowTextW(hwnd, new_title):
             logger.log_message(f"Failed to set window title to {new_title}")
 
-    def move_window_with_settings(hwnd, window_settings: dict) -> None:
+    def move_window_with_settings(hwnd, window_settings: dict) -> None: # noqa
         monitor_index = window_settings.get("monitor")
         if monitor_index is not None:
             move_window_to_monitor(hwnd, monitor_index)
@@ -166,7 +166,7 @@ if IS_WINDOWS:
         if width is not None and height is not None:
             set_window_size(hwnd, width, height)
 
-    def get_window_title(hwnd) -> str:
+    def get_window_title(hwnd) -> str: # noqa
         length = user32.GetWindowTextLengthW(hwnd)
         if length > 0:
             buffer = ctypes.create_unicode_buffer(length + 1)
@@ -174,10 +174,10 @@ if IS_WINDOWS:
             return buffer.value
         return ""
 
-    def find_hwnd_by_process_name(process_name):
+    def find_hwnd_by_process_name(process_name: str): # noqa
         # Enumerate all windows and try to find one owned by the process name
         windows = enum_windows()
-        for hwnd, title in windows:
+        for hwnd, title in windows: # noqa   # type: ignore
             length = user32.GetWindowTextLengthW(hwnd)
             if length > 0:
                 # Optionally: Get process ID for hwnd and check process name
@@ -192,19 +192,19 @@ if IS_WINDOWS:
         return None
 
     def get_pid_from_window_title(
-        window_title: str, *, use_substring_check: bool = False
+        window_title: str, *, use_substring_check: bool = False,
     ) -> int | None:
         """
         Returns the PID for the first window matching the given title.
         """
         try:
             windows = get_windows_by_title(
-                window_title, use_substring_check=use_substring_check
+                window_title, use_substring_check=use_substring_check,
             )
 
             if not windows:
                 logger.log_message(
-                    f'Warning: No windows found with title "{window_title}"'
+                    f'Warning: No windows found with title "{window_title}"',
                 )
                 return None
 
@@ -215,19 +215,19 @@ if IS_WINDOWS:
 
             if pid.value == 0:
                 logger.log_message(
-                    f'Warning: Failed to retrieve PID for window "{title}"'
+                    f'Warning: Failed to retrieve PID for window "{title}"',
                 )
                 return None
 
             return pid.value
 
-        except Exception as e:
+        except Exception as e: # noqa
             logger.log_message(f"Error in get_pid_from_window_title: {e}")
             return None
 
 else:
 
-    def not_supported(*args, **kwargs) -> None:
+    def not_supported(*args, **kwargs) -> None: # noqa
         logger.log_message("Warning: Window control functions are only supported on Windows.")
 
     # Define dummy versions of functions

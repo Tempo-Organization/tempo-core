@@ -18,7 +18,7 @@ def run_dump_jmap_jmap_command(
         game_pid,
         output_jmap_location,
         "--engine-version",
-        engine_ver_string
+        engine_ver_string,
     ]
 
     app_runner.run_app(

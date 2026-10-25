@@ -1,4 +1,3 @@
-from typing import final
 import os
 import sys
 import json
@@ -79,40 +78,60 @@ def load_settings(config_file: Path) -> None:
         init_settings(config_file)
 
 
-def get_unreal_engine_dir() -> Path | None:
+def get_unreal_engine_dir_from_config() -> Path | None:
     unreal_engine_directory = settings_information.settings.get("engine_info", {}).get(
         "unreal_engine_dir", None,
     )
-    if unreal_engine_directory and not unreal_engine_directory.is_absolute():
-        unreal_engine_directory = Path(
-            str(settings_information.config_file_dir.path), unreal_engine_directory,
-        )
+    if unreal_engine_directory:
+        if not Path(unreal_engine_directory).is_absolute():
+            unreal_engine_directory = Path(
+                str(settings_information.config_file_dir.path), unreal_engine_directory,
+            )
+        return Path(unreal_engine_directory) # added this and above changes recently
+
+
+def get_unreal_engine_dir_from_env_vars() -> Path | None:
+    unreal_version = get_unreal_engine_version(engine_path=None)
+    env_var_string_one = "UNREAL_ENGINE_DIRECTORY"
+    env_var_string_two = f"TEMPO_{env_var_string_one}"
+    if unreal_version:
+        env_var_string_three = f"{env_var_string_one}_{unreal_version.major_version}_{unreal_version.minor_version}"
+        env_var_string_four = f"TEMPO_{env_var_string_three}"
+        var_three = env.getenv(env_var_string_three)
+        var_four = env.getenv(env_var_string_four)
     else:
-        unreal_version = get_unreal_engine_version(engine_path=None)
-        env_var_string_one = "UNREAL_ENGINE_DIRECTORY"
-        env_var_string_two = f"TEMPO_{env_var_string_one}"
-        if unreal_version:
-            env_var_string_three = f"{env_var_string_one}_{unreal_version.major_version}_{unreal_version.minor_version}"
-            env_var_string_four = f"TEMPO_{env_var_string_three}"
-            var_three = env.getenv(env_var_string_three)
-            var_four = env.getenv(env_var_string_four)
-        else:
-            var_four = None
-            var_three = None
-        var_one = env.getenv(env_var_string_one)
-        var_two = env.getenv(env_var_string_two)
-        unreal_engine_directory = var_four or var_three or var_two or var_one
+        var_four = None
+        var_three = None
+    var_one = env.getenv(env_var_string_one)
+    var_two = env.getenv(env_var_string_two)
+    unreal_engine_directory = var_four or var_three or var_two or var_one
     if unreal_engine_directory:
         return Path(unreal_engine_directory)
-    else:
-        unreal_version = get_unreal_engine_version(engine_path=None)
-        if not unreal_version:
-            return None
-        registry_installs = registry.get_unreal_installs_from_registry()
-        raw_unreal_version_str = unreal_version.get_raw_unreal_version_str()
-        if raw_unreal_version_str in registry_installs.keys():
-            return registry_installs[raw_unreal_version_str] # ty: ignore
+    return None
+
+
+def get_unreal_engine_dir_from_registry() -> Path | None:
+    unreal_version = get_unreal_engine_version(engine_path=None)
+    if not unreal_version:
         return None
+    registry_installs = registry.get_unreal_installs_from_registry()
+    raw_unreal_version_str = unreal_version.get_raw_unreal_version_str()
+    if raw_unreal_version_str in registry_installs.keys():
+        return registry_installs[raw_unreal_version_str] # ty: ignore
+    return None
+
+
+def get_unreal_engine_dir() -> Path | None:
+    unreal_engine_dir_from_config = get_unreal_engine_dir_from_config()
+    unreal_engine_dir_from_env_vars = get_unreal_engine_dir_from_env_vars()
+    unreal_engine_dir_from_registry = get_unreal_engine_dir_from_registry()
+
+    if unreal_engine_dir_from_config:
+        return unreal_engine_dir_from_config
+    if unreal_engine_dir_from_env_vars:
+        return unreal_engine_dir_from_env_vars
+    if unreal_engine_dir_from_registry:
+        return unreal_engine_dir_from_registry
 
 
 def get_unreal_engine_dir_or_raise() -> Path:
@@ -485,7 +504,7 @@ def get_unreal_engine_version(
     auto_detected_version = unreal_engine.get_unreal_engine_version_from_build_version_file(engine_path)
     if auto_detected_version:
         return auto_detected_version
-    
+
     if not settings_information.config_file.path:
         raise FileNotFoundError('Could not locate your config file in the settings_information.')
 

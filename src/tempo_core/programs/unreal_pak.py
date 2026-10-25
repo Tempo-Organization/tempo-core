@@ -47,11 +47,6 @@ def make_response_file_non_iostore(mod_name: str) -> Path:
         for root, _, files in dir_to_pack.walk():
             for file_name in files:
                 absolute_path = Path(root / file_name)
-                if not os.path.isfile:
-                    file_not_found_error = (
-                        f'The following file could not be found "{absolute_path}"'
-                    )
-                    raise FileNotFoundError(file_not_found_error)
                 relative_path = os.path.relpath(root, dir_to_pack).replace("\\", "/")
                 mount_point = f"../../../{relative_path}/"
                 file.write(f'"{Path(absolute_path)}" "{mount_point}"\n')

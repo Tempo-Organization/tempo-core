@@ -18,7 +18,7 @@ from tempo_core import (
     utilities,
     manager,
     checks,
-    timer
+    timer,
 )
 from tempo_core.programs import unreal_engine
 from tempo_core.threads import constant, game_monitor
@@ -142,7 +142,7 @@ def full_run_all(
     if toggle_engine:
         engine.toggle_engine_on()
 
-        
+
 def generate_mods(*, input_mod_names: list[str], use_symlinks: bool) -> None:
     settings.settings_information.mod_names.update(input_mod_names)
     checks.atleast_one_enabled_mod_check()
@@ -663,7 +663,7 @@ def generate_uproject(
         # Ensure the directory is empty
         project_dir = project_file.resolve().parent
 
-        if project_dir.exists and sum(1 for p in project_dir.rglob("*") if p.is_file()) > 0:
+        if project_dir.exists and sum(1 for p in project_dir.rglob("*") if p.is_file()) > 0:  # type: ignore
             cannot_generate_in_non_empty_dir_error = f'The directory "{project_dir}" is not empty. Cannot generate project here.'
             raise FileExistsError(cannot_generate_in_non_empty_dir_error)
 

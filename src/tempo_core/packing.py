@@ -163,7 +163,7 @@ def get_cook_project_commands() -> list[list[str]]:
     final_file_list = []
 
     for path in asset_paths:
-        final_file_list.append(path.replace("Content", "/Game", 1).as_posix())
+        final_file_list.append(Path(path.replace("Content", "/Game", 1)).as_posix())
 
     for path in tree_paths:
         full_path = f'{uproject_dir}/{path}'
@@ -221,7 +221,7 @@ def build_uproject() -> None:
     run_proj_command(get_solo_build_project_command())
     build_editor_target() # maybe make this optional
     logger.log_message("Project Building Complete")
-    
+
 
 
 def cook_uproject() -> None:
@@ -744,7 +744,7 @@ def build_cook() -> None:
         package_uproject_non_iostore()
     if not is_game_iostore and not needs_engine_command_run:
         build_editor_target() # didn't seem to always need this but now do?
-        build_uproject()
+        # build_uproject()
         cook_uproject()
 
 
@@ -991,7 +991,7 @@ def make_repak_mod_release(
         dest_pak.unlink()
     logger.log_message(dest_pak.parent)
     dest_pak.parent.mkdir(parents=True, exist_ok=True)
-        
+
     file_io.zip_directory_tree(
         input_dir=Path(f"{base_files_directory}/{mod_name}"),
         output_dir=output_directory,
@@ -1030,104 +1030,105 @@ def make_engine_mod_release(
     )
 
 
-def get_mod_files_asset_paths_for_loose_mods(
-    mod_name: str, base_files_directory: Path,
-) -> dict[Path, Path]:
-    file_dict = {}
-    uproject_file = settings.get_uproject_file_or_raise()
-    unreal_engine_dir = settings.get_unreal_engine_dir_or_raise()
-    cooked_uproject_dir = unreal_engine.get_cooked_uproject_dir(
-        uproject_file, unreal_engine_dir,
-    )
-    mod_info = get_mod_pak_entry(mod_name)
-    for asset in mod_info.get("file_includes", {}).get("asset_paths", []):
-        base_path = f"{cooked_uproject_dir}/{asset}"
-        for extension in file_io.get_file_extensions(base_path):
-            src_file = Path(f"{base_path}.{extension}")
-            dest_file = Path((f"{base_files_directory}/{mod_name}/mod_files/{asset}.{extension}"))
-            file_dict[src_file] = dest_file
-    return file_dict
+# def get_mod_files_asset_paths_for_loose_mods(
+#     mod_name: str, base_files_directory: Path,
+# ) -> dict[Path, Path]:
+#     file_dict = {}
+#     uproject_file = settings.get_uproject_file_or_raise()
+#     unreal_engine_dir = settings.get_unreal_engine_dir_or_raise()
+#     cooked_uproject_dir = unreal_engine.get_cooked_uproject_dir(
+#         uproject_file, unreal_engine_dir,
+#     )
+#     mod_info = get_mod_pak_entry(mod_name)
+#     for asset in mod_info.get("file_includes", {}).get("asset_paths", []):
+#         base_path = f"{cooked_uproject_dir}/{asset}"
+#         for extension in file_io.get_file_extensions(base_path):
+#             src_file = Path(f"{base_path}.{extension}")
+#             dest_file = Path((f"{base_files_directory}/{mod_name}/mod_files/{asset}.{extension}"))
+#             file_dict[src_file] = dest_file
+#     return file_dict
 
 
-def get_mod_files_tree_paths_for_loose_mods(
-    mod_name: str, base_files_directory: Path,
-) -> dict[Path, Path]:
-    file_dict = {}
-    uproject_file = settings.get_uproject_file_or_raise()
-    unreal_engine_dir = settings.get_unreal_engine_dir_or_raise()
-    cooked_uproject_dir = unreal_engine.get_cooked_uproject_dir(
-        uproject_file, unreal_engine_dir,
-    )
-    mod_info = get_mod_pak_entry(mod_name)
-    for tree in mod_info.get("file_includes", {}).get("tree_paths", []):
-        tree_path = Path(f"{cooked_uproject_dir}/{tree}")
-        for entry in file_io.get_files_in_tree(tree_path):
-            if entry.is_file():
-                base_entry = entry.with_suffix('')
-                for extension in file_io.get_file_extensions(str(entry)):
-                    src_path = Path(f"{base_entry}.{extension}")
-                    relative_path = os.path.relpath(base_entry, cooked_uproject_dir)
-                    dest_path = Path(f"{base_files_directory}/{mod_name}/mod_files/{relative_path}.{extension}")
-                    file_dict[src_path] = dest_path
-    return file_dict
+# def get_mod_files_tree_paths_for_loose_mods(
+#     mod_name: str, base_files_directory: Path,
+# ) -> dict[Path, Path]:
+#     file_dict = {}
+#     uproject_file = settings.get_uproject_file_or_raise()
+#     unreal_engine_dir = settings.get_unreal_engine_dir_or_raise()
+#     cooked_uproject_dir = unreal_engine.get_cooked_uproject_dir(
+#         uproject_file, unreal_engine_dir,
+#     )
+#     mod_info = get_mod_pak_entry(mod_name)
+#     for tree in mod_info.get("file_includes", {}).get("tree_paths", []):
+#         tree_path = Path(f"{cooked_uproject_dir}/{tree}")
+#         for entry in file_io.get_files_in_tree(tree_path):
+#             if entry.is_file():
+#                 base_entry = entry.with_suffix('')
+#                 for extension in file_io.get_file_extensions(str(entry)):
+#                     src_path = Path(f"{base_entry}.{extension}")
+#                     relative_path = os.path.relpath(base_entry, cooked_uproject_dir)
+#                     dest_path = Path(f"{base_files_directory}/{mod_name}/mod_files/{relative_path}.{extension}")
+#                     file_dict[src_path] = dest_path
+#     return file_dict
 
 
-def get_mod_files_persistent_paths_for_loose_mods(
-    mod_name: str, base_files_directory: Path,
-) -> dict[Path, Path]:
-    file_dict = {}
-    persistent_mod_dir = settings.get_persistent_mod_dir(mod_name)
-
-    for root, _, files in persistent_mod_dir.walk():
-        for file in files:
-            file_path = Path(root / file)
-            relative_path = os.path.relpath(file_path, persistent_mod_dir)
-            after_path = Path(f"{base_files_directory}/{mod_name}/mod_files/{relative_path}")
-            file_dict[file_path] = after_path
-    return file_dict
-
-
-def get_mod_files_mod_name_dir_paths_for_loose_mods(
-    mod_name: str, base_files_directory: Path,
-) -> dict[Path, Path]:
-    file_dict = {}
-    uproject_file = settings.get_uproject_file_or_raise()
-    unreal_engine_dir = settings.get_unreal_engine_dir_or_raise()
-    mod_name_dir_name = utilities.get_mod_name_dir_name(mod_name)
-    unreal_mod_tree_type_str = utilities.get_unreal_mod_tree_type_str(mod_name)
-    cooked_uproject_dir = unreal_engine.get_cooked_uproject_dir(uproject_file, unreal_engine_dir)
-    cooked_game_name_mod_dir = Path(f"{cooked_uproject_dir}/Content/{unreal_mod_tree_type_str}/{mod_name_dir_name}")
-
-    for file in file_io.get_files_in_tree(cooked_game_name_mod_dir):
-        relative_file_path = os.path.relpath(file, cooked_game_name_mod_dir)
-        src_path = Path(file.absolute())
-        dest_path = Path(f"{base_files_directory}/{mod_name}/mod_files/{relative_file_path}")
-        file_dict[src_path] = dest_path
-    return file_dict
+# def get_mod_files_persistent_paths_for_loose_mods(
+#     mod_name: str, base_files_directory: Path,
+# ) -> dict[Path, Path]:
+#     file_dict = {}
+#     persistent_mod_dir = settings.get_persistent_mod_dir(mod_name)
+#
+#     for root, _, files in persistent_mod_dir.walk():
+#         for file in files:
+#             file_path = Path(root / file)
+#             relative_path = os.path.relpath(file_path, persistent_mod_dir)
+#             after_path = Path(f"{base_files_directory}/{mod_name}/mod_files/{relative_path}")
+#             file_dict[file_path] = after_path
+#     return file_dict
 
 
-def get_mod_paths_for_loose_mods(mod_name: str, base_files_directory: Path) -> dict[Path, Path]:
-    file_dict = {}
-    file_dict.update(
-        get_mod_files_asset_paths_for_loose_mods(mod_name, base_files_directory),
-    )
-    file_dict.update(
-        get_mod_files_tree_paths_for_loose_mods(mod_name, base_files_directory),
-    )
-    file_dict.update(
-        get_mod_files_persistent_paths_for_loose_mods(mod_name, base_files_directory),
-    )
-    file_dict.update(
-        get_mod_files_mod_name_dir_paths_for_loose_mods(mod_name, base_files_directory),
-    )
+# def get_mod_files_mod_name_dir_paths_for_loose_mods(
+#     mod_name: str, base_files_directory: Path,
+# ) -> dict[Path, Path]:
+#     file_dict = {}
+#     uproject_file = settings.get_uproject_file_or_raise()
+#     unreal_engine_dir = settings.get_unreal_engine_dir_or_raise()
+#     mod_name_dir_name = utilities.get_mod_name_dir_name(mod_name)
+#     unreal_mod_tree_type_str = utilities.get_unreal_mod_tree_type_str(mod_name)
+#     cooked_uproject_dir = unreal_engine.get_cooked_uproject_dir(uproject_file, unreal_engine_dir)
+#     cooked_game_name_mod_dir = Path(f"{cooked_uproject_dir}/Content/{unreal_mod_tree_type_str}/{mod_name_dir_name}")
+#
+#     for file in file_io.get_files_in_tree(cooked_game_name_mod_dir):
+#         relative_file_path = os.path.relpath(file, cooked_game_name_mod_dir)
+#         src_path = Path(file.absolute())
+#         dest_path = Path(f"{base_files_directory}/{mod_name}/mod_files/{relative_file_path}")
+#         file_dict[src_path] = dest_path
+#     return file_dict
 
-    return file_dict
+
+# def get_mod_paths_for_loose_mods(mod_name: str, base_files_directory: Path) -> dict[Path, Path]:
+#     file_dict = {}
+#     file_dict.update(
+#         get_mod_files_asset_paths_for_loose_mods(mod_name, base_files_directory),
+#     )
+#     file_dict.update(
+#         get_mod_files_tree_paths_for_loose_mods(mod_name, base_files_directory),
+#     )
+#     file_dict.update(
+#         get_mod_files_persistent_paths_for_loose_mods(mod_name, base_files_directory),
+#     )
+#     file_dict.update(
+#         get_mod_files_mod_name_dir_paths_for_loose_mods(mod_name, base_files_directory),
+#     )
+#
+#     return file_dict
 
 
 def make_loose_mod_release(
     singular_mod_info: dict, base_files_directory: Path, output_directory: Path, mod_name: str,
 ) -> None:
-    mod_files = get_mod_paths_for_loose_mods(mod_name, base_files_directory)
+    # mod_files = get_mod_paths_for_loose_mods(mod_name, base_files_directory)
+    mod_files = get_mod_paths_for_loose_mods(mod_name)
     dict_keys = mod_files.keys()
     for key in dict_keys:
         src_file = key
