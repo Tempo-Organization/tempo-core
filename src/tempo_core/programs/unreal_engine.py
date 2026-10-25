@@ -1,5 +1,4 @@
 from tempo_core.utilities import get_uproject_dir_or_raise
-import os
 import json
 from pathlib import Path
 
@@ -74,13 +73,13 @@ def get_editor_cmd_path(unreal_engine_dir: Path) -> Path:
             engine_path_suffix = "UE4Editor-Cmd.exe"
         else:
             engine_path_suffix = "UnrealEditor-Cmd.exe"
-        return Path(unreal_engine_dir / 'Engine/Binaries/Win64' / engine_path_suffix)
+        return Path(unreal_engine_dir, 'Engine/Binaries/Win64', engine_path_suffix)
     else:
         if get_win_dir_type(unreal_engine_dir) == PackagingDirType.WINDOWS_NO_EDITOR:
             engine_path_suffix = "UE4Editor-Cmd"
         else:
             engine_path_suffix = "UnrealEditor-Cmd"
-        return Path(unreal_engine_dir / 'Engine/Binaries/Linux' / engine_path_suffix)
+        return Path(unreal_engine_dir, 'Engine/Binaries/Linux', engine_path_suffix)
 
 
 def is_game_ue5(unreal_engine_dir: Path | None) -> bool:
@@ -186,9 +185,9 @@ def has_build_target_been_built(uproject_file_path: Path) -> bool:
 
 def get_unreal_pak_exe_path(unreal_engine_dir: Path) -> Path:
     if settings.is_windows():
-        return Path(unreal_engine_dir / "Engine" / "Binaries" / "Win64" / "UnrealPak.exe")
+        return Path(unreal_engine_dir , "Engine" , "Binaries" , "Win64" , "UnrealPak.exe")
     else:
-        return Path(unreal_engine_dir / "Engine" / "Binaries" / "Linux" / "UnrealPak")
+        return Path(unreal_engine_dir , "Engine" , "Binaries" , "Linux" , "UnrealPak")
 
 
 def get_game_window_title(input_game_exe_path: Path) -> str:

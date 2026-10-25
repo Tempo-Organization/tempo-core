@@ -18,6 +18,8 @@ def run_app(
     working_dir: Path = default_working_dir,
     use_shell: bool = True,
 ) -> None:
+    if isinstance(working_dir, str):
+        working_dir = Path(working_dir)
     working_dir.mkdir(parents=True, exist_ok=True)
 
     if not args:
