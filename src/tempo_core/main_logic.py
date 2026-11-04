@@ -53,9 +53,21 @@ def build(*, toggle_engine: bool) -> None:
 def cook(*, toggle_engine: bool) -> None:
     if toggle_engine:
         engine.toggle_engine_off()
+
+    logger.log_message(
+        f"Timer: Time since script execution: {timer.get_running_time()}",
+    )
+
     logger.log_message("Content Cooking Starting")
+
     packing.cook_uproject()
+
     logger.log_message("Content Cook Complete")
+
+    logger.log_message(
+        f"Timer: Time since script execution: {timer.get_running_time()}",
+    )
+
     if toggle_engine:
         engine.toggle_engine_on()
 
