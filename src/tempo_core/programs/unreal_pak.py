@@ -416,6 +416,10 @@ def move_files_for_packing(mod_name: str) -> None:
             if src_file.is_file():
                 shutil.copy2(src_file, dest_file)
 
+
+    if len(mod_files_dict.items()) < 1:
+       return
+
     if should_use_progress_bars:
         from rich.progress import Progress
 

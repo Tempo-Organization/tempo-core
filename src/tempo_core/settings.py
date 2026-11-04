@@ -603,3 +603,9 @@ def get_disabled_mod_names() -> set[str]:
         if mods_info_dict[mod_name].get('is_enabled', True) == False:
             mod_names.add(mod_name)
     return mod_names
+
+
+def get_unreal_engine_cooking_main_command() -> str:
+    return settings_information.settings.get("engine_info", {}).get(
+        "engine_cooking_command", "BuildCookRun",
+    )

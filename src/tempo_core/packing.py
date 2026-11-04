@@ -103,6 +103,45 @@ def get_engine_pak_command() -> list[str]:
     return command
 
 
+# def get_cook_project_command() -> str:
+#     command = (
+#         f'"Engine\\Build\\BatchFiles\\RunUAT.{file_io.get_platform_wrapper_extension()}" {settings.get_unreal_engine_cooking_main_command()} '
+#         f'-project="{settings.get_uproject_file()}" '
+#         f"-skipstage "
+#         f"-nodebuginfo"
+#     )
+#     uproject_path = settings.get_uproject_file()
+#     if not uproject_path:
+#         raise FileNotFoundError("cannot find the uproject file")
+#     if not unreal_engine.has_build_target_been_built(uproject_path):
+#         build_arg = "-build"
+#         command = f"{command} {build_arg}"
+#     for arg in settings.get_engine_cooking_args():
+#         command = f"{command} {arg}"
+#     return command
+
+
+def get_cook_project_command() -> list[str]:
+    command = [
+        f'"Engine\\Build\\BatchFiles\\RunUAT.{file_io.get_platform_wrapper_extension()}"',
+        settings.get_unreal_engine_cooking_main_command(),
+        f'-project="{settings.get_uproject_file()}"',
+        "-skipstage",
+        "-nodebuginfo",
+    ]
+
+    uproject_path = settings.get_uproject_file()
+    if not uproject_path:
+        raise FileNotFoundError("cannot find the uproject file")
+
+    if not unreal_engine.has_build_target_been_built(uproject_path):
+        command.append("-build")
+
+    command.extend(settings.get_engine_cooking_args())
+
+    return command
+
+
 # add support for collections later like this file_includes - unreal_collections
 # make sure the right iterate command is being used based on correct versions later
 def get_cook_project_commands() -> list[list[str]]:
@@ -128,6 +167,9 @@ def get_cook_project_commands() -> list[list[str]]:
         '-iterative',
         '-fastcook',
         single_cooking_arg,
+        "-skipstage", # testing
+        "-nodebuginfo", # testing
+        "-noP4", # testing
     ]
 
     mods_info = settings.get_mods_info_dict_from_json()
@@ -225,10 +267,22 @@ def build_uproject() -> None:
 
 
 def cook_uproject() -> None:
+
+    run_proj_command(get_cook_project_command())
+    return
+
+    # the below code should be faster, but is not for whatever reason.
+
     cook_commands = get_cook_project_commands()
     for command in cook_commands:
         # not using shell to make command max length more consistent
+        # may have to systematically copy the cooked files over to a temp location
+        # as it seems on 4.22 at least to clear them out each time potentially
+        # make the configuration issue a bit more specific as to which mod it is having issues with specifically
         run_proj_command(command, False)
+        # slap on fix
+        for mod_name in settings.get_enabled_mod_names():
+            unreal_pak.move_files_for_packing(mod_name)
 
 
 def package_uproject_non_iostore() -> None:
